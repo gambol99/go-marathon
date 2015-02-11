@@ -11,8 +11,24 @@ VERSION=$(shell awk '/const Version/ { print $$4 }' version.go | sed 's/"//g')
 
 .PHONY: test
 
-test:
-	rm release/$(NAME)
+ruby-centos:
+	echo "install"
+
+ruby-ubuntu:
+	apt-get install -y ruby bundler
+
+ruby-install:
+	[ -x /usr/bin/apt-get ] && make ruby-ubuntu || :
+	[ -x /usr/bin/yum ]     && make ruby-centos || :
+
+test: ruby-install
+	(cd tests/rest-api && bundler install --deployment)
+	echo "Starting the Rest API for testing"
+	thin -d start -c tests/rest-api
+	echo "Performing tests"
+	sleep 5
+	curl localhost:3000/v2/info
+	thin stop -c tests/rest-api
 
 changelog: release
 	git log $(shell git tag | tail -n1)..HEAD --no-merges --format=%B > changelog

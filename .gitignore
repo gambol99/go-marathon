@@ -4,6 +4,7 @@
 *.so
 go-marathon.iml
 .idea/
+tests/rest-api/Gemfile.lock
 
 # Folders
 _obj
