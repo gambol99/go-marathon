@@ -14,10 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-require 'optparse'
 require 'sinatra'
 require 'yaml'
-require 'rack'
 
 module RestAPI
   class Application < Sinatra::Base
