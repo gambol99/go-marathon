@@ -16,27 +16,16 @@ limitations under the License.
 
 package marathon
 
-type Applications struct {
-	Apps []Application `json:"apps"`
+import (
+	"testing"
+)
+
+func TestAllTasks(t *testing.T) {
+	NewFakeMarathonEndpoint()
+	tasks, err := test_client.AllTasks()
+	AssertOnError(err, t)
+	AssertOnNull(tasks, t)
+	AssertOnInteger(len(tasks.Tasks), 2, t)
 }
 
-func (client *MarathonClient) Applications() (Applications, error) {
-	var apps Applications
-	if err := client.ApiGet(MARATHON_API_APPS, &apps); err != nil {
-		return Applications{}, err
-	} else {
-		return apps, nil
-	}
-}
 
-func (client *MarathonClient) ListApplications() ([]string, error) {
-	if applications, err := client.Applications(); err != nil {
-		return nil, err
-	} else {
-		list := make([]string, 0)
-		for _, application := range applications.Apps {
-			list = append(list, application.ID)
-		}
-		return list, nil
-	}
-}

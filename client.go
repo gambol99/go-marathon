@@ -17,22 +17,36 @@ limitations under the License.
 package marathon
 
 import (
-	"strings"
-	"fmt"
-	"errors"
-	"net/http"
-	"net/url"
-	"io/ioutil"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"net"
+	"net/http"
+	"strings"
+	"syscall"
+	"sync"
+	"io"
+)
+
+const (
+	HTTP_GET 	= "GET"
+	HTTP_PUT 	= "PUT"
+	HTTP_DELETE = "DELETE"
+	HTTP_POST   = "POST"
 )
 
 type Marathon interface {
 	/* watch for changes on a application */
-	Watch(application_id string, channel chan bool)
+	Watch(name string, channel chan bool)
 	/* remove me from watching this service */
-	RemoveWatch(application_id string, channel chan bool)
+	RemoveWatch(name string, channel chan bool)
+	/* check it see if a application exists */
+	HasApplication(name string) (bool, error)
+	/* get a listing of the application ids */
+	ListApplications() ([]string, error)
 	/* get a list of applications from marathon */
-	Applications() (Applications,error)
+	Applications() (Applications, error)
 	/* get a specific application */
 	Application(id string) (Application, error)
 	/* get a list of tasks for a specific application */
@@ -41,8 +55,10 @@ type Marathon interface {
 	AllTasks() (Tasks, error)
 	/* get the marathon url */
 	GetMarathonURL() string
-	/* get the call back url */
-	GetCallbackURL() string
+	/* ping the marathon */
+	Ping() (bool, error)
+	/* grab the marathon server info */
+	Info() (Info, error)
 }
 
 var (
@@ -52,121 +68,201 @@ var (
 	ErrInvalidResponse = errors.New("Invalid response from Marathon")
 	/* some resource does not exists */
 	ErrDoesNotExist = errors.New("The resource does not exist")
+	/* all the marathon endpoints are down */
+	ErrMarathonDown = errors.New("All the Marathon hosts are presently down")
+	/* unable to decode the response */
+	ErrInvalidResult = errors.New("Unable to decode the response from Marathon")
 )
 
-type MarathonClient struct {
+type Client struct {
+	sync.RWMutex
 	/* the configuration for the client */
 	config Config
-	/* the marathon url */
-	hosts []string
+	/* the callback url for subscription */
+	subscription_url string
+	/* the binding for the http service */
+	subscription_iface string
 	/* protocol */
 	protocol string
-	/* the http clinet */
+	/* the http client */
 	http *http.Client
+	/* the marathon cluster */
+	cluster Cluster
+	/* a map of service you wish to listen to */
+	services map[string]chan bool
+}
+
+type ErrorMessage struct {
+	Message string `json:"message"`
 }
 
 func NewClient(config Config) (Marathon, error) {
-	/* step: we need to get the ip address of the interface */
-	var ip_address string
-	var err errors
-
-	/* step: get the ip address, will be required for call backs */
-	if config.event_ipaddress != "" {
-
+	/* step: we parse the url and build a cluster */
+	if cluster, err := NewMarathonCluster(config.URL); err != nil {
+		return nil, err
 	} else {
-		ip_address, err = GetInterfaceAddress(config.Options.Proxy_interface)
-		if err != nil {
-			return nil, err
-		}
+		/* step: create the service marathon client */
+		service := new(Client)
+		service.services = make(map[string]chan bool, 0)
+		service.cluster = cluster
+		service.http = &http.Client{}
+		return service, nil
 	}
-
-	/* step: create the service */
-	service := new(MarathonClient)
-	service.services = make(map[string]chan bool,0)
-	service.marathon_url = fmt.Sprintf("http://%s", strings.TrimPrefix(config.marathon_url, "marathon://") )
-	service.http = http.Transport{Dial: 5}
-	/* step: register with marathon service as a callback for events */
-	service.service_interface = fmt.Sprintf("%s:%d", ip_address, config.events_port)
-	service.callback_url 	  = fmt.Sprintf("http://%s%s", service.service_interface, DEFAULT_EVENTS_URL)
-	return service, nil
 }
 
-func (client *MarathonClient) GetMarathonURL() string {
-	return client.marathon_url
+func (client *Client) GetMarathonURL() string {
+	return client.cluster.Url()
 }
 
-func (client *MarathonClient) GetCallbackURL() string {
-	return client.callback_url
-}
-
-func (client *MarathonClient) GetServiceKey(service_name string, service_port int) string {
-	return fmt.Sprintf("%s:%d", service_name, service_port)
-}
-
-func (client *MarathonClient) ParseMarathonURL(uri string) error {
-	if marathon, err := url.Parse(uri); err != nil {
-		return ErrInvalidEndpoint
+func (client *Client) Ping() (bool, error) {
+	if err := client.ApiGet(MARATHON_API_PING, "", nil); err != nil {
+		return false, err
 	} else {
-		/* check the protocol */
-		if marathon.Scheme != "http" && marathon.Scheme != "https" {
-			return errors.New("Invalid protocol type for marathon url, must be http/https")
-		}
-		client.hosts := strings.SplitN(marathon.Host, ",", -1)
-		client.protocol = marathon.Scheme
+		return true, nil
 	}
-	return nil
 }
 
-func (client *MarathonClient) ApiGet(uri string, response *interface {}) error {
-	if result, _, err := client.HttpGet(uri); err != nil {
+func (client *Client) MarshallJSON(data interface {}) (string, error) {
+	if response, err := json.Marshal(data); err != nil {
+		return "", err
+	} else {
+		return string(response), err
+	}
+}
+
+func (client *Client) UnMarshallDataToJson(stream io.Reader, result interface {}) error {
+	decoder := json.NewDecoder(stream)
+	if err := decoder.Decode(result); err != nil {
 		return err
+	}
+	return nil
+}
+
+func (client *Client) ApiGet(uri, body string, result interface{}) error {
+	_, _, error := client.ApiCall(HTTP_GET, uri, body, result)
+	return error
+}
+
+func (client *Client) ApiPut(uri string, post interface {}, result interface{}) error {
+	var content string
+	var err error
+	if post == nil {
+		content = ""
 	} else {
-		decoder := json.NewDecoder(result)
-		if err := decoder.Decode(response); err != nil {
+		content, err = client.MarshallJSON(post)
+		if err != nil {
 			return err
+		}
+	}
+	_, _, error := client.ApiCall(HTTP_PUT, uri, content, result)
+	return error
+}
+
+func (client *Client) ApiPost(uri string, post interface {}, result interface{}) error {
+	/* step: we need to marshall the post data into json */
+	var content string
+	var err error
+	if post == nil {
+		content = ""
+	} else {
+		content, err = client.MarshallJSON(post)
+		if err != nil {
+			return err
+		}
+	}
+	_, _, error := client.ApiCall(HTTP_PUT, uri, content, result)
+	return error
+}
+
+func (client *Client) ApiDelete(uri, body string, result interface{}) error {
+	_, _, error := client.ApiCall(HTTP_DELETE, uri, body, result)
+	return error
+}
+
+func (client *Client) ApiCall(method, uri, body string, result interface{}) (int, string, error) {
+	if status, content, _, err := client.HttpCall(method, uri, body); err != nil {
+		return 0, "", err
+	} else {
+		client.Debug("ApiCall() status: %s, content: %s\n", status, content)
+		if status >= 200 && status <= 299 {
+			if result != nil {
+				if err := client.UnMarshallDataToJson(strings.NewReader(content), result); err != nil {
+					return status, content, err
+				}
+			}
+			return status, content, nil
+		}
+		switch status {
+		case 500:
+			return 0, "", ErrInvalidResponse
+		case 404:
+			return 0, "", ErrDoesNotExist
+		}
+
+		/* step: lets decode into a error message */
+		var message ErrorMessage
+		if err := client.UnMarshallDataToJson(strings.NewReader(content), &message); err != nil {
+			return status, content, ErrInvalidResponse
 		} else {
-			return nil
+			return status, message.Message, ErrInvalidResult
 		}
 	}
 }
 
-func (client *MarathonClient) ApiPost(uri string, post interface {}, result interface {}) error {
+func (client *Client) HttpCall(method, uri, body string) (int, string, *http.Response, error) {
+	/* step: get a member from the cluster */
+	if marathon, err := client.cluster.GetMember(); err != nil {
+		return 0, "", nil, err
+	} else {
+		url := fmt.Sprintf("%s/%s", marathon, uri)
+		client.Debug("HTTPCall() method: %s, uri: %s, url: %s\n", method, uri, url)
 
-
-	return nil
-}
-
-func (client *MarathonClient) ApiDelete(uri string, result interface {}) error {
-
-	return nil
-}
-
-func (client *MarathonClient) HttpGet(uri string) (string, int, error) {
-	/* step: we can try any of the endpoints */
-	for _, marathon := range client.hosts {
-		/* @@todo will move this over to a cluster formation later */
-		request_url := fmt.Sprintf("%s://%s%s", client.protocol, marathon, uri)
-		if response, err := client.http.Get(request_url); err != nil {
-			/* step: lets try another host perhaps? */
-			continue
+		if request, err := http.NewRequest(method, url, strings.NewReader(body)); err != nil {
+			return 0, "", nil, err
 		} else {
-			/* step: lets read in the http body */
-			if body, err := ioutil.ReadAll(response.Body); err != nil {
-				return "", 0, err
-			} else {
-				status_code := response.StatusCode
-				if status_code >= 200 || status_code <= 299 {
-					return body, status_code, nil
-				} else {
-					switch status_code {
-					case 404:
-						return "", status_code, ErrDoesNotExist
+			request.Header.Add("Content-Type", "application/json")
+			request.Header.Add("X-Client", "go-marathon")
+			request.Header.Add("X-Client-Version", VERSION)
+
+			var content string
+			/* step: perform the request */
+			if response, err := client.http.Do(request); err != nil {
+				switch error_type := err.(type) {
+				case *net.OpError:
+					switch error_type.Op {
+					case "dial", "read":
+						/* step: we need to mark the host down */
+						client.cluster.MarkDown()
+						/* step: retry the request */
+						return client.HttpCall(method, uri, body)
 					default:
-						return body, status_code, ErrInvalidResponse
+					}
+				case *syscall.Errno:
+					switch *error_type {
+					case syscall.ECONNREFUSED:
+						/* step: we need to mark the host down */
+						client.cluster.MarkDown()
+						/* step: retry the request */
+						return client.HttpCall(method, uri, body)
 					}
 				}
+				return 0, "", response, err
+			} else {
+				client.Debug("HTTPCall() call successful, status: %d\n", response.StatusCode)
+				/* step: lets read in any content */
+				if response.ContentLength > 0 {
+					client.Debug("HTTPCall() method: %s, uri: %s, url: %s\n", method, uri, url)
+					/* step: read in the content from the request */
+					response_content, err := ioutil.ReadAll(response.Body)
+					if err != nil {
+						return response.StatusCode, "", response, err
+					}
+					content = string(response_content)
+				}
+				/* step: return the request */
+				return response.StatusCode, content, response, nil
 			}
 		}
 	}
-	return "", 0, errors.New("Unable to make call to marathon")
+	return 0, "", nil, errors.New("Unable to make call to marathon")
 }

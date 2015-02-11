@@ -16,15 +16,41 @@ limitations under the License.
 
 package marathon
 
-type Task struct {
-	AppID     			string 				  `json:"appId"`
-	Host      			string 				  `json:"host"`
-	ID        			string 			      `json:"id"`
-	HealthCheckResult   []*HealthCheckResult  `json:"healthCheckResults"`
-	Ports     			[]int  				  `json:"ports"`
-	ServicePorts    	[]int  				  `json:"servicePorts"`
-	StagedAt  			string 				  `json:"stagedAt"`
-	StartedAt 			string 				  `json:"startedAt"`
-	Version   			string 				  `json:"version"`
+import (
+	"fmt"
+)
+
+type Tasks struct {
+	Tasks []Task `json:"tasks"`
 }
 
+type Task struct {
+	AppID             string               `json:"appId"`
+	Host              string               `json:"host"`
+	ID                string               `json:"id"`
+	HealthCheckResult []*HealthCheckResult `json:"healthCheckResults"`
+	Ports             []int                `json:"ports"`
+	ServicePorts      []int                `json:"servicePorts"`
+	StagedAt          string               `json:"stagedAt"`
+	StartedAt         string               `json:"startedAt"`
+	Version           string               `json:"version"`
+}
+
+func (client *Client) AllTasks() (Tasks, error) {
+	var tasks Tasks
+	if err := client.ApiGet(MARATHON_API_TASKS, "", &tasks); err != nil {
+		fmt.Printf("error: %s", err)
+		return tasks, err
+	} else {
+		return tasks, nil
+	}
+}
+
+func (client *Client) Tasks(application_id string) (Tasks, error) {
+	var tasks Tasks
+	if err := client.ApiGet(fmt.Sprintf("%s%s/tasks", MARATHON_API_APPS, application_id), "", &tasks); err != nil {
+		return tasks, err
+	} else {
+		return tasks, nil
+	}
+}
