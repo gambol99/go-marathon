@@ -2,6 +2,8 @@
 *.o
 *.a
 *.so
+go-marathon.iml
+.idea/
 
 # Folders
 _obj
