@@ -9,18 +9,20 @@ AUTHOR=gambol99
 HARDWARE=$(shell uname -m)
 VERSION=$(shell awk '/const Version/ { print $$4 }' version.go | sed 's/"//g')
 
-.PHONY: test
-
+.PHONY: ruby-centos
 ruby-centos:
 	echo "install"
 
+.PHONY: ruby-ubuntu
 ruby-ubuntu:
 	apt-get install -y ruby bundler
 
+.PHONY: ruby-install
 ruby-install:
 	[ -x /usr/bin/apt-get ] && make ruby-ubuntu || :
 	[ -x /usr/bin/yum ]     && make ruby-centos || :
 
+.PHONY: test
 test: ruby-install
 	(cd tests/rest-api && bundler install --deployment)
 	echo "Starting the Rest API for testing"
@@ -30,6 +32,11 @@ test: ruby-install
 	curl localhost:3000/v2/info
 	thin stop -c tests/rest-api
 
+.PHONY: changelog
 changelog: release
 	git log $(shell git tag | tail -n1)..HEAD --no-merges --format=%B > changelog
 
+.PHONY: update
+update:
+	git pull
+	make
