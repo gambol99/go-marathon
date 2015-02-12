@@ -59,25 +59,35 @@ type MarathonClient struct {
 	config Config
 	/* the marathon url */
 	hosts []string
+	/* protocol */
+	protocol string
+	/* the http clinet */
+	http *http.Client
 }
 
 func NewClient(config Config) (Marathon, error) {
 	/* step: we need to get the ip address of the interface */
-	ip_address, err := utils.GetLocalIPAddress(config.Options.Proxy_interface)
-	if err != nil {
-		return nil, err
+	var ip_address string
+	var err errors
+
+	/* step: get the ip address, will be required for call backs */
+	if config.event_ipaddress != "" {
+
+	} else {
+		ip_address, err = GetInterfaceAddress(config.Options.Proxy_interface)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	/* step: create the service */
 	service := new(MarathonClient)
 	service.services = make(map[string]chan bool,0)
 	service.marathon_url = fmt.Sprintf("http://%s", strings.TrimPrefix(config.marathon_url, "marathon://") )
-
+	service.http = http.Transport{Dial: 5}
 	/* step: register with marathon service as a callback for events */
 	service.service_interface = fmt.Sprintf("%s:%d", ip_address, config.events_port)
 	service.callback_url 	  = fmt.Sprintf("http://%s%s", service.service_interface, DEFAULT_EVENTS_URL)
-
-
 	return service, nil
 }
 
@@ -97,11 +107,14 @@ func (client *MarathonClient) ParseMarathonURL(uri string) error {
 	if marathon, err := url.Parse(uri); err != nil {
 		return ErrInvalidEndpoint
 	} else {
+		/* check the protocol */
+		if marathon.Scheme != "http" && marathon.Scheme != "https" {
+			return errors.New("Invalid protocol type for marathon url, must be http/https")
+		}
 		client.hosts := strings.SplitN(marathon.Host, ",", -1)
-
-
-		return nil
+		client.protocol = marathon.Scheme
 	}
+	return nil
 }
 
 func (client *MarathonClient) ApiGet(uri string, response *interface {}) error {
@@ -129,25 +142,31 @@ func (client *MarathonClient) ApiDelete(uri string, result interface {}) error {
 }
 
 func (client *MarathonClient) HttpGet(uri string) (string, int, error) {
-	url := fmt.Sprintf("%s/%s", client.marathon_url, uri)
-	if response, err := http.Get(url); err != nil {
-		return "", 0, err
-	} else {
-		/* step: lets read in the http body */
-		if body, err := ioutil.ReadAll(response.Body); err != nil {
-			return "", 0, err
+	/* step: we can try any of the endpoints */
+	for _, marathon := range client.hosts {
+		/* @@todo will move this over to a cluster formation later */
+		request_url := fmt.Sprintf("%s://%s%s", client.protocol, marathon, uri)
+		if response, err := client.http.Get(request_url); err != nil {
+			/* step: lets try another host perhaps? */
+			continue
 		} else {
-			status_code := response.StatusCode
-			if status_code >= 200 || status_code <= 299 {
-				return body, status_code, nil
+			/* step: lets read in the http body */
+			if body, err := ioutil.ReadAll(response.Body); err != nil {
+				return "", 0, err
 			} else {
-				switch status_code {
-				case 404:
-					return "", status_code, ErrDoesNotExist
-				default:
-					return body, status_code, ErrInvalidResponse
+				status_code := response.StatusCode
+				if status_code >= 200 || status_code <= 299 {
+					return body, status_code, nil
+				} else {
+					switch status_code {
+					case 404:
+						return "", status_code, ErrDoesNotExist
+					default:
+						return body, status_code, ErrInvalidResponse
+					}
 				}
 			}
 		}
 	}
+	return "", 0, errors.New("Unable to make call to marathon")
 }
