@@ -21,7 +21,6 @@ import (
 	"time"
 )
 
-
 var cluster Cluster
 
 func GetFakeCluster() {
@@ -64,5 +63,3 @@ func TestMarkdown(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 	AssertOnInteger(len(cluster.Active()), 2, t)
 }
-
-

@@ -20,18 +20,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"strings"
-	"syscall"
 	"sync"
-	"io"
+	"syscall"
 )
 
 const (
-	HTTP_GET 	= "GET"
-	HTTP_PUT 	= "PUT"
+	HTTP_GET    = "GET"
+	HTTP_PUT    = "PUT"
 	HTTP_DELETE = "DELETE"
 	HTTP_POST   = "POST"
 )
@@ -80,6 +80,8 @@ var (
 	ErrMarathonDown = errors.New("All the Marathon hosts are presently down")
 	/* unable to decode the response */
 	ErrInvalidResult = errors.New("Unable to decode the response from Marathon")
+	/* invalid argument */
+	ErrInvalidArgument = errors.New("The argument passed is invalid")
 )
 
 type Client struct {
@@ -130,7 +132,7 @@ func (client *Client) Ping() (bool, error) {
 	}
 }
 
-func (client *Client) MarshallJSON(data interface {}) (string, error) {
+func (client *Client) MarshallJSON(data interface{}) (string, error) {
 	if response, err := json.Marshal(data); err != nil {
 		return "", err
 	} else {
@@ -138,7 +140,7 @@ func (client *Client) MarshallJSON(data interface {}) (string, error) {
 	}
 }
 
-func (client *Client) UnMarshallDataToJson(stream io.Reader, result interface {}) error {
+func (client *Client) UnMarshallDataToJson(stream io.Reader, result interface{}) error {
 	decoder := json.NewDecoder(stream)
 	if err := decoder.Decode(result); err != nil {
 		return err
@@ -151,7 +153,7 @@ func (client *Client) ApiGet(uri, body string, result interface{}) error {
 	return error
 }
 
-func (client *Client) ApiPut(uri string, post interface {}, result interface{}) error {
+func (client *Client) ApiPut(uri string, post interface{}, result interface{}) error {
 	var content string
 	var err error
 	if post == nil {
@@ -166,7 +168,7 @@ func (client *Client) ApiPut(uri string, post interface {}, result interface{}) 
 	return error
 }
 
-func (client *Client) ApiPost(uri string, post interface {}, result interface{}) error {
+func (client *Client) ApiPost(uri string, post interface{}, result interface{}) error {
 	/* step: we need to marshall the post data into json */
 	var content string
 	var err error

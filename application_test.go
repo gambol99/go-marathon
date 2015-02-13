@@ -34,7 +34,7 @@ func TestListApplications(t *testing.T) {
 	AssertOnError(err, t)
 	AssertOnNull(applications, t)
 	AssertOnInteger(len(applications), 1, t)
-	AssertOnString(applications[0],FAKE_APP_NAME, t)
+	AssertOnString(applications[0], FAKE_APP_NAME, t)
 }
 
 func TestListApplication(t *testing.T) {
@@ -42,7 +42,7 @@ func TestListApplication(t *testing.T) {
 	application, err := test_client.Application(FAKE_APP_NAME)
 	AssertOnError(err, t)
 	AssertOnNull(application, t)
-	AssertOnString(application.ID,FAKE_APP_NAME, t)
+	AssertOnString(application.ID, FAKE_APP_NAME, t)
 	AssertOnNull(application.HealthChecks, t)
 	AssertOnNull(application.Tasks, t)
 	AssertOnInteger(len(application.HealthChecks), 1, t)

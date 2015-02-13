@@ -19,7 +19,6 @@ package marathon
 import (
 	"errors"
 	"fmt"
-
 )
 
 var (
@@ -31,7 +30,7 @@ type Applications struct {
 }
 
 type ApplicationWrap struct {
-	Application Application	`json:"app"`
+	Application Application `json:"app"`
 }
 
 type Application struct {
@@ -100,24 +99,61 @@ func (client *Client) CreateApplication(application Application) (bool, error) {
 }
 
 func (client *Client) HasApplication(name string) (bool, error) {
-	if applications, err := client.ListApplications(); err != nil {
-		return false, err
+	client.Debug("Checking if application: %s exists in marathon", name)
+	if name == "" {
+		return false, ErrInvalidArgument
 	} else {
-		for _, id := range applications {
-			if name == id {
-				return true, nil
+		if applications, err := client.ListApplications(); err != nil {
+			return false, err
+		} else {
+			for _, id := range applications {
+				if name == id {
+					client.Debug("The application: %s presently exist in maration", name)
+					return true, nil
+				}
 			}
+		}
+		return false, nil
+	}
+}
+
+func (client *Client) DeleteApplication(application Application) (bool, error) {
+	/* step: check of the application already exists */
+	if found, err := client.HasApplication(application.ID); err != nil {
+		return false, err
+	} else if found {
+		return false, ErrDoesNotExist
+	} else {
+		/* step: delete the application */
+		client.Debug("Deleting the application: %s", application.ID)
+		if err := client.ApiDelete(fmt.Sprintf("%s%s", MARATHON_API_APPS, application.ID), "", nil); err != nil {
+			return false, err
+		} else {
+
 		}
 	}
 	return false, nil
 }
 
-func (client *Client) DeleteApplication(app Application) (bool, error) {
+func (client *Client) RestartApplication(application Application, force bool) (Deployment, error) {
+	client.Debug("Restarting the application: %s, force: %s", application, force)
+	/* step: check the application exists to restart */
+	if found, err := client.HasApplication(application.ID); err != nil {
+		return Deployment{}, err
+	} else if found {
+		return Deployment{}, ErrApplicationExists
+	}
 
-	return false, nil
+	return Deployment{}, nil
 }
 
-func (client *Client) RestartApplication(app Application, force bool) (Deployment, error) {
+func (client *Client) ScaleApplication(application Application, instances int) (Deployment, error) {
+	client.Debug("ScaleApplication: application: %s, instance: %d", application, instances)
+	if found, err := client.HasApplication(application.ID); err != nil {
+		return Deployment{}, err
+	} else if !found {
+		return Deployment{}, ErrDoesNotExist
+	}
 
 	return Deployment{}, nil
 }

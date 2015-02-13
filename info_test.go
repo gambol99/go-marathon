@@ -28,4 +28,3 @@ func TestInfo(t *testing.T) {
 	AssertOnString(info.Leader, "127.0.0.1:8080", t)
 	AssertOnString(info.Version, "0.7.0-SNAPSHOT", t)
 }
-

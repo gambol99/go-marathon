@@ -31,10 +31,10 @@ type Config struct {
 
 var (
 	DefaultConfig = Config{
-		URL:    			"http://localhost:8080",
-		EventsPort:     	DEFAULT_EVENTS_PORT,
-		EventsInterface:	DEFAULT_EVENTS_BIND,
-		EventsIpAddress: 	"",
-		Debug:              false,
+		URL:             "http://localhost:8080",
+		EventsPort:      DEFAULT_EVENTS_PORT,
+		EventsInterface: DEFAULT_EVENTS_BIND,
+		EventsIpAddress: "",
+		Debug:           false,
 	}
 )

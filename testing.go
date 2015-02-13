@@ -17,15 +17,15 @@ limitations under the License.
 package marathon
 
 import (
-	"strings"
-	"testing"
 	"fmt"
 	"os"
+	"strings"
+	"testing"
 )
 
 const (
 	FAKE_MARATHON_URL = "http://127.0.0.1:3000,127.0.0.1:3000"
-	FAKE_APP_NAME = "/fake_app"
+	FAKE_APP_NAME     = "/fake_app"
 )
 
 var test_client Marathon
@@ -43,7 +43,7 @@ func NewFakeMarathonEndpoint() {
 	}
 }
 
-func AssertOnNull(data interface {}, t *testing.T) {
+func AssertOnNull(data interface{}, t *testing.T) {
 	if data == nil {
 		t.Fail()
 	}
@@ -72,4 +72,3 @@ func AssertOnInteger(value, expected int, t *testing.T) {
 		t.Errorf("failed, value %d, expected: %d", value, expected)
 	}
 }
-

@@ -18,11 +18,11 @@ package marathon
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
-	"fmt"
 )
 
 type EventSubscription struct {
@@ -133,7 +133,7 @@ func (client *Client) HandleMarathonEvent(writer http.ResponseWriter, request *h
 func (client *Client) WatchList() []string {
 	client.RLock()
 	defer client.RUnlock()
-	list := make([]string,0)
+	list := make([]string, 0)
 	for name, _ := range client.services {
 		list = append(list, name)
 	}
