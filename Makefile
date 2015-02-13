@@ -15,7 +15,7 @@ build:
 	go build
 
 start-restapi:
-	thin -d -q start -c tests/rest-api
+  thin -d -q start -c tests/rest-api
 
 stop-restapi:
 	thin stop -c tests/rest-api
@@ -23,8 +23,7 @@ stop-restapi:
 test:
 	make start-restapi
 	sleep 3
-	echo "Performin the test"
-
+	go test -v
 	make stop-restapi
 
 api:
