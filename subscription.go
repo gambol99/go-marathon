@@ -17,11 +17,12 @@ limitations under the License.
 package marathon
 
 import (
-	"time"
 	"encoding/json"
 	"net/http"
-	"fmt"
 	"strings"
+	"sync"
+	"time"
+	"fmt"
 )
 
 type EventSubscription struct {
@@ -31,50 +32,78 @@ type EventSubscription struct {
 	CallbackURLs []string `json:"CallbackUrls"`
 }
 
-func (client *MarathonClient) RegisterEvents() error {
-	registration := fmt.Sprintf("%s/%s?callbackUrl=%s", r.marathon_url, MARATHON_API_SUBSCRIPTION, r.callback_url)
+type Subscriptions struct {
+	CallbackURLs []string `json:"callbackUrls"`
+}
 
-	/* step: register the http handler and start listening */
-	http.HandleFunc(DEFAULT_EVENTS_URL, client.HandleMarathonEvent)
-	go func() {
-		//glog.Infof("Starting to listen to http events from Marathon on %s", service.marathon_url)
-		//http.ListenAndServe(config.service_interface, nil)
-	}()
+var (
+	subscriptionLock sync.Once
+)
 
+func (client *Client) Subscriptions() (Subscriptions, error) {
+	var subscriptions Subscriptions
+	if err := client.ApiGet(MARATHON_API_SUBSCRIPTION, "", &subscriptions); err != nil {
+		return Subscriptions{}, err
+	} else {
+		return subscriptions, nil
+	}
+}
+
+func (client *Client) RegisterSubscription() error {
+	/* step: create the call back handler */
+	subscriptionLock.Do(func() {
+		/* step: register the handler */
+		http.HandleFunc(DEFAULT_EVENTS_URL, client.HandleMarathonEvent)
+		/* step: register and listen */
+		go http.ListenAndServe(client.subscription_iface, nil)
+		/* step: we register with the subscription service */
+	})
 	/* step: attempt to register with the marathon callback */
 	attempts := 1
 	max_attempts := 3
 	for {
-		if response, err := http.Post(registration, "application/json", nil); err != nil {
-			//glog.Errorf("Failed to post Marathon registration for callback service, error: %s", err )
-		} else {
-			if response.StatusCode < 200 || response.StatusCode >= 300 {
-				//glog.Errorf("Failed to register with the Marathon event callback service, error: %s", response.Body)
-			} else {
-				//glog.Infof("Successfully registered with Marathon to receive events")
-				return nil
-			}
+		uri := fmt.Sprintf("%s", MARATHON_API_SUBSCRIPTION)
+		if err := client.ApiPost(uri, "", nil); err != nil {
+			return err
 		}
 		/* check: have we reached the max attempts? */
 		if attempts >= max_attempts {
-			/* choice: if after x attempts we can't register with Marathon, there's not much point */
-			//glog.Fatalf("Failed to register with Marathon's callback service %d time, no point in continuing", attempts)
+			return ErrInvalidResponse
 		}
-
 		/* choice: lets go to sleep for x seconds */
 		time.Sleep(3 * time.Second)
 		attempts += 1
 	}
+}
+
+func (client *Client) DeregisterSubscription() error {
+	/* step: check if we are already subscripted */
+	found, err := client.HasSubscription()
+	if err != nil {
+		return err
+	} else if found {
+		/* step: remove from the list of subscriptions */
+
+	}
 	return nil
 }
 
-func (client *MarathonClient) DeregisterEvents(callback string, marathon string) error {
-	/** @@TODO := needs to be implemented, not to leave loose callbacks around */
-	return nil
+func (client *Client) HasSubscription() (bool, error) {
+	if subscriptions, err := client.Subscriptions(); err != nil {
+		return false, err
+	} else {
+		for _, subscription := range subscriptions.CallbackURLs {
+			if client.subscription_url == subscription {
+				return true, nil
+			}
+
+		}
+	}
+	return false, nil
 }
 
-func (client *MarathonClient) HandleMarathonEvent(writer http.ResponseWriter, request *http.Request) {
-	var event MarathonEvent
+func (client *Client) HandleMarathonEvent(writer http.ResponseWriter, request *http.Request) {
+	var event Event
 	decoder := json.NewDecoder(request.Body)
 	if err := decoder.Decode(&event); err != nil {
 
@@ -91,9 +120,8 @@ func (client *MarathonClient) HandleMarathonEvent(writer http.ResponseWriter, re
 		}
 		/* step: we notify the receiver */
 		for service, listener := range client.services {
-			//glog.Infof("FOUND SERVICE, key: %s, channel: %v", service, listener)
 			if strings.HasPrefix(service, event.AppID) {
-				//glog.Infof("SENDING EVENT, key: %s, channel: %v", service, listener)
+
 				go func() {
 					listener <- true
 				}()
@@ -102,18 +130,24 @@ func (client *MarathonClient) HandleMarathonEvent(writer http.ResponseWriter, re
 	}
 }
 
-func (client MarathonClient) Watch(service_name string, service_port int, channel chan bool) {
-	client.Lock()
-	defer client.Unlock()
-	service_key := client.GetServiceKey(service_name, service_port)
-	client.services[service_key] = channel
+func (client *Client) WatchList() []string {
+	client.RLock()
+	defer client.RUnlock()
+	list := make([]string,0)
+	for name, _ := range client.services {
+		list = append(list, name)
+	}
+	return list
 }
 
-func (client MarathonClient) RemoveWatch(service_name string, service_port int, channel chan bool) {
+func (client *Client) Watch(name string, channel chan bool) {
 	client.Lock()
 	defer client.Unlock()
-	service_key := client.GetServiceKey(service_name, service_port)
-	delete(client.services,service_key)
+	client.services[name] = channel
 }
 
-
+func (client *Client) RemoveWatch(name string, channel chan bool) {
+	client.Lock()
+	defer client.Unlock()
+	delete(client.services, name)
+}

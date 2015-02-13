@@ -16,25 +16,29 @@ limitations under the License.
 
 package marathon
 
-type Config struct {
-	/* the url for marathon */
-	URL string
-	/* event handler port */
-	EventsPort int
-	/* the interface we should be listening on for events */
-	EventsInterface string
-	/* the ip address you want to listen on */
-	EventsIpAddress string
-	/* switch on debugging */
-	Debug bool
-}
-
-var (
-	DefaultConfig = Config{
-		URL:    			"http://localhost:8080",
-		EventsPort:     	DEFAULT_EVENTS_PORT,
-		EventsInterface:	DEFAULT_EVENTS_BIND,
-		EventsIpAddress: 	"",
-		Debug:              false,
-	}
+import (
+	"errors"
+	"net"
+	"strings"
 )
+
+func GetInterfaceAddress(name string) (string, error) {
+	if interfaces, err := net.Interfaces(); err != nil {
+		return "", err
+	} else {
+		for _, iface := range interfaces {
+			/* step: get only the interface we're interested in */
+			if iface.Name == name {
+				addrs, err := iface.Addrs()
+				if err != nil {
+					return "", err
+				}
+				/* step: return the first address */
+				if len(addrs) > 0 {
+					return strings.SplitN(addrs[0].String(), "/", 2)[0], nil
+				}
+			}
+		}
+	}
+	return "", errors.New("Unable to determine or find the interface")
+}

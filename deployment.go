@@ -16,7 +16,9 @@ limitations under the License.
 
 package marathon
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Deployment struct {
 	AffectedApps   []string          `json:"affectedApps"`
@@ -33,20 +35,20 @@ type DeploymentStep struct {
 	App    string `json:"app"`
 }
 
-func (client *MarathonClient) Deployments() ([]Deployment, error) {
+func (client *Client) Deployments() ([]Deployment, error) {
 	var deployments []Deployment
-	if err := client.ApiGet(MARATHON_API_DEPLOYMENTS, &deployments); err != nil {
+	if err := client.ApiGet(MARATHON_API_DEPLOYMENTS, "", &deployments); err != nil {
 		return nil, err
 	} else {
 		return deployments, nil
 	}
 }
 
-func (client *MarathonClient) DeleteDeployment(deployment Deployment, force bool) (Deployment, error) {
+func (client *Client) DeleteDeployment(deployment Deployment, force bool) (Deployment, error) {
 	var result Deployment
-	if err := client.ApiDelete(fmt.Sprintf("%s/%s", MARATHON_API_DEPLOYMENTS, deployment.ID), &result); err != nil {
-		return result, err
+	if err := client.ApiDelete(fmt.Sprintf("%s/%s", MARATHON_API_DEPLOYMENTS, deployment.ID), "", &result); err != nil {
+		return Deployment{}, err
 	} else {
-		return nil, nil
+		return result, nil
 	}
 }

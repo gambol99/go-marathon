@@ -16,25 +16,14 @@ limitations under the License.
 
 package marathon
 
-type Config struct {
-	/* the url for marathon */
-	URL string
-	/* event handler port */
-	EventsPort int
-	/* the interface we should be listening on for events */
-	EventsInterface string
-	/* the ip address you want to listen on */
-	EventsIpAddress string
-	/* switch on debugging */
-	Debug bool
+import (
+	"testing"
+)
+
+func TestDeployments(t *testing.T) {
+	NewFakeMarathonEndpoint()
+	//deployments, err := test_client.Deployments()
+	//AssertOnError(err, t)
+	//AssertOnNull(deployments, t)
 }
 
-var (
-	DefaultConfig = Config{
-		URL:    			"http://localhost:8080",
-		EventsPort:     	DEFAULT_EVENTS_PORT,
-		EventsInterface:	DEFAULT_EVENTS_BIND,
-		EventsIpAddress: 	"",
-		Debug:              false,
-	}
-)

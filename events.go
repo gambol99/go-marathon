@@ -34,11 +34,10 @@ type EventStatusUpdate struct {
 }
 
 type EventHealthCheckChanged struct {
-	EventType  string `json:"eventType"`
-	Timestamp  string `json:"timestamp,omitempty"`
-	AppID      string `json:"appId"`
-	TaskID     string `json:"taskId"`
-	Version    string `json:"version,omitempty"`
-	Alive  	   bool   `json:"alive"`
+	EventType string `json:"eventType"`
+	Timestamp string `json:"timestamp,omitempty"`
+	AppID     string `json:"appId"`
+	TaskID    string `json:"taskId"`
+	Version   string `json:"version,omitempty"`
+	Alive     bool   `json:"alive"`
 }
-

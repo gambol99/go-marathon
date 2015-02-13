@@ -16,31 +16,6 @@ limitations under the License.
 
 package marathon
 
-type Container struct {
-	Type    string    `json:"type,omitempty"`
-	Docker  *Docker   `json:"docker,omitempty"`
-	Volumes []*Volume `json:"volumes,omitempty"`
-}
-
-type Volume struct {
-	ContainerPath string `json:"containerPath,omitempty"`
-	HostPath      string `json:"hostPath,omitempty"`
-	Mode          string `json:"mode,omitempty"`
-}
-
-type Docker struct {
-	Image        string         `json:"image,omitempty"`
-	Network      string         `json:"network,omitempty"`
-	PortMappings []*PortMapping `json:"portMappings,omitempty"`
-}
-
-type PortMapping struct {
-	ContainerPort int    `json:"containerPort,omitempty"`
-	HostPort      int    `json:"hostPort,omitempty"`
-	ServicePort   int    `json:"servicePort,omitempty"`
-	Protocol      string `json:"protocol,omitempty"`
-}
-
 type HealthCheck struct {
 	Protocol           string `json:"protocol,omitempty"`
 	Path               string `json:"path,omitempty"`
@@ -51,10 +26,10 @@ type HealthCheck struct {
 }
 
 type HealthCheckResult struct {
-	Alive  				bool   `json:"alive"`
+	Alive               bool   `json:"alive"`
 	ConsecutiveFailures int    `json:"consecutiveFailures"`
-	FirstSuccess		string `json:"firstSuccess"`
-	LastFailure			string `json:"lastFailure"`
-	LastSuccess			string `json:"lastSuccess"`
-	TaskID				string `json:"taskId"`
+	FirstSuccess        string `json:"firstSuccess"`
+	LastFailure         string `json:"lastFailure"`
+	LastSuccess         string `json:"lastSuccess"`
+	TaskID              string `json:"taskId"`
 }

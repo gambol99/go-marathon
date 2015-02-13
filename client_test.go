@@ -16,25 +16,20 @@ limitations under the License.
 
 package marathon
 
-type Config struct {
-	/* the url for marathon */
-	URL string
-	/* event handler port */
-	EventsPort int
-	/* the interface we should be listening on for events */
-	EventsInterface string
-	/* the ip address you want to listen on */
-	EventsIpAddress string
-	/* switch on debugging */
-	Debug bool
+import (
+	"testing"
+)
+
+func TestPing(t *testing.T) {
+	NewFakeMarathonEndpoint()
+	found, err := test_client.Ping()
+	AssertOnError(err, t)
+    AssertOnBool(found, true, t)
 }
 
-var (
-	DefaultConfig = Config{
-		URL:    			"http://localhost:8080",
-		EventsPort:     	DEFAULT_EVENTS_PORT,
-		EventsInterface:	DEFAULT_EVENTS_BIND,
-		EventsIpAddress: 	"",
-		Debug:              false,
-	}
-)
+func TestGetMarathonURL(t *testing.T) {
+	NewFakeMarathonEndpoint()
+	AssertOnString(test_client.GetMarathonURL(),FAKE_MARATHON_URL,t)
+}
+
+
