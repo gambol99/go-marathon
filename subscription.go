@@ -130,13 +130,23 @@ func (client *Client) HandleMarathonEvent(writer http.ResponseWriter, request *h
 	}
 }
 
-func (client Client) Watch(name string, channel chan bool) {
+func (client *Client) WatchList() []string {
+	client.RLock()
+	defer client.RUnlock()
+	list := make([]string,0)
+	for name, _ := range client.services {
+		list = append(list, name)
+	}
+	return list
+}
+
+func (client *Client) Watch(name string, channel chan bool) {
 	client.Lock()
 	defer client.Unlock()
 	client.services[name] = channel
 }
 
-func (client Client) RemoveWatch(name string, channel chan bool) {
+func (client *Client) RemoveWatch(name string, channel chan bool) {
 	client.Lock()
 	defer client.Unlock()
 	delete(client.services, name)

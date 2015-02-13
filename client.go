@@ -41,6 +41,8 @@ type Marathon interface {
 	Watch(name string, channel chan bool)
 	/* remove me from watching this service */
 	RemoveWatch(name string, channel chan bool)
+	/* a list of service being watched */
+	WatchList() []string
 	/* check it see if a application exists */
 	HasApplication(name string) (bool, error)
 	/* get a listing of the application ids */
@@ -53,6 +55,12 @@ type Marathon interface {
 	Tasks(id string) (Tasks, error)
 	/* get a list of all tasks */
 	AllTasks() (Tasks, error)
+	/* get a list of the deployments */
+	Deployments() ([]Deployment, error)
+	/* delete a deployment */
+	DeleteDeployment(deployment Deployment, force bool) (Deployment, error)
+	/* a list of current subscriptions */
+	Subscriptions() (Subscriptions, error)
 	/* get the marathon url */
 	GetMarathonURL() string
 	/* ping the marathon */
