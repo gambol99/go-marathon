@@ -15,7 +15,7 @@ build:
 	go build
 
 start-restapi:
-  thin -d -q start -c tests/rest-api
+	thin -d -q start -c tests/rest-api
 
 stop-restapi:
 	thin stop -c tests/rest-api
