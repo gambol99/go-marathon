@@ -34,7 +34,7 @@ var test_client Marathon
 func NewFakeMarathonEndpoint() {
 	if test_client == nil {
 		var err error
-		config := DefaultConfig
+		config := NewDefaultConfig()
 		config.URL = FAKE_MARATHON_URL
 		test_client, err = NewClient(config)
 		if err != nil {

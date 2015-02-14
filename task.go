@@ -36,6 +36,11 @@ type Task struct {
 	Version           string               `json:"version"`
 }
 
+func (task Task) String() string {
+	return fmt.Sprintf("id: %s, application: %s, host: %s, ports: %s, created: %s",
+		task.ID, task.AppID, task.Host, task.Ports, task.StartedAt)
+}
+
 func (client *Client) AllTasks() (*Tasks, error) {
 	tasks := new(Tasks)
 	if err := client.ApiGet(MARATHON_API_TASKS, "", tasks); err != nil {

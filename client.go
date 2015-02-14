@@ -116,7 +116,7 @@ type Client struct {
 	services map[string]chan bool
 }
 
-type ErrorMessage struct {
+type Message struct {
 	Message string `json:"message"`
 }
 
@@ -224,7 +224,7 @@ func (client *Client) ApiCall(method, uri, body string, result interface{}) (int
 		}
 
 		/* step: lets decode into a error message */
-		var message ErrorMessage
+		var message Message
 		if err := client.UnMarshallDataToJson(strings.NewReader(content), &message); err != nil {
 			return status, content, ErrInvalidResponse
 		} else {

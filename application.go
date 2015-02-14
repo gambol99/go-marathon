@@ -54,6 +54,10 @@ type Application struct {
 	Version       string            `json:"version,omitempty"`
 }
 
+func (application Application) String() string {
+	return fmt.Sprintf("id: %s, version: %s", application.ID, application.Version)
+}
+
 type ApplicationVersions struct {
 	Versions []string `json:"versions"`
 }
