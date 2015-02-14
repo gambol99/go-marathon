@@ -34,7 +34,7 @@ var test_client Marathon
 func NewFakeMarathonEndpoint() {
 	if test_client == nil {
 		var err error
-		config := DefaultConfig
+		config := NewDefaultConfig()
 		config.URL = FAKE_MARATHON_URL
 		test_client, err = NewClient(config)
 		if err != nil {
@@ -46,32 +46,41 @@ func NewFakeMarathonEndpoint() {
 
 func AssertOnNull(data interface{}, t *testing.T) {
 	if data == nil {
-		t.Fail()
+		t.FailNow()
 	}
 }
 
 func AssertOnError(err error, t *testing.T) {
 	if err != nil {
-		t.Fail()
+		t.Errorf("failed: was not exptecting an error")
+		t.FailNow()
+	}
+}
+
+func AssertOnNoError(err error, t *testing.T) {
+	if err == nil {
+		t.Errorf("failed: error not nil, expected: a error")
+		t.FailNow()
 	}
 }
 
 func AssertOnBool(value, expected bool, t *testing.T) {
 	if value != expected {
 		t.Errorf("failed: value: %t, expected: %t", value, expected)
-		t.Fail()
+		t.FailNow()
 	}
 }
 
 func AssertOnString(value, expected string, t *testing.T) {
 	if !strings.Contains(value, expected) {
 		t.Errorf("failed, value %s, expected: %s", value, expected)
+		t.FailNow()
 	}
 }
 
 func AssertOnInteger(value, expected int, t *testing.T) {
 	if value != expected {
 		t.Errorf("failed, value %d, expected: %d", value, expected)
-		t.Fail()
+		t.FailNow()
 	}
 }

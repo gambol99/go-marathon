@@ -34,7 +34,7 @@ type ApplicationWrap struct {
 }
 
 type Application struct {
-	ID            string            `json:"id"`
+	ID            string            `json:"id",omitempty`
 	Cmd           string            `json:"cmd,omitempty"`
 	Constraints   [][]string        `json:"constraints,omitempty"`
 	Container     *Container        `json:"container,omitempty"`
@@ -52,6 +52,18 @@ type Application struct {
 	TasksStaged   int               `json:"tasksStaged,omitempty"`
 	Uris          []string          `json:"uris,omitempty"`
 	Version       string            `json:"version,omitempty"`
+}
+
+func (application Application) String() string {
+	return fmt.Sprintf("id: %s, version: %s", application.ID, application.Version)
+}
+
+type ApplicationVersions struct {
+	Versions []string `json:"versions"`
+}
+
+type ApplicationVersion struct {
+	Version string `json:"version"`
 }
 
 func (client *Client) Applications() (*Applications, error) {
@@ -73,6 +85,37 @@ func (client *Client) ListApplications() ([]string, error) {
 		}
 		return list, nil
 	}
+}
+
+func (client *Client) HasApplicationVersion(name, version string) (bool, error) {
+	if versions, err := client.ApplicationVersions(name); err != nil {
+		return false, err
+	} else {
+		if Contains(versions.Versions, version) {
+			return true, nil
+		}
+		return false, nil
+	}
+}
+
+func (client *Client) ApplicationVersions(name string) (*ApplicationVersions, error) {
+	uri := fmt.Sprintf("%s%s/versions", MARATHON_API_APPS, name)
+	versions := new(ApplicationVersions)
+	if err := client.ApiGet(uri, "", versions); err != nil {
+		return nil, err
+	}
+	return versions, nil
+}
+
+func (client *Client) ChangeApplicationVersion(name string, version *ApplicationVersion) (*DeploymentID, error) {
+	client.Debug("Changing the application: %s to version: %s", name, version)
+	uri := fmt.Sprintf("%s%s", MARATHON_API_APPS, name)
+	deploymentId := new(DeploymentID)
+	if err := client.ApiPut(uri, version, deploymentId); err != nil {
+		client.Debug("Failed to change the application to version: %s, error: %s", version.Version, err)
+		return nil, err
+	}
+	return deploymentId, nil
 }
 
 func (client *Client) Application(id string) (*Application, error) {
@@ -117,12 +160,6 @@ func (client *Client) ApplicationOK(name string) (bool, error) {
 		}
 		return true, nil
 	}
-
-
-
-
-
-
 }
 
 func (client *Client) CreateApplication(application *Application) (bool, error) {

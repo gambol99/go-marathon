@@ -29,12 +29,13 @@ type Config struct {
 	Debug bool
 }
 
-var (
-	DefaultConfig = Config{
+func NewDefaultConfig() Config {
+	return Config{
 		URL:             "http://localhost:8080",
 		EventsPort:      DEFAULT_EVENTS_PORT,
 		EventsInterface: DEFAULT_EVENTS_BIND,
 		EventsIpAddress: "",
-		Debug:           false,
-	}
-)
+		Debug:           true}
+}
+
+

@@ -30,6 +30,11 @@ type Deployment struct {
 	Version        string            `json:"version"`
 }
 
+type DeploymentID struct {
+	DeploymentID string `json:"deploymentId"`
+	Version string `json:"version"`
+}
+
 type DeploymentStep struct {
 	Action string `json:"action"`
 	App    string `json:"app"`

@@ -47,6 +47,12 @@ type Marathon interface {
 	HasApplication(name string) (bool, error)
 	/* get a listing of the application ids */
 	ListApplications() ([]string, error)
+	/* a list of application versions */
+	ApplicationVersions(name string) (*ApplicationVersions, error)
+	/* check a application version exists */
+	HasApplicationVersion(name, version string) (bool, error)
+	/* change an application to a different version */
+	ChangeApplicationVersion(name string, version *ApplicationVersion) (*DeploymentID, error)
 	/* check if an application is ok */
 	ApplicationOK(name string) (bool, error)
 	/* create an application in marathon */
@@ -110,7 +116,7 @@ type Client struct {
 	services map[string]chan bool
 }
 
-type ErrorMessage struct {
+type Message struct {
 	Message string `json:"message"`
 }
 
@@ -218,7 +224,7 @@ func (client *Client) ApiCall(method, uri, body string, result interface{}) (int
 		}
 
 		/* step: lets decode into a error message */
-		var message ErrorMessage
+		var message Message
 		if err := client.UnMarshallDataToJson(strings.NewReader(content), &message); err != nil {
 			return status, content, ErrInvalidResponse
 		} else {
