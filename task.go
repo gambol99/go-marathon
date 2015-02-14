@@ -36,20 +36,19 @@ type Task struct {
 	Version           string               `json:"version"`
 }
 
-func (client *Client) AllTasks() (Tasks, error) {
-	var tasks Tasks
-	if err := client.ApiGet(MARATHON_API_TASKS, "", &tasks); err != nil {
-		fmt.Printf("error: %s", err)
-		return tasks, err
+func (client *Client) AllTasks() (*Tasks, error) {
+	tasks := new(Tasks)
+	if err := client.ApiGet(MARATHON_API_TASKS, "", tasks); err != nil {
+		return nil, err
 	} else {
 		return tasks, nil
 	}
 }
 
-func (client *Client) Tasks(application_id string) (Tasks, error) {
-	var tasks Tasks
-	if err := client.ApiGet(fmt.Sprintf("%s%s/tasks", MARATHON_API_APPS, application_id), "", &tasks); err != nil {
-		return tasks, err
+func (client *Client) Tasks(application_id string) (*Tasks, error) {
+	tasks := new(Tasks)
+	if err := client.ApiGet(fmt.Sprintf("%s%s/tasks", MARATHON_API_APPS, application_id), "", tasks); err != nil {
+		return nil, err
 	} else {
 		return tasks, nil
 	}

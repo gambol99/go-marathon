@@ -26,4 +26,3 @@ func TestDeployments(t *testing.T) {
 	//AssertOnError(err, t)
 	//AssertOnNull(deployments, t)
 }
-

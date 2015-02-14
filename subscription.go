@@ -18,11 +18,11 @@ package marathon
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
-	"fmt"
 )
 
 type EventSubscription struct {
@@ -40,10 +40,10 @@ var (
 	subscriptionLock sync.Once
 )
 
-func (client *Client) Subscriptions() (Subscriptions, error) {
-	var subscriptions Subscriptions
-	if err := client.ApiGet(MARATHON_API_SUBSCRIPTION, "", &subscriptions); err != nil {
-		return Subscriptions{}, err
+func (client *Client) Subscriptions() (*Subscriptions, error) {
+	subscriptions := new(Subscriptions)
+	if err := client.ApiGet(MARATHON_API_SUBSCRIPTION, "", subscriptions); err != nil {
+		return nil, err
 	} else {
 		return subscriptions, nil
 	}
@@ -133,7 +133,7 @@ func (client *Client) HandleMarathonEvent(writer http.ResponseWriter, request *h
 func (client *Client) WatchList() []string {
 	client.RLock()
 	defer client.RUnlock()
-	list := make([]string,0)
+	list := make([]string, 0)
 	for name, _ := range client.services {
 		list = append(list, name)
 	}

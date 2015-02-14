@@ -123,10 +123,72 @@
             "uris": [],
             "user": null,
             "version": "2014-09-25T02:26:59.256Z"
+        },
+        {
+            "args": null,
+            "backoffFactor": 1.15,
+            "backoffSeconds": 1,
+            "cmd": "python3 -m http.server 8080",
+            "constraints": [],
+            "container": {
+                "docker": {
+                    "image": "python:3",
+                    "network": "BRIDGE",
+                    "portMappings": [
+                        {
+                            "containerPort": 8080,
+                            "hostPort": 0,
+                            "servicePort": 9000,
+                            "protocol": "tcp"
+                        },
+                        {
+                            "containerPort": 161,
+                            "hostPort": 0,
+                            "protocol": "udp"
+                        }
+                    ]
+                },
+                "type": "DOCKER",
+                "volumes": []
+            },
+            "cpus": 0.5,
+            "dependencies": [],
+            "deployments": [],
+            "disk": 0.0,
+            "env": {},
+            "executor": "",
+            "healthChecks": [
+                {
+                    "command": null,
+                    "gracePeriodSeconds": 5,
+                    "intervalSeconds": 20,
+                    "maxConsecutiveFailures": 3,
+                    "path": "/",
+                    "portIndex": 0,
+                    "protocol": "HTTP",
+                    "timeoutSeconds": 20
+                }
+            ],
+            "id": "/fake_app_broken",
+            "instances": 2,
+            "mem": 64.0,
+            "ports": [
+                10000,
+                10001
+            ],
+            "requirePorts": false,
+            "storeUrls": [],
+            "tasksRunning": 2,
+            "tasksStaged": 0,
+            "upgradeStrategy": {
+                "minimumHealthCapacity": 1.0
+            },
+            "uris": [],
+            "user": null,
+            "version": "2014-09-25T02:26:59.256Z"
         }
     ]
     }
-
 - uri: /v2/apps/fake_app
   method: GET
   content: |
@@ -229,7 +291,108 @@
         "version": "2014-09-12T23:28:21.737Z"
     }
     }
-
+- uri: /v2/apps/fake_app_broken
+  method: GET
+  content: |
+    {
+    "app": {
+        "args": null,
+        "backoffFactor": 1.15,
+        "backoffSeconds": 1,
+        "cmd": "python toggle.py $PORT0",
+        "constraints": [],
+        "container": null,
+        "cpus": 0.2,
+        "dependencies": [],
+        "deployments": [],
+        "disk": 0.0,
+        "env": {},
+        "executor": "",
+        "healthChecks": [
+            {
+                "command": null,
+                "gracePeriodSeconds": 5,
+                "intervalSeconds": 10,
+                "maxConsecutiveFailures": 3,
+                "path": "/health",
+                "portIndex": 0,
+                "protocol": "HTTP",
+                "timeoutSeconds": 10
+            }
+        ],
+        "id": "/fake_app_broken",
+        "instances": 2,
+        "lastTaskFailure": {
+            "appId": "/toggle",
+            "host": "10.141.141.10",
+            "message": "Abnormal executor termination",
+            "state": "TASK_FAILED",
+            "taskId": "toggle.cc427e60-5046-11e4-9e34-56847afe9799",
+            "timestamp": "2014-09-12T23:23:41.711Z",
+            "version": "2014-09-12T23:28:21.737Z"
+        },
+        "mem": 32.0,
+        "ports": [
+            10000
+        ],
+        "requirePorts": false,
+        "storeUrls": [],
+        "tasks": [
+            {
+                "appId": "/toggle",
+                "healthCheckResults": [
+                    {
+                        "alive": true,
+                        "consecutiveFailures": 0,
+                        "firstSuccess": "2014-09-13T00:20:28.101Z",
+                        "lastFailure": null,
+                        "lastSuccess": "2014-09-13T00:25:07.506Z",
+                        "taskId": "toggle.802df2ae-3ad4-11e4-a400-56847afe9799"
+                    }
+                ],
+                "host": "10.141.141.10",
+                "id": "toggle.802df2ae-3ad4-11e4-a400-56847afe9799",
+                "ports": [
+                    31045
+                ],
+                "stagedAt": "2014-09-12T23:28:28.594Z",
+                "startedAt": "2014-09-13T00:24:46.959Z",
+                "version": "2014-09-12T23:28:21.737Z"
+            },
+            {
+                "appId": "/toggle",
+                "healthCheckResults": [
+                    {
+                        "alive": false,
+                        "consecutiveFailures": 0,
+                        "firstSuccess": "2014-09-13T00:20:28.101Z",
+                        "lastFailure": null,
+                        "lastSuccess": "2014-09-13T00:25:07.508Z",
+                        "taskId": "toggle.7c99814d-3ad4-11e4-a400-56847afe9799"
+                    }
+                ],
+                "host": "10.141.141.10",
+                "id": "toggle.7c99814d-3ad4-11e4-a400-56847afe9799",
+                "ports": [
+                    31234
+                ],
+                "stagedAt": "2014-09-12T23:28:22.587Z",
+                "startedAt": "2014-09-13T00:24:46.965Z",
+                "version": "2014-09-12T23:28:21.737Z"
+            }
+        ],
+        "tasksRunning": 2,
+        "tasksStaged": 0,
+        "upgradeStrategy": {
+            "minimumHealthCapacity": 1.0
+        },
+        "uris": [
+            "http://downloads.mesosphere.com/misc/toggle.tgz"
+        ],
+        "user": null,
+        "version": "2014-09-12T23:28:21.737Z"
+    }
+    }
 - uri: /v2/apps/fake_app/versions
   method: GET
   content: |

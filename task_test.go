@@ -27,5 +27,3 @@ func TestAllTasks(t *testing.T) {
 	AssertOnNull(tasks, t)
 	AssertOnInteger(len(tasks.Tasks), 2, t)
 }
-
-

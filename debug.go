@@ -18,10 +18,9 @@ package marathon
 
 import (
 	"fmt"
-
 )
 
-func (client *Client) Debug(message string, args ...interface {}) {
+func (client *Client) Debug(message string, args ...interface{}) {
 	if client.config.Debug == true {
 		fmt.Printf(message, args)
 	}
