@@ -25,7 +25,7 @@ func TestApplications(t *testing.T) {
 	applications, err := test_client.Applications()
 	AssertOnError(err, t)
 	AssertOnNull(applications, t)
-	AssertOnInteger(len(applications.Apps), 1, t)
+	AssertOnInteger(len(applications.Apps), 2, t)
 }
 
 func TestListApplications(t *testing.T) {
@@ -33,8 +33,19 @@ func TestListApplications(t *testing.T) {
 	applications, err := test_client.ListApplications()
 	AssertOnError(err, t)
 	AssertOnNull(applications, t)
-	AssertOnInteger(len(applications), 1, t)
+	AssertOnInteger(len(applications), 2, t)
 	AssertOnString(applications[0], FAKE_APP_NAME, t)
+	AssertOnString(applications[1], FAKE_APP_NAME_BROKEN, t)
+}
+
+func TestApplicationOK(t *testing.T) {
+	NewFakeMarathonEndpoint()
+	ok, err := test_client.ApplicationOK(FAKE_APP_NAME)
+	AssertOnError(err, t)
+	AssertOnBool(ok, true, t)
+	ok, err = test_client.ApplicationOK(FAKE_APP_NAME_BROKEN)
+	AssertOnError(err, t)
+	AssertOnBool(ok, false, t)
 }
 
 func TestListApplication(t *testing.T) {

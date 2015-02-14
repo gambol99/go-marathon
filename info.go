@@ -57,10 +57,10 @@ type Info struct {
 	} `json:"zookeeper_config"`
 }
 
-func (client *Client) Info() (Info, error) {
-	var info Info
-	if err := client.ApiGet(MARATHON_API_INFO, "", &info); err != nil {
-		return Info{}, err
+func (client *Client) Info() (*Info, error) {
+	info := new(Info)
+	if err := client.ApiGet(MARATHON_API_INFO, "", info); err != nil {
+		return nil, err
 	} else {
 		return info, nil
 	}

@@ -54,12 +54,12 @@ type Application struct {
 	Version       string            `json:"version,omitempty"`
 }
 
-func (client *Client) Applications() (Applications, error) {
-	var apps Applications
-	if err := client.ApiGet(MARATHON_API_APPS, "", &apps); err != nil {
-		return Applications{}, err
+func (client *Client) Applications() (*Applications, error) {
+	applications := new(Applications)
+	if err := client.ApiGet(MARATHON_API_APPS, "", applications); err != nil {
+		return nil, err
 	} else {
-		return apps, nil
+		return applications, nil
 	}
 }
 
@@ -75,16 +75,57 @@ func (client *Client) ListApplications() ([]string, error) {
 	}
 }
 
-func (client *Client) Application(id string) (Application, error) {
-	var application ApplicationWrap
-	if err := client.ApiGet(fmt.Sprintf("%s%s", MARATHON_API_APPS, id), "", &application); err != nil {
-		return Application{}, err
+func (client *Client) Application(id string) (*Application, error) {
+	application := new(ApplicationWrap)
+	if err := client.ApiGet(fmt.Sprintf("%s%s", MARATHON_API_APPS, id), "", application); err != nil {
+		return nil, err
 	} else {
-		return application.Application, nil
+		return &application.Application, nil
 	}
 }
 
-func (client *Client) CreateApplication(application Application) (bool, error) {
+func (client *Client) ApplicationOK(name string) (bool, error) {
+	/* step: check the application even exists */
+	if found, err := client.HasApplication(name); err != nil {
+		return false, err
+	} else if !found {
+		return false, ErrDoesNotExist
+	}
+	/* step: get the application */
+	if application, err := client.Application(name); err != nil {
+		return false, err
+	} else {
+		/* step: if the application has not health checks, just return true */
+		if application.HealthChecks == nil || len(application.HealthChecks) <= 0 {
+			return true, nil
+		}
+		/* step: does the application have any tasks */
+		if application.Tasks == nil || len(application.Tasks) <= 0 {
+			return true, nil
+		}
+
+		/* step: iterate the application checks and look for false */
+		for _, task := range application.Tasks {
+			if task.HealthCheckResult != nil {
+				for _, check := range task.HealthCheckResult {
+					if !check.Alive {
+						return false, nil
+					}
+				}
+
+			}
+		}
+		return true, nil
+	}
+
+
+
+
+
+
+}
+
+func (client *Client) CreateApplication(application *Application) (bool, error) {
 	/* step: check of the application already exists */
 	if found, err := client.HasApplication(application.ID); err != nil {
 		return false, err
@@ -117,7 +158,7 @@ func (client *Client) HasApplication(name string) (bool, error) {
 	}
 }
 
-func (client *Client) DeleteApplication(application Application) (bool, error) {
+func (client *Client) DeleteApplication(application *Application) (bool, error) {
 	/* step: check of the application already exists */
 	if found, err := client.HasApplication(application.ID); err != nil {
 		return false, err
@@ -135,25 +176,24 @@ func (client *Client) DeleteApplication(application Application) (bool, error) {
 	return false, nil
 }
 
-func (client *Client) RestartApplication(application Application, force bool) (Deployment, error) {
+func (client *Client) RestartApplication(application *Application, force bool) (*Deployment, error) {
 	client.Debug("Restarting the application: %s, force: %s", application, force)
 	/* step: check the application exists to restart */
 	if found, err := client.HasApplication(application.ID); err != nil {
-		return Deployment{}, err
+		return nil, err
 	} else if found {
-		return Deployment{}, ErrApplicationExists
+		return nil, ErrApplicationExists
 	}
-
-	return Deployment{}, nil
+	return nil, nil
 }
 
-func (client *Client) ScaleApplication(application Application, instances int) (Deployment, error) {
+func (client *Client) ScaleApplication(application *Application, instances int) (*Deployment, error) {
 	client.Debug("ScaleApplication: application: %s, instance: %d", application, instances)
+	deployment := new(Deployment)
 	if found, err := client.HasApplication(application.ID); err != nil {
-		return Deployment{}, err
+		return nil, err
 	} else if !found {
-		return Deployment{}, ErrDoesNotExist
+		return nil, ErrDoesNotExist
 	}
-
-	return Deployment{}, nil
+	return deployment, nil
 }

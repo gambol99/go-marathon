@@ -47,26 +47,34 @@ type Marathon interface {
 	HasApplication(name string) (bool, error)
 	/* get a listing of the application ids */
 	ListApplications() ([]string, error)
+	/* check if an application is ok */
+	ApplicationOK(name string) (bool, error)
+	/* create an application in marathon */
+	CreateApplication(application *Application) (bool, error)
+	/* delete an application */
+	DeleteApplication(application *Application) (bool, error)
+	/* restart an application */
+	RestartApplication(application *Application, force bool) (*Deployment, error)
 	/* get a list of applications from marathon */
-	Applications() (Applications, error)
+	Applications() (*Applications, error)
 	/* get a specific application */
-	Application(id string) (Application, error)
+	Application(id string) (*Application, error)
 	/* get a list of tasks for a specific application */
-	Tasks(id string) (Tasks, error)
+	Tasks(application string) (*Tasks, error)
 	/* get a list of all tasks */
-	AllTasks() (Tasks, error)
+	AllTasks() (*Tasks, error)
 	/* get a list of the deployments */
 	Deployments() ([]Deployment, error)
 	/* delete a deployment */
 	DeleteDeployment(deployment Deployment, force bool) (Deployment, error)
 	/* a list of current subscriptions */
-	Subscriptions() (Subscriptions, error)
+	Subscriptions() (*Subscriptions, error)
 	/* get the marathon url */
 	GetMarathonURL() string
 	/* ping the marathon */
 	Ping() (bool, error)
 	/* grab the marathon server info */
-	Info() (Info, error)
+	Info() (*Info, error)
 }
 
 var (

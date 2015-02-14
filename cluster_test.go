@@ -58,8 +58,8 @@ func TestGetMember(t *testing.T) {
 
 func TestMarkdown(t *testing.T) {
 	GetFakeCluster()
-	cluster.MarkDown()
 	AssertOnInteger(len(cluster.Active()), 2, t)
-	time.Sleep(200 * time.Millisecond)
+	cluster.MarkDown()
+	time.Sleep(10 * time.Millisecond)
 	AssertOnInteger(len(cluster.Active()), 2, t)
 }

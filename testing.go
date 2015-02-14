@@ -24,8 +24,9 @@ import (
 )
 
 const (
-	FAKE_MARATHON_URL = "http://127.0.0.1:3000,127.0.0.1:3000"
-	FAKE_APP_NAME     = "/fake_app"
+	FAKE_MARATHON_URL 		= "http://127.0.0.1:3000,127.0.0.1:3000"
+	FAKE_APP_NAME     		= "/fake_app"
+	FAKE_APP_NAME_BROKEN    = "/fake_app_broken"
 )
 
 var test_client Marathon
@@ -55,8 +56,9 @@ func AssertOnError(err error, t *testing.T) {
 	}
 }
 
-func AssertOnBool(value, expect bool, t *testing.T) {
-	if value != expect {
+func AssertOnBool(value, expected bool, t *testing.T) {
+	if value != expected {
+		t.Errorf("failed: value: %t, expected: %t", value, expected)
 		t.Fail()
 	}
 }
@@ -70,5 +72,6 @@ func AssertOnString(value, expected string, t *testing.T) {
 func AssertOnInteger(value, expected int, t *testing.T) {
 	if value != expected {
 		t.Errorf("failed, value %d, expected: %d", value, expected)
+		t.Fail()
 	}
 }
