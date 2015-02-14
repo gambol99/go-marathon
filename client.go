@@ -47,6 +47,12 @@ type Marathon interface {
 	HasApplication(name string) (bool, error)
 	/* get a listing of the application ids */
 	ListApplications() ([]string, error)
+	/* a list of application versions */
+	ApplicationVersions(name string) (*ApplicationVersions, error)
+	/* check a application version exists */
+	HasApplicationVersion(name, version string) (bool, error)
+	/* change an application to a different version */
+	ChangeApplicationVersion(name string, version *ApplicationVersion) (*DeploymentID, error)
 	/* check if an application is ok */
 	ApplicationOK(name string) (bool, error)
 	/* create an application in marathon */

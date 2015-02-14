@@ -35,6 +35,6 @@ var (
 		EventsPort:      DEFAULT_EVENTS_PORT,
 		EventsInterface: DEFAULT_EVENTS_BIND,
 		EventsIpAddress: "",
-		Debug:           false,
+		Debug:           true,
 	}
 )

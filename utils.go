@@ -42,3 +42,12 @@ func GetInterfaceAddress(name string) (string, error) {
 	}
 	return "", errors.New("Unable to determine or find the interface")
 }
+
+func Contains(elements []string, value string) bool {
+	for _, element := range elements {
+		if element == value {
+			return true
+		}
+	}
+	return false
+}
