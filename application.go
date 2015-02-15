@@ -60,6 +60,47 @@ func (application Application) String() string {
 	return fmt.Sprintf("id: %s, version: %s", application.ID, application.Version)
 }
 
+func (application *Application) Name(id string) (*Application) {
+	application.ID = id
+	return application
+}
+
+func (application *Application) CPU(cpu float32) (*Application) {
+	application.CPUs = cpu
+	return application
+}
+
+func (application *Application) Storage(disk float32) (*Application) {
+	application.Disk = disk
+	return application
+}
+
+func (application *Application) Memory(memory float32) (*Application) {
+	application.Mem = memory
+	return application
+}
+
+func (application *Application) Count(count int) (*Application) {
+	application.Instances = count
+	return application
+}
+
+func (application *Application) Arg(argument string) (*Application) {
+	if application.Args == nil {
+		application.Args = make([]string,0)
+	}
+	application.Args = append(application.Args, argument)
+	return application
+}
+
+func (application *Application) AddEnv(name, value string) (*Application) {
+	if application.Env == nil {
+		application.Env = make(map[string]string,0)
+	}
+	application.Env[name] = value
+	return application
+}
+
 type ApplicationVersions struct {
 	Versions []string `json:"versions"`
 }

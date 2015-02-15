@@ -58,35 +58,22 @@ func main() {
 				glog.Infof("Application: %s, healthy: %t", details.ID, health )
 			}
 		}
+
+
 		glog.Infof("Deploying a new application")
 		application := new(marathon.Application)
-		application.ID = "/my/product"
-		application.CPUs = 0.1
-		application.Mem = 64
-		application.Disk = 0.0
-		application.Instances = 2
-		application.Args = make([]string,0)
-		application.Args = append(application.Args, "/usr/sbin/apache2ctl")
-		application.Args = append(application.Args, "-D")
-		application.Args = append(application.Args, "FORGROUND")
+		application.Name("/my/product")
+		application.CPU(0.1).Memory(64).Storage(0.0).Count(2)
+		application.Arg("/usr/sbin/apache2ctl").Arg("-D").Arg("FORGROUND")
+		application.AddEnv("NAME","frontend_http")
+		application.AddEnv("SERVICE_80_NAME", "test_http")
 		application.Constraints = make([][]string,0)
 		application.Executor = ""
 		application.RequirePorts = false
-		application.Env = make(map[string]string,0)
 		application.Uris = make([]string,0)
-		application.Version = ""
-		docker := new(marathon.Docker)
-		docker.Image = "quay.io/gambol99/apache-php:latest"
-		docker.Network = "BRIDGE"
-		port := new(marathon.PortMapping)
-		port.ContainerPort = 80
-		port.HostPort = 0
-		port.Protocol = "tcp"
-		docker.PortMappings = make([]*marathon.PortMapping,0)
-		docker.PortMappings = append(docker.PortMappings, port)
-		application.Container = &marathon.Container{
-			Type: "DOCKER",
-			Docker: docker}
+
+		container := marathon.NewDockerContainer()
+		container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80).Expose(443)
 
 		if _, err := client.CreateApplication(application); err != nil {
 			glog.Errorf("Failed to create application: %s, error: %s", application, err)
