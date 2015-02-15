@@ -58,5 +58,40 @@ func main() {
 				glog.Infof("Application: %s, healthy: %t", details.ID, health )
 			}
 		}
+		glog.Infof("Deploying a new application")
+		application := new(marathon.Application)
+		application.ID = "/my/product"
+		application.CPUs = 0.1
+		application.Mem = 64
+		application.Disk = 0.0
+		application.Instances = 2
+		application.Args = make([]string,0)
+		application.Args = append(application.Args, "/usr/sbin/apache2ctl")
+		application.Args = append(application.Args, "-D")
+		application.Args = append(application.Args, "FORGROUND")
+		application.Constraints = make([][]string,0)
+		application.Executor = ""
+		application.RequirePorts = false
+		application.Env = make(map[string]string,0)
+		application.Uris = make([]string,0)
+		application.Version = ""
+		docker := new(marathon.Docker)
+		docker.Image = "quay.io/gambol99/apache-php:latest"
+		docker.Network = "BRIDGE"
+		port := new(marathon.PortMapping)
+		port.ContainerPort = 80
+		port.HostPort = 0
+		port.Protocol = "tcp"
+		docker.PortMappings = make([]*marathon.PortMapping,0)
+		docker.PortMappings = append(docker.PortMappings, port)
+		application.Container = &marathon.Container{
+			Type: "DOCKER",
+			Docker: docker}
+
+		if _, err := client.CreateApplication(application); err != nil {
+			glog.Errorf("Failed to create application: %s, error: %s", application, err)
+		} else {
+			glog.Infof("Created the application: %s", application)
+		}
 	}
 }

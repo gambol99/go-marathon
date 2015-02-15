@@ -35,8 +35,8 @@ type Docker struct {
 }
 
 type PortMapping struct {
-	ContainerPort int    `json:"containerPort,omitempty"`
-	HostPort      int    `json:"hostPort,omitempty"`
-	ServicePort   int    `json:"servicePort,omitempty"`
-	Protocol      string `json:"protocol,omitempty"`
+	ContainerPort int    `json:"containerPort"`
+	HostPort      int    `json:"hostPort"`
+	ServicePort   int    `json:"servicePort"`
+	Protocol      string `json:"protocol"`
 }

@@ -96,6 +96,8 @@ var (
 	ErrInvalidResult = errors.New("Unable to decode the response from Marathon")
 	/* invalid argument */
 	ErrInvalidArgument = errors.New("The argument passed is invalid")
+	/* error return by marathon */
+	ErrMarathonError = errors.New("Marathon error")
 )
 
 type Client struct {
@@ -163,6 +165,7 @@ func (client *Client) UnMarshallDataToJson(stream io.Reader, result interface{})
 }
 
 func (client *Client) ApiGet(uri, body string, result interface{}) error {
+	client.Debug("ApiGet() uri: %s, body: %s", uri, body)
 	_, _, error := client.ApiCall(HTTP_GET, uri, body, result)
 	return error
 }
@@ -194,7 +197,7 @@ func (client *Client) ApiPost(uri string, post interface{}, result interface{}) 
 			return err
 		}
 	}
-	_, _, error := client.ApiCall(HTTP_PUT, uri, content, result)
+	_, _, error := client.ApiCall(HTTP_POST, uri, content, result)
 	return error
 }
 
@@ -204,6 +207,7 @@ func (client *Client) ApiDelete(uri, body string, result interface{}) error {
 }
 
 func (client *Client) ApiCall(method, uri, body string, result interface{}) (int, string, error) {
+	client.Debug("ApiCall() method: %s, uri: %s, body: %s", method, uri, body)
 	if status, content, _, err := client.HttpCall(method, uri, body); err != nil {
 		return 0, "", err
 	} else {
@@ -228,7 +232,7 @@ func (client *Client) ApiCall(method, uri, body string, result interface{}) (int
 		if err := client.UnMarshallDataToJson(strings.NewReader(content), &message); err != nil {
 			return status, content, ErrInvalidResponse
 		} else {
-			return status, message.Message, ErrInvalidResult
+			return status, message.Message, ErrMarathonError
 		}
 	}
 }
@@ -245,9 +249,6 @@ func (client *Client) HttpCall(method, uri, body string) (int, string, *http.Res
 			return 0, "", nil, err
 		} else {
 			request.Header.Add("Content-Type", "application/json")
-			request.Header.Add("X-Client", "go-marathon")
-			request.Header.Add("X-Client-Version", VERSION)
-
 			var content string
 			/* step: perform the request */
 			if response, err := client.http.Do(request); err != nil {
@@ -272,10 +273,9 @@ func (client *Client) HttpCall(method, uri, body string) (int, string, *http.Res
 				}
 				return 0, "", response, err
 			} else {
-				client.Debug("HTTPCall() call successful, status: %d\n", response.StatusCode)
 				/* step: lets read in any content */
-				if response.ContentLength > 0 {
-					client.Debug("HTTPCall() method: %s, uri: %s, url: %s\n", method, uri, url)
+				client.Debug("HTTPCall() method: %s, uri: %s, url: %s\n", method, uri, url)
+				if response.ContentLength != 0 {
 					/* step: read in the content from the request */
 					response_content, err := ioutil.ReadAll(response.Body)
 					if err != nil {
