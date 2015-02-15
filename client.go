@@ -56,9 +56,11 @@ type Marathon interface {
 	/* check if an application is ok */
 	ApplicationOK(name string) (bool, error)
 	/* create an application in marathon */
-	CreateApplication(application *Application) (bool, error)
+	CreateApplication(application *Application) error
 	/* delete an application */
-	DeleteApplication(application *Application) (bool, error)
+	DeleteApplication(application *Application) error
+	/* scale a application */
+	ScaleApplicationInstances(application *Application, instances int) error
 	/* restart an application */
 	RestartApplication(application *Application, force bool) (*Deployment, error)
 	/* get a list of applications from marathon */
@@ -127,11 +129,13 @@ func NewClient(config Config) (Marathon, error) {
 	if cluster, err := NewMarathonCluster(config.URL); err != nil {
 		return nil, err
 	} else {
+		fmt.Printf("config: %s", config)
 		/* step: create the service marathon client */
 		service := new(Client)
+		service.config   = config
 		service.services = make(map[string]chan bool, 0)
-		service.cluster = cluster
-		service.http = &http.Client{}
+		service.cluster  = cluster
+		service.http     = &http.Client{}
 		return service, nil
 	}
 }

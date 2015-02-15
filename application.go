@@ -56,10 +56,6 @@ type Application struct {
 	Version       string            `json:"version,omitempty"`
 }
 
-func (application Application) String() string {
-	return fmt.Sprintf("id: %s, version: %s", application.ID, application.Version)
-}
-
 func (application *Application) Name(id string) (*Application) {
 	application.ID = id
 	return application
@@ -205,18 +201,9 @@ func (client *Client) ApplicationOK(name string) (bool, error) {
 	}
 }
 
-func (client *Client) CreateApplication(application *Application) (bool, error) {
-	/* step: check of the application already exists */
-	if found, err := client.HasApplication(application.ID); err != nil {
-		return false, err
-	} else if found {
-		return false, ErrApplicationExists
-	}
-	/* step: post the application to marathon */
-	if err := client.ApiPost(MARATHON_API_APPS, &application, nil); err != nil {
-		return false, err
-	}
-	return true, nil
+func (client *Client) CreateApplication(application *Application) error {
+	client.Debug("Creating an application: %s", application)
+	return client.ApiPost(MARATHON_API_APPS, &application, nil)
 }
 
 func (client *Client) HasApplication(name string) (bool, error) {
@@ -238,22 +225,10 @@ func (client *Client) HasApplication(name string) (bool, error) {
 	}
 }
 
-func (client *Client) DeleteApplication(application *Application) (bool, error) {
+func (client *Client) DeleteApplication(application *Application) error {
 	/* step: check of the application already exists */
-	if found, err := client.HasApplication(application.ID); err != nil {
-		return false, err
-	} else if found {
-		return false, ErrDoesNotExist
-	} else {
-		/* step: delete the application */
-		client.Debug("Deleting the application: %s", application.ID)
-		if err := client.ApiDelete(fmt.Sprintf("%s%s", MARATHON_API_APPS, application.ID), "", nil); err != nil {
-			return false, err
-		} else {
-
-		}
-	}
-	return false, nil
+	client.Debug("Deleting the application: %s", application.ID)
+	return client.ApiDelete(fmt.Sprintf("%s%s", MARATHON_API_APPS, application.ID), "", nil)
 }
 
 func (client *Client) RestartApplication(application *Application, force bool) (*Deployment, error) {
@@ -267,13 +242,11 @@ func (client *Client) RestartApplication(application *Application, force bool) (
 	return nil, nil
 }
 
-func (client *Client) ScaleApplication(application *Application, instances int) (*Deployment, error) {
+func (client *Client) ScaleApplicationInstances(application *Application, instances int) error {
 	client.Debug("ScaleApplication: application: %s, instance: %d", application, instances)
-	deployment := new(Deployment)
-	if found, err := client.HasApplication(application.ID); err != nil {
-		return nil, err
-	} else if !found {
-		return nil, ErrDoesNotExist
-	}
-	return deployment, nil
+	changes := new(Application)
+	changes.ID = application.ID
+	changes.Instances = instances
+	uri := fmt.Sprintf("%s%s", MARATHON_API_APPS, application.ID)
+	return client.ApiPut(uri, &changes, nil)
 }

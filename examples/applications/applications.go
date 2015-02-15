@@ -21,6 +21,7 @@ import (
 
 	"github.com/golang/glog"
 	marathon "github.com/gambol99/go-marathon"
+	"time"
 )
 
 var marathon_url string
@@ -59,26 +60,46 @@ func main() {
 			}
 		}
 
+		APPLICATION_NAME := "/my/product"
 
 		glog.Infof("Deploying a new application")
 		application := new(marathon.Application)
-		application.Name("/my/product")
+		application.Name(APPLICATION_NAME)
 		application.CPU(0.1).Memory(64).Storage(0.0).Count(2)
-		application.Arg("/usr/sbin/apache2ctl").Arg("-D").Arg("FORGROUND")
+		application.Arg("/usr/sbin/apache2ctl").Arg("-D").Arg("FOREGROUND")
 		application.AddEnv("NAME","frontend_http")
 		application.AddEnv("SERVICE_80_NAME", "test_http")
 		application.Constraints = make([][]string,0)
-		application.Executor = ""
-		application.RequirePorts = false
+		application.RequirePorts = true
 		application.Uris = make([]string,0)
 
-		container := marathon.NewDockerContainer()
-		container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80).Expose(443)
+		application.Container = marathon.NewDockerContainer()
+		application.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80).Expose(443)
 
-		if _, err := client.CreateApplication(application); err != nil {
+		if err := client.CreateApplication(application); err != nil {
 			glog.Errorf("Failed to create application: %s, error: %s", application, err)
 		} else {
 			glog.Infof("Created the application: %s", application)
 		}
+
+		time.Sleep( 20 * time.Second)
+
+		glog.Infof("Scale to 4 instances")
+		if err := client.ScaleApplicationInstances(application, 4); err != nil {
+			glog.Errorf("Failed to delete the application: %s, error: %s", application, err )
+		} else {
+			glog.Infof("Successfully scaled the application")
+		}
+
+		time.Sleep( 20 * time.Second)
+
+		glog.Infof("Deleting the application: %s", APPLICATION_NAME)
+
+		if err := client.DeleteApplication(application); err != nil {
+			glog.Errorf("Failed to delete the application: %s, error: %s", application, err )
+		} else {
+			glog.Infof("Successfully deleted the application")
+		}
+
 	}
 }
