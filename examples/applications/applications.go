@@ -85,7 +85,7 @@ func main() {
 		time.Sleep( 20 * time.Second)
 
 		glog.Infof("Scale to 4 instances")
-		if err := client.ScaleApplicationInstances(application, 4); err != nil {
+		if err := client.ScaleApplicationInstances(application.ID, 4); err != nil {
 			glog.Errorf("Failed to delete the application: %s, error: %s", application, err )
 		} else {
 			glog.Infof("Successfully scaled the application")

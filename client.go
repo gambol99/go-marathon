@@ -37,12 +37,8 @@ const (
 )
 
 type Marathon interface {
-	/* watch for changes on a application */
-	Watch(name string, channel chan bool)
-	/* remove me from watching this service */
-	RemoveWatch(name string, channel chan bool)
-	/* a list of service being watched */
-	WatchList() []string
+	/* -- APPLICATIONS --- */
+
 	/* check it see if a application exists */
 	HasApplication(name string) (bool, error)
 	/* get a listing of the application ids */
@@ -58,25 +54,43 @@ type Marathon interface {
 	/* create an application in marathon */
 	CreateApplication(application *Application) error
 	/* delete an application */
-	DeleteApplication(application *Application) error
+	DeleteApplication(name string) error
 	/* scale a application */
-	ScaleApplicationInstances(application *Application, instances int) error
+	ScaleApplicationInstances(name string, instances int) error
 	/* restart an application */
-	RestartApplication(application *Application, force bool) (*Deployment, error)
+	RestartApplication(name string, force bool) (*DeploymentID, error)
 	/* get a list of applications from marathon */
 	Applications() (*Applications, error)
 	/* get a specific application */
-	Application(id string) (*Application, error)
+	Application(name string) (*Application, error)
+
+	/* -- TASKS --- */
+
 	/* get a list of tasks for a specific application */
 	Tasks(application string) (*Tasks, error)
 	/* get a list of all tasks */
 	AllTasks() (*Tasks, error)
+
+	/* --- DEPLOYMENTS --- */
+
 	/* get a list of the deployments */
 	Deployments() ([]Deployment, error)
 	/* delete a deployment */
 	DeleteDeployment(deployment Deployment, force bool) (Deployment, error)
+
+	/* --- SUBSCRIPTIONS --- */
+
 	/* a list of current subscriptions */
 	Subscriptions() (*Subscriptions, error)
+	/* watch for changes on a application */
+	Watch(name string, channel chan bool)
+	/* remove me from watching this service */
+	RemoveWatch(name string, channel chan bool)
+	/* a list of service being watched */
+	WatchList() []string
+
+	/* --- MISC --- */
+
 	/* get the marathon url */
 	GetMarathonURL() string
 	/* ping the marathon */

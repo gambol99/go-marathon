@@ -35,7 +35,7 @@ func NewDefaultConfig() Config {
 		EventsPort:      DEFAULT_EVENTS_PORT,
 		EventsInterface: DEFAULT_EVENTS_BIND,
 		EventsIpAddress: "",
-		Debug:           true}
+		Debug:           false}
 }
 
 
