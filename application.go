@@ -36,9 +36,11 @@ type ApplicationWrap struct {
 type Application struct {
 	ID            string            `json:"id",omitempty`
 	Cmd           string            `json:"cmd,omitempty"`
+	Args          []string          `json:"args,omitempty"`
 	Constraints   [][]string        `json:"constraints,omitempty"`
 	Container     *Container        `json:"container,omitempty"`
 	CPUs          float32           `json:"cpus,omitempty"`
+	Disk          float32           `json:"disk,omitempty"`
 	Env           map[string]string `json:"env,omitempty"`
 	Executor      string            `json:"executor,omitempty"`
 	HealthChecks  []*HealthCheck    `json:"healthChecks,omitempty"`
