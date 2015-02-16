@@ -37,5 +37,3 @@ func NewDefaultConfig() Config {
 		EventsIpAddress: "",
 		Debug:           false}
 }
-
-

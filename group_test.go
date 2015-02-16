@@ -17,11 +17,24 @@ limitations under the License.
 package marathon
 
 import (
-	"fmt"
+	"testing"
 )
 
-func (client *Client) Debug(message string, args ...interface{}) {
-	if client.config.Debug == true {
-		fmt.Printf(message+"\n", args)
-	}
+func TestGroups(t *testing.T) {
+	NewFakeMarathonEndpoint()
+	groups, err := test_client.Groups()
+	AssertOnError(err, t)
+	AssertOnNull(groups, t)
+	AssertOnInteger(len(groups.Groups), 1, t)
+	group := groups.Groups[0]
+	AssertOnString(group.ID, FAKE_GROUP_NAME, t)
+}
+
+func TestGroup(t *testing.T) {
+	NewFakeMarathonEndpoint()
+	group, err := test_client.Group(FAKE_GROUP_NAME)
+	AssertOnError(err, t)
+	AssertOnNull(group, t)
+	AssertOnInteger(len(group.Apps), 1, t)
+	AssertOnString(group.ID, FAKE_GROUP_NAME, t)
 }

@@ -58,5 +58,3 @@ func (client *Client) Tasks(application_id string) (*Tasks, error) {
 		return tasks, nil
 	}
 }
-
-

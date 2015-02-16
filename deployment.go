@@ -32,7 +32,7 @@ type Deployment struct {
 
 type DeploymentID struct {
 	DeploymentID string `json:"deploymentId"`
-	Version string `json:"version"`
+	Version      string `json:"version"`
 }
 
 type DeploymentStep struct {

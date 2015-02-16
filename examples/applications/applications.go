@@ -19,8 +19,8 @@ package main
 import (
 	"flag"
 
-	"github.com/golang/glog"
 	marathon "github.com/gambol99/go-marathon"
+	"github.com/golang/glog"
 	"time"
 )
 
@@ -40,6 +40,7 @@ func main() {
 	flag.Parse()
 	config := marathon.NewDefaultConfig()
 	config.URL = marathon_url
+	config.Debug = true
 	if client, err := marathon.NewClient(config); err != nil {
 		glog.Fatalf("Failed to create a client for marathon, error: %s", err)
 	} else {
@@ -56,7 +57,7 @@ func main() {
 				}
 				health, err := client.ApplicationOK(details.ID)
 				Assert(err)
-				glog.Infof("Application: %s, healthy: %t", details.ID, health )
+				glog.Infof("Application: %s, healthy: %t", details.ID, health)
 			}
 		}
 
@@ -67,11 +68,11 @@ func main() {
 		application.Name(APPLICATION_NAME)
 		application.CPU(0.1).Memory(64).Storage(0.0).Count(2)
 		application.Arg("/usr/sbin/apache2ctl").Arg("-D").Arg("FOREGROUND")
-		application.AddEnv("NAME","frontend_http")
+		application.AddEnv("NAME", "frontend_http")
 		application.AddEnv("SERVICE_80_NAME", "test_http")
-		application.Constraints = make([][]string,0)
+		application.Constraints = make([][]string, 0)
 		application.RequirePorts = true
-		application.Uris = make([]string,0)
+		application.Uris = make([]string, 0)
 
 		application.Container = marathon.NewDockerContainer()
 		application.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80).Expose(443)
@@ -82,23 +83,32 @@ func main() {
 			glog.Infof("Created the application: %s", application)
 		}
 
-		time.Sleep( 20 * time.Second)
+		time.Sleep(20 * time.Second)
 
 		glog.Infof("Scale to 4 instances")
 		if err := client.ScaleApplicationInstances(application.ID, 4); err != nil {
-			glog.Errorf("Failed to delete the application: %s, error: %s", application, err )
+			glog.Errorf("Failed to delete the application: %s, error: %s", application, err)
 		} else {
 			glog.Infof("Successfully scaled the application")
 		}
 
-		time.Sleep( 20 * time.Second)
+		time.Sleep(20 * time.Second)
 
 		glog.Infof("Deleting the application: %s", APPLICATION_NAME)
 
-		if err := client.DeleteApplication(application); err != nil {
-			glog.Errorf("Failed to delete the application: %s, error: %s", application, err )
+		if err := client.DeleteApplication(application.ID); err != nil {
+			glog.Errorf("Failed to delete the application: %s, error: %s", application, err)
 		} else {
 			glog.Infof("Successfully deleted the application")
+		}
+
+		glog.Infof("Retrieving a list of groups")
+		if groups, err := client.Groups(); err != nil {
+			glog.Errorf("Failed to retrieve the groups from maratho, error: %s", err)
+		} else {
+			for _, group := range groups.Groups {
+				glog.Infof("Found group: %s", group.ID)
+			}
 		}
 
 	}

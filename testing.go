@@ -24,9 +24,10 @@ import (
 )
 
 const (
-	FAKE_MARATHON_URL 		= "http://127.0.0.1:3000,127.0.0.1:3000"
-	FAKE_APP_NAME     		= "/fake_app"
-	FAKE_APP_NAME_BROKEN    = "/fake_app_broken"
+	FAKE_MARATHON_URL    = "http://127.0.0.1:3000,127.0.0.1:3000"
+	FAKE_GROUP_NAME      = "/test"
+	FAKE_APP_NAME        = "/fake_app"
+	FAKE_APP_NAME_BROKEN = "/fake_app_broken"
 )
 
 var test_client Marathon

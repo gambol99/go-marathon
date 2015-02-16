@@ -48,7 +48,7 @@ type Marathon interface {
 	/* check a application version exists */
 	HasApplicationVersion(name, version string) (bool, error)
 	/* change an application to a different version */
-	ChangeApplicationVersion(name string, version *ApplicationVersion) (*DeploymentID, error)
+	SetApplicationVersion(name string, version *ApplicationVersion) (*DeploymentID, error)
 	/* check if an application is ok */
 	ApplicationOK(name string) (bool, error)
 	/* create an application in marathon */
@@ -64,7 +64,20 @@ type Marathon interface {
 	/* get a specific application */
 	Application(name string) (*Application, error)
 
-	/* -- TASKS --- */
+	/* --- GROUPS --- */
+
+	/* list all the groups in the system */
+	Groups() (*Groups, error)
+	/* retrieve a specific group from marathon */
+	Group(name string) (*Group, error)
+	/* create a group deployment */
+	CreateGroup(group *Group) (*ApplicationVersion, error)
+	/* delete a group */
+	DeleteGroup(group *Group) (*ApplicationVersion, error)
+	/* check if a group exists */
+	HasGroup(name string) (bool, error)
+
+	/* --- TASKS --- */
 
 	/* get a list of tasks for a specific application */
 	Tasks(application string) (*Tasks, error)
@@ -143,13 +156,12 @@ func NewClient(config Config) (Marathon, error) {
 	if cluster, err := NewMarathonCluster(config.URL); err != nil {
 		return nil, err
 	} else {
-		fmt.Printf("config: %s", config)
 		/* step: create the service marathon client */
 		service := new(Client)
-		service.config   = config
+		service.config = config
 		service.services = make(map[string]chan bool, 0)
-		service.cluster  = cluster
-		service.http     = &http.Client{}
+		service.cluster = cluster
+		service.http = &http.Client{}
 		return service, nil
 	}
 }

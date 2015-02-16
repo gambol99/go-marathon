@@ -6,7 +6,8 @@ go-marathon.iml
 .idea/
 Gemfile.lock
 thin.*
-
+examples/applications/applications
+examples/groups/groups
 
 # Folders
 _obj

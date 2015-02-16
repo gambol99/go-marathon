@@ -415,6 +415,94 @@
             "2014-04-04T06:25:31.399Z"
         ]
     }
+- uri: /v2/groups
+  method: GET
+  content: |
+    {
+        "apps": [],
+        "dependencies": [],
+        "groups": [
+            {
+                "apps": [
+                    {
+                        "args": null,
+                        "backoffFactor": 1.15,
+                        "backoffSeconds": 1,
+                        "maxLaunchDelaySeconds": 3600,
+                        "cmd": "sleep 30",
+                        "constraints": [],
+                        "container": null,
+                        "cpus": 1.0,
+                        "dependencies": [],
+                        "disk": 0.0,
+                        "env": {},
+                        "executor": "",
+                        "healthChecks": [],
+                        "id": "/test/app",
+                        "instances": 1,
+                        "mem": 128.0,
+                        "ports": [
+                            10000
+                        ],
+                        "requirePorts": false,
+                        "storeUrls": [],
+                        "upgradeStrategy": {
+                            "minimumHealthCapacity": 1.0
+                        },
+                        "uris": [],
+                        "user": null,
+                        "version": "2014-08-28T01:05:40.586Z"
+                    }
+                ],
+                "dependencies": [],
+                "groups": [],
+                "id": "/test",
+                "version": "2014-08-28T01:09:46.212Z"
+            }
+        ],
+        "id": "/",
+        "version": "2014-08-28T01:09:46.212Z"
+    }
+- uri: /v2/groups/test
+  method: GET
+  content: |
+    {
+        "apps": [
+            {
+                "args": null,
+                "backoffFactor": 1.15,
+                "backoffSeconds": 1,
+                "maxLaunchDelaySeconds": 3600,
+                "cmd": "sleep 30",
+                "constraints": [],
+                "container": null,
+                "cpus": 1.0,
+                "dependencies": [],
+                "disk": 0.0,
+                "env": {},
+                "executor": "",
+                "healthChecks": [],
+                "id": "/test/app",
+                "instances": 1,
+                "mem": 128.0,
+                "ports": [
+                    10000
+                ],
+                "requirePorts": false,
+                "storeUrls": [],
+                "upgradeStrategy": {
+                    "minimumHealthCapacity": 1.0
+                },
+                "uris": [],
+                "user": null,
+                "version": "2014-08-28T01:05:40.586Z"
+            }
+        ],
+        "dependencies": [],
+        "groups": [],
+        "id": "/test",
+        "version": "2014-08-28T01:09:46.212Z"
+    }
 - uri: /v2/groups/:groupId
   method: PUT
   content: |

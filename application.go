@@ -50,48 +50,59 @@ type Application struct {
 	Ports         []int             `json:"ports,omitempty"`
 	RequirePorts  bool              `json:"requirePorts,omitempty"`
 	BackoffFactor float32           `json:"backoffFactor,omitempty"`
+	Dependencies  []string          `json:"dependencies,omitempty`
 	TasksRunning  int               `json:"tasksRunning,omitempty"`
 	TasksStaged   int               `json:"tasksStaged,omitempty"`
+	User          string            `json:"user,omitempty"`
 	Uris          []string          `json:"uris,omitempty"`
 	Version       string            `json:"version,omitempty"`
 }
 
-func (application *Application) Name(id string) (*Application) {
+func (application *Application) Name(id string) *Application {
 	application.ID = id
 	return application
 }
 
-func (application *Application) CPU(cpu float32) (*Application) {
+func (application *Application) CPU(cpu float32) *Application {
 	application.CPUs = cpu
 	return application
 }
 
-func (application *Application) Storage(disk float32) (*Application) {
+func (application *Application) Storage(disk float32) *Application {
 	application.Disk = disk
 	return application
 }
 
-func (application *Application) Memory(memory float32) (*Application) {
+func (application *Application) DependsOn(name string) *Application {
+	if application.Dependencies == nil {
+		application.Dependencies = make([]string, 0)
+	}
+	application.Dependencies = append(application.Dependencies, name)
+	return application
+
+}
+
+func (application *Application) Memory(memory float32) *Application {
 	application.Mem = memory
 	return application
 }
 
-func (application *Application) Count(count int) (*Application) {
+func (application *Application) Count(count int) *Application {
 	application.Instances = count
 	return application
 }
 
-func (application *Application) Arg(argument string) (*Application) {
+func (application *Application) Arg(argument string) *Application {
 	if application.Args == nil {
-		application.Args = make([]string,0)
+		application.Args = make([]string, 0)
 	}
 	application.Args = append(application.Args, argument)
 	return application
 }
 
-func (application *Application) AddEnv(name, value string) (*Application) {
+func (application *Application) AddEnv(name, value string) *Application {
 	if application.Env == nil {
-		application.Env = make(map[string]string,0)
+		application.Env = make(map[string]string, 0)
 	}
 	application.Env[name] = value
 	return application
@@ -105,6 +116,7 @@ type ApplicationVersion struct {
 	Version string `json:"version"`
 }
 
+// Retrieve an array of all the applications which are running in marathon
 func (client *Client) Applications() (*Applications, error) {
 	applications := new(Applications)
 	if err := client.ApiGet(MARATHON_API_APPS, "", applications); err != nil {
@@ -114,6 +126,7 @@ func (client *Client) Applications() (*Applications, error) {
 	}
 }
 
+// Retrieve an array of the application names currently running in marathon
 func (client *Client) ListApplications() ([]string, error) {
 	if applications, err := client.Applications(); err != nil {
 		return nil, err
@@ -157,7 +170,7 @@ func (client *Client) ApplicationVersions(name string) (*ApplicationVersions, er
 // Params:
 // 		name: 		the id used to identify the application
 //		version: 	the version (normally a timestamp) you wish to change to
-func (client *Client) ChangeApplicationVersion(name string, version *ApplicationVersion) (*DeploymentID, error) {
+func (client *Client) SetApplicationVersion(name string, version *ApplicationVersion) (*DeploymentID, error) {
 	client.Debug("Changing the application: %s to version: %s", name, version)
 	uri := fmt.Sprintf("%s%s", MARATHON_API_APPS, name)
 	deploymentId := new(DeploymentID)
