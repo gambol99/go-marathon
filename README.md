@@ -6,14 +6,14 @@
 
 Go-marathon is a api library for working with [Marathon](https://mesosphere.github.io/marathon/). It currently supports 
 
-  - Application and group deployment
-  - Helper filters for pulling the status, configuraion and tasks
-  - Multple Endpoint support for HA deployments
+  > - Application and group deployment
+  > - Helper filters for pulling the status, configuraion and tasks
+  > - Multple Endpoint support for HA deployments
   
 Underdevelopment
 
-  - Subscriptions and Marathon event interface
-  - General clean up
+  > - Subscriptions and Marathon event interface
+  > - General clean up
 
 > ##### **Examples**
 
