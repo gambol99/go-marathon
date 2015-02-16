@@ -73,7 +73,7 @@ type Marathon interface {
 	/* create a group deployment */
 	CreateGroup(group *Group) (*ApplicationVersion, error)
 	/* delete a group */
-	DeleteGroup(group *Group) (*ApplicationVersion, error)
+	DeleteGroup(name string) (*ApplicationVersion, error)
 	/* check if a group exists */
 	HasGroup(name string) (bool, error)
 
