@@ -34,6 +34,9 @@ type Groups struct {
 	Groups       []*Group       `json:"groups"`
 }
 
+// Create a new Application Group
+// Params:
+//		name:	the name of the group
 func NewApplicationGroup(name string) *Group {
 	return &Group{
 		ID:           name,
@@ -43,11 +46,17 @@ func NewApplicationGroup(name string) *Group {
 	}
 }
 
+// Specify the name of the group
+// Params:
+// 		name:	the name of the group
 func (group *Group) Name(name string) *Group {
 	group.ID = name
 	return group
 }
 
+// Add a application to the group in question
+// Params:
+// 		application:	a pointer to the Application
 func (group *Group) App(application *Application) *Group {
 	if group.Apps == nil {
 		group.Apps = make([]*Application, 0)
@@ -56,6 +65,7 @@ func (group *Group) App(application *Application) *Group {
 	return group
 }
 
+// Retrieve a list of all the groups from marathon
 func (client *Client) Groups() (*Groups, error) {
 	groups := new(Groups)
 	if err := client.ApiGet(MARATHON_API_GROUPS, "", groups); err != nil {
@@ -64,6 +74,9 @@ func (client *Client) Groups() (*Groups, error) {
 	return groups, nil
 }
 
+// Retrieve the configuration of a specific group from marathon
+// Params:
+//		name:	the identifier for the group
 func (client *Client) Group(name string) (*Group, error) {
 	group := new(Group)
 	if err := client.ApiGet(fmt.Sprintf("%s%s", MARATHON_API_GROUPS, name), "", group); err != nil {
@@ -72,6 +85,9 @@ func (client *Client) Group(name string) (*Group, error) {
 	return group, nil
 }
 
+// Check if the group exists in marathon
+// Params:
+// 		name:	the identifier for the group
 func (client *Client) HasGroup(name string) (bool, error) {
 	if groups, err := client.Groups(); err != nil {
 		return false, err
@@ -85,6 +101,9 @@ func (client *Client) HasGroup(name string) (bool, error) {
 	}
 }
 
+// Create a new group in marathon
+// Params:
+//		group:	a pointer the Group structure defining the group
 func (client *Client) CreateGroup(group *Group) (*ApplicationVersion, error) {
 	version := new(ApplicationVersion)
 	if err := client.ApiPost(MARATHON_API_GROUPS, group, version); err != nil {
@@ -93,6 +112,9 @@ func (client *Client) CreateGroup(group *Group) (*ApplicationVersion, error) {
 	return version, nil
 }
 
+// Delete a group from marathon
+// Params:
+// 		name:	the identifier for the group
 func (client *Client) DeleteGroup(name string) (*ApplicationVersion, error) {
 	version := new(ApplicationVersion)
 	uri := fmt.Sprintf("%s%s", MARATHON_API_GROUPS, name)
