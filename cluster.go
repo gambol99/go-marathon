@@ -183,12 +183,15 @@ func (cluster *MarathonCluster) GetMarathonURL(member *Member) string {
 func (cluster *MarathonCluster) MarkDown() {
 	cluster.Lock()
 	defer cluster.Unlock()
+
 	/* step: mark the current host as down */
 	member := cluster.active
 	member.status = MEMBER_UNAVAILABLE
+
 	/* step: create a go-routine to place the member back in */
 	go func() {
 		http_client := &http.Client{}
+
 		/* step: we wait a ping from the host to work */
 		for {
 			fmt.Printf("Attempting to connect to member: %s\n", member.hostname)
@@ -200,6 +203,7 @@ func (cluster *MarathonCluster) MarkDown() {
 			}
 		}
 	}()
+
 	/* step: move to the next member */
 	if cluster.active.next != nil {
 		cluster.active = cluster.active.next

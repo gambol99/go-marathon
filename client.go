@@ -25,8 +25,6 @@ import (
 	"net/http"
 	"strings"
 	"sync"
-	"time"
-	"net"
 )
 
 const (
