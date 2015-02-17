@@ -73,6 +73,18 @@ type Marathon interface {
 	/* get the endpoints for a service on a application */
 	TaskEndpoints(name string, port int) ([]string, error)
 
+	/* --- GROUPS --- */
+	/* list all the groups in the system */
+	Groups() (*Groups, error)
+	/* retrieve a specific group from marathon */
+	Group(name string) (*Group, error)
+	/* create a group deployment */
+	CreateGroup(group *Group) (*ApplicationVersion, error)
+	/* delete a group */
+	DeleteGroup(name string) (*ApplicationVersion, error)
+	/* check if a group exists */
+	HasGroup(name string) (bool, error)
+
 	/* --- DEPLOYMENTS --- */
 
 	/* get a list of the deployments */
