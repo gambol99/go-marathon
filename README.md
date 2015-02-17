@@ -1,6 +1,5 @@
-[![Build Status](https://drone.io/github.com/gambol99/go-marathon/status.png)](https://drone.io/github.com/gambol99/go-marathon/latest)
-[![GoDoc](http://godoc.org/github.com/gambol99/go-marathon?status.png)](http://godoc.org/github.com/gambol99/go-marathon)
 [![Build Status](https://travis-ci.org/gambol99/go-marathon.svg?branch=master)](https://travis-ci.org/gambol99/go-marathon)
+[![GoDoc](http://godoc.org/github.com/gambol99/go-marathon?status.png)](http://godoc.org/github.com/gambol99/go-marathon)
 
 #### **Go-Marathon**
 -----
@@ -8,14 +7,10 @@
 Go-marathon is a api library for working with [Marathon](https://mesosphere.github.io/marathon/). It currently supports 
 
   > - Application and group deployment
-  > - Helper filters for pulling the status, configuraion and tasks
-  > - Multple Endpoint support for HA deployments
+  > - Helper filters for pulling the status, configuration and tasks
+  > - Multiple Endpoint support for HA deployments
+  > - Marathon Subscriptions and Event callbacks
   
-Underdevelopment
-
-  > - Subscriptions and Marathon event interface
-  > - General clean up
-
 > ##### **Examples**
 
 Check out the examples directory for more code examples

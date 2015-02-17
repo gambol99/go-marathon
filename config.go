@@ -31,9 +31,9 @@ type Config struct {
 
 func NewDefaultConfig() Config {
 	return Config{
-		URL:             "http://localhost:8080",
-		EventsPort:      DEFAULT_EVENTS_PORT,
-		EventsInterface: DEFAULT_EVENTS_BIND,
+		URL:             "http://127.0.0.1:8080",
+		EventsPort:      10001,
+		EventsInterface: "eth0",
 		Debug:           false,
 		RequestTimeout:  5}
 }

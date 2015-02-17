@@ -22,12 +22,16 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"errors"
+	"time"
+	"net"
 )
 
 type Subscriptions struct {
 	CallbackURLs []string `json:"callbackUrls"`
 }
 
+// Retrieve a list of registered subscriptions
 func (client *Client) Subscriptions() (*Subscriptions, error) {
 	subscriptions := new(Subscriptions)
 	if err := client.ApiGet(MARATHON_API_SUBSCRIPTION, "", subscriptions); err != nil {
@@ -37,69 +41,104 @@ func (client *Client) Subscriptions() (*Subscriptions, error) {
 	}
 }
 
-func (client *Client) RegisterSubscription() error {
-	/* step: lets lock the client */
+func (client *Client) AddEventsListener(channel EventsChannel, filter int) error {
 	client.Lock()
 	defer client.Unlock()
-	if !client.events_running {
-		go func() {
-			/* step: generate the call url */
-			if _, err := client.SubscriptionURL(); err != nil {
-				return
-			}
-			/* step: register the handler */
-			http.HandleFunc(DEFAULT_EVENTS_URL, client.HandleMarathonEvent)
-			/* step: register and listen */
-			http.ListenAndServe(fmt.Sprintf("%s:%d", client.events_ipaddress, client.config.EventsPort), nil)
-			/* step; unset the boolean */
-			client.events_running = false
-		}()
-	}
-	/* step: check if we are already subscribed */
-	if found, err := client.HasSubscription(); err != nil {
+	/* step: someone has asked to start listening to event, we need to register for events
+	if we haven't done so already
+	 */
+	if err := client.RegisterSubscription(); err != nil {
 		return err
-	} else if found {
-		return nil
 	}
-	/* step: register the event callback */
-	uri := fmt.Sprintf("%s?callbackUrl=%s", MARATHON_API_SUBSCRIPTION, client.events_callback_url)
-	if err := client.ApiPost(uri, "", nil); err != nil {
-		return err
+
+	if _, found := client.listeners[channel]; !found {
+		client.listeners[channel] = filter
 	}
 	return nil
 }
 
-func (client *Client) DeregisterSubscription() error {
-	/* step: check if we are already subscribed */
-	found, err := client.HasSubscription()
-	if err != nil {
+func (client *Client) RemoveEventsListener(channel EventsChannel) {
+	client.Lock()
+	defer client.Unlock()
+	if _, found := client.listeners[channel]; found {
+		delete(client.listeners, channel)
+		/* step: if there is no one listening anymore, lets remove our self
+		from the events callback */
+		if len(client.listeners) <= 0 {
+			client.UnSubscribe()
+		}
+	}
+}
+
+func (client *Client) SubscriptionURL() string {
+	return fmt.Sprintf("http://%s:%d%s", client.ipaddress, client.config.EventsPort, DEFAULT_EVENTS_URL)
+}
+
+func (client *Client) RegisterSubscription() error {
+	if !client.events_running {
+		if ip_address, err := GetInterfaceAddress(client.config.EventsInterface); err != nil {
+			return errors.New(fmt.Sprintf("Unable to get the ip address from the interface: %s, error: %s",
+				client.config.EventsInterface, err))
+		} else {
+			/* step: set the ip address */
+			client.ipaddress = ip_address
+			binding := fmt.Sprintf("%s:%d", ip_address, client.config.EventsPort)
+			/* step: register the handler */
+			http.HandleFunc(DEFAULT_EVENTS_URL, client.HandleMarathonEvent)
+			/* step: create the http server */
+			server := &http.Server{
+				Addr:           binding,
+				Handler:        nil,
+				ReadTimeout:    10 * time.Second,
+				WriteTimeout:   10 * time.Second,
+				MaxHeaderBytes: 1 << 20,
+			}
+			/* step: try and listen on the port */
+			if listener, err := net.Listen("tcp", binding); err != nil {
+				return nil
+			} else {
+				go func() {
+					for {
+						/* step: start listening in blocking mode */
+						server.Serve(listener)
+					}
+				}()
+			}
+		}
+	}
+
+	/* step: get the callback url */
+	callback := client.SubscriptionURL()
+	/* step: check if the callback is registered */
+	if found, err := client.HasSubscription(callback); err != nil {
 		return err
-	} else if found {
-		/* step: remove from the list of subscriptions */
-		uri := fmt.Sprintf("%s?callbackUrl=%s", MARATHON_API_SUBSCRIPTION, client.events_callback_url)
-		if err := client.ApiDelete(uri, "", nil); err != nil {
+	} else if !found {
+		/* step: we need to register our self */
+		uri := fmt.Sprintf("%s?callbackUrl=%s", MARATHON_API_SUBSCRIPTION, callback)
+		if err := client.ApiPost(uri, "", nil); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (client *Client) HasSubscription() (bool, error) {
+func (client *Client) UnSubscribe() error {
+	/* step: remove from the list of subscriptions */
+	return client.ApiDelete(fmt.Sprintf("%s?callbackUrl=%s", MARATHON_API_SUBSCRIPTION, client.ipaddress), "", nil)
+}
+
+func (client *Client) HasSubscription(callback string) (bool, error) {
 	/* step: generate our events callback */
-	if callback, err := client.SubscriptionURL(); err != nil {
+	if subscriptions, err := client.Subscriptions(); err != nil {
 		return false, err
 	} else {
-		if subscriptions, err := client.Subscriptions(); err != nil {
-			return false, err
-		} else {
-			for _, subscription := range subscriptions.CallbackURLs {
-				if callback == subscription {
-					return true, nil
-				}
+		for _, subscription := range subscriptions.CallbackURLs {
+			if callback == subscription {
+				return true, nil
 			}
 		}
-		return false, nil
 	}
+	return false, nil
 }
 
 func (client *Client) HandleMarathonEvent(writer http.ResponseWriter, request *http.Request) {
@@ -116,14 +155,24 @@ func (client *Client) HandleMarathonEvent(writer http.ResponseWriter, request *h
 		}
 		/* step: check the type is handled */
 		if event_type_value, found := Events[event_type.EventType]; found {
-			event := client.GetEvent(event_type.EventType)
+			event := client.GetEventType(event_type.EventType)
 			event.EventType = event_type_value
 			/* step: lets decode */
 			decoder = json.NewDecoder(strings.NewReader(content))
 			if err := decoder.Decode(event.Event); err != nil {
 				client.Debug("Failed to decode the event type: %s, error: %s", event_type, err)
 			}
-
+			client.RLock()
+			defer client.RUnlock()
+			/* step: check if anyone is listen for this event */
+			for channel, filter := range client.listeners {
+				/* step: check if this person wants this event type */
+				if event.EventType & filter != 0 {
+					go func() {
+						channel <- event
+					}()
+				}
+			}
 		} else {
 			client.Debug("The event type: %s was not found", event_type.EventType)
 		}
@@ -132,7 +181,7 @@ func (client *Client) HandleMarathonEvent(writer http.ResponseWriter, request *h
 	}
 }
 
-func (client *Client) GetEvent(event_type string) *Event {
+func (client *Client) GetEventType(event_type string) *Event {
 	event := new(Event)
 	event.EventTypeName = event_type
 	switch event_type {
@@ -172,38 +221,4 @@ func (client *Client) GetEvent(event_type string) *Event {
 	return event
 }
 
-func (client *Client) SubscriptionURL() (string, error) {
-	if ip_address, err := GetInterfaceAddress(client.config.EventsInterface); err != nil {
-		return "", err
-	} else {
-		/* step: construct the url */
-		client.events_ipaddress = ip_address
-		client.events_callback_url = fmt.Sprintf("http://%s:%d%s",
-			client.events_ipaddress, client.config.EventsPort, DEFAULT_EVENTS_URL)
 
-		client.Debug("Subscription callback url: %s", client.events_callback_url)
-		return client.events_callback_url, nil
-	}
-}
-
-func (client *Client) WatchList() []string {
-	client.RLock()
-	defer client.RUnlock()
-	list := make([]string, 0)
-	for name, _ := range client.services {
-		list = append(list, name)
-	}
-	return list
-}
-
-func (client *Client) Watch(name string, channel chan string) {
-	client.Lock()
-	defer client.Unlock()
-	client.services[name] = channel
-}
-
-func (client *Client) RemoveWatch(name string) {
-	client.Lock()
-	defer client.Unlock()
-	delete(client.services, name)
-}

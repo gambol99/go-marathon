@@ -17,9 +17,6 @@ limitations under the License.
 package marathon
 
 const (
-	/* the default port to listen for events from marathon */
-	DEFAULT_EVENTS_PORT = 10001
-	DEFAULT_EVENTS_BIND = "0.0.0.0"
 	DEFAULT_EVENTS_URL  = "/event"
 
 	/* --- api related constants --- */

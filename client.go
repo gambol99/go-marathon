@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 )
 
 const (
@@ -92,16 +93,13 @@ type Marathon interface {
 
 	/* --- SUBSCRIPTIONS --- */
 
-	/* register for events */
-	RegisterSubscription() error
 	/* a list of current subscriptions */
 	Subscriptions() (*Subscriptions, error)
-	/* watch for changes on a application */
-	Watch(name string, channel chan string)
-	/* remove me from watching this service */
-	RemoveWatch(name string)
-	/* a list of service being watched */
-	WatchList() []string
+	/* add a events listener */
+	AddEventsListener(channel EventsChannel, filter int) error
+	/* remove a events listener */
+	RemoveEventsListener(channel EventsChannel)
+	/* notify me of changes to application */
 
 	/* --- MISC --- */
 
@@ -136,18 +134,16 @@ type Client struct {
 	config Config
 	/* event handler */
 	events_running bool
-	/* the ip address you want to listen on */
-	events_ipaddress string
-	/* the events callback url */
-	events_callback_url string
 	/* protocol */
 	protocol string
+	/* the ip addess of the client */
+	ipaddress string
 	/* the http client */
 	http *http.Client
 	/* the marathon cluster */
 	cluster Cluster
 	/* a map of service you wish to listen to */
-	services map[string]chan string
+	listeners map[EventsChannel]int
 }
 
 type Message struct {
@@ -162,9 +158,11 @@ func NewClient(config Config) (Marathon, error) {
 		/* step: create the service marathon client */
 		service := new(Client)
 		service.config = config
-		service.services = make(map[string]chan string, 0)
+		service.listeners = make(map[EventsChannel]int, 0)
 		service.cluster = cluster
-		service.http = &http.Client{}
+		service.http = &http.Client{
+			Timeout: (time.Duration(config.RequestTimeout) * time.Second),
+		}
 		return service, nil
 	}
 }
@@ -285,25 +283,9 @@ func (client *Client) HttpCall(method, uri, body string) (int, string, *http.Res
 			var content string
 			/* step: perform the request */
 			if response, err := client.http.Do(request); err != nil {
+				/* step: mark the endpoint as down */
 				client.cluster.MarkDown()
-				/*
-				switch error_type := err.(type) {
-				case *net.OpError:
-					switch error_type.Op {
-					case "dial", "read":
-						client.Debug("Connection dial|read error")
-						return client.HttpCall(method, uri, body)
-					default:
-					}
-				case *syscall.Errno:
-					switch *error_type {
-					case syscall.ECONNREFUSED:
-						client.Debug("Connection refused")
-						return client.HttpCall(method, uri, body)
-					}
-				}
-				client.Debug("Unknown connection error: %s", err)
-				*/
+				/* step: retry the request with another endpoint */
 				return client.HttpCall(method, uri, body)
 			} else {
 				/* step: lets read in any content */

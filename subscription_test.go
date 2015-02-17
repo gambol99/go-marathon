@@ -28,25 +28,3 @@ func TestSubscriptions(t *testing.T) {
 	AssertOnNull(sub.CallbackURLs, t)
 	AssertOnInteger(len(sub.CallbackURLs), 1, t)
 }
-
-func TestWatch(t *testing.T) {
-	NewFakeMarathonEndpoint()
-	channel := make(chan string)
-	AssertOnNull(test_client.WatchList(), t)
-	AssertOnInteger(len(test_client.WatchList()), 0, t)
-	test_client.Watch(FAKE_APP_NAME, channel)
-	AssertOnNull(test_client.WatchList(), t)
-	AssertOnInteger(len(test_client.WatchList()), 1, t)
-}
-
-func TestRemove(t *testing.T) {
-	NewFakeMarathonEndpoint()
-	AssertOnNull(test_client.WatchList(), t)
-	channel := make(chan string)
-	test_client.Watch(FAKE_APP_NAME, channel)
-	AssertOnNull(test_client.WatchList(), t)
-	AssertOnInteger(len(test_client.WatchList()), 1, t)
-	test_client.RemoveWatch(FAKE_APP_NAME)
-	AssertOnNull(test_client.WatchList(), t)
-	AssertOnInteger(len(test_client.WatchList()), 0, t)
-}

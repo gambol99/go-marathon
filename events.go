@@ -16,12 +16,14 @@ limitations under the License.
 
 package marathon
 
+import "fmt"
+
 type EventType struct {
 	EventType string `json:"eventType"`
 }
 
 const (
-	EVENT_API_REQUEST = 0 << iota
+	EVENT_API_REQUEST = 1 << iota
 	EVENT_STATUS_UPDATE
 	EVENT_FRAMEWORK_MESSAGE
 	EVENT_SUBSCRIPTION
@@ -49,7 +51,7 @@ var (
 )
 
 func init() {
-	Events = map[string]int{
+	Events = map[string]int {
 		"api_post_event":              EVENT_API_REQUEST,
 		"status_update_event":         EVENT_STATUS_UPDATE,
 		"framework_message_event":     EVENT_FRAMEWORK_MESSAGE,
@@ -78,6 +80,12 @@ type Event struct {
 	EventTypeName string
 	Event         interface{}
 }
+
+func (event *Event) String() string {
+	return fmt.Sprintf("type: %s, event: %s", event.EventTypeName, event.Event)
+}
+
+type EventsChannel chan *Event
 
 /* --- API Request --- */
 
