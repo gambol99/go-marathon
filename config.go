@@ -23,8 +23,6 @@ type Config struct {
 	EventsPort int
 	/* the interface we should be listening on for events */
 	EventsInterface string
-	/* the ip address you want to listen on */
-	EventsIpAddress string
 	/* switch on debugging */
 	Debug bool
 }
@@ -34,6 +32,5 @@ func NewDefaultConfig() Config {
 		URL:             "http://localhost:8080",
 		EventsPort:      DEFAULT_EVENTS_PORT,
 		EventsInterface: DEFAULT_EVENTS_BIND,
-		EventsIpAddress: "",
 		Debug:           false}
 }

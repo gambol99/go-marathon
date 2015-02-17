@@ -40,6 +40,26 @@ type DeploymentStep struct {
 	App    string `json:"app"`
 }
 
+type DeploymentPlan struct {
+	ID       string `json:"id"`
+	Version  string `json:"version"`
+	Original struct {
+		Apps         []*Application `json:"apps"`
+		Dependencies []string       `json:"dependencies"`
+		Groups       []*Group       `json:"groups"`
+		ID           string         `json:"id"`
+		Version      string         `json:"version"`
+	} `json:"original"`
+	Steps  []*DeploymentStep `json:"steps"`
+	Target struct {
+		Apps         []*Application `json:"apps"`
+		Dependencies []string       `json:"dependencies"`
+		Groups       []*Group       `json:"groups"`
+		ID           string         `json:"id"`
+		Version      string         `json:"version"`
+	} `json:"target"`
+}
+
 func (client *Client) Deployments() ([]Deployment, error) {
 	var deployments []Deployment
 	if err := client.ApiGet(MARATHON_API_DEPLOYMENTS, "", &deployments); err != nil {

@@ -94,12 +94,14 @@ type Marathon interface {
 
 	/* --- SUBSCRIPTIONS --- */
 
+	/* register for events */
+	RegisterSubscription() error
 	/* a list of current subscriptions */
 	Subscriptions() (*Subscriptions, error)
 	/* watch for changes on a application */
-	Watch(name string, channel chan bool)
+	Watch(name string, channel chan string)
 	/* remove me from watching this service */
-	RemoveWatch(name string, channel chan bool)
+	RemoveWatch(name string)
 	/* a list of service being watched */
 	WatchList() []string
 
@@ -134,10 +136,12 @@ type Client struct {
 	sync.RWMutex
 	/* the configuration for the client */
 	config Config
-	/* the callback url for subscription */
-	subscription_url string
-	/* the binding for the http service */
-	subscription_iface string
+	/* event handler */
+	events_running bool
+	/* the ip address you want to listen on */
+	events_ipaddress string
+	/* the events callback url */
+	events_callback_url string
 	/* protocol */
 	protocol string
 	/* the http client */
@@ -145,7 +149,7 @@ type Client struct {
 	/* the marathon cluster */
 	cluster Cluster
 	/* a map of service you wish to listen to */
-	services map[string]chan bool
+	services map[string]chan string
 }
 
 type Message struct {
@@ -157,11 +161,10 @@ func NewClient(config Config) (Marathon, error) {
 	if cluster, err := NewMarathonCluster(config.URL); err != nil {
 		return nil, err
 	} else {
-		fmt.Printf("config: %s", config)
 		/* step: create the service marathon client */
 		service := new(Client)
 		service.config = config
-		service.services = make(map[string]chan bool, 0)
+		service.services = make(map[string]chan string, 0)
 		service.cluster = cluster
 		service.http = &http.Client{}
 		return service, nil

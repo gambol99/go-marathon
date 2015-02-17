@@ -75,7 +75,7 @@ func (client *Client) TaskEndpoints(name string, port int) ([]string, error) {
 		if port_index, err := application.Container.Docker.ServicePortIndex(port); err != nil {
 			return nil, err
 		} else {
-	  		var _ = port_index
+			var _ = port_index
 		}
 	}
 	return nil, nil
