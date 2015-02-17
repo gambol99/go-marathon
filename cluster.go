@@ -59,6 +59,22 @@ type MarathonCluster struct {
 	active *Member
 }
 
+func (cluster MarathonCluster) String() string {
+	return fmt.Sprintf("url: %s|%s, members: %s, size: %d, active: %s",
+		cluster.protocol, cluster.url, cluster.members, cluster.size, cluster.active)
+}
+
+func (cluster *MarathonCluster) ClusterState() []string {
+	list := make([]string,0)
+	member := cluster.members
+	for i := 0; i < cluster.size; i++ {
+		fmt.Printf("member: %v", member)
+		list = append(list, fmt.Sprintf("%s", member))
+		member = member.next
+	}
+	return list
+}
+
 type Member struct {
 	/* the name / ip address of the host */
 	hostname string
@@ -68,9 +84,17 @@ type Member struct {
 	next *Member
 }
 
+func (member Member) String() string {
+	status := "UP"
+	if member.status == MEMBER_UNAVAILABLE {
+		status = "DOWN"
+	}
+	return fmt.Sprintf("member: %s:%s", member.hostname, status)
+}
+
 func NewMarathonCluster(marathon_url string) (Cluster, error) {
 	cluster := new(MarathonCluster)
-	/* step: parse the url */
+	/* step: parse the marathon url */
 	if marathon, err := url.Parse(marathon_url); err != nil {
 		return nil, ErrInvalidEndpoint
 	} else {
@@ -79,22 +103,27 @@ func NewMarathonCluster(marathon_url string) (Cluster, error) {
 			return nil, ErrInvalidEndpoint
 		}
 		cluster.protocol = marathon.Scheme
-		cluster.url = marathon_url
+		cluster.url      = marathon_url
 
 		/* step: create a link list of the hosts */
-		var previous *Member
-		for _, host := range strings.SplitN(marathon.Host, ",", -1) {
+		var previous *Member = nil
+		for index, host := range strings.SplitN(marathon.Host, ",", -1) {
+			/* step: create a new cluster member */
 			member := new(Member)
 			member.hostname = host
-			member.status = MEMBER_AVAILABLE
-			cluster.size += 1
-			if previous == nil {
-				previous = member
-				cluster.active = member
+			cluster.size    += 1
+			/* step: if the first member */
+			if index == 0 {
+				cluster.members = member
+				cluster.active  = member
+				previous        = member
 			} else {
-				previous.next = member
+				previous.next   = member
+				previous        = member
 			}
 		}
+		/* step: close the link list */
+		previous.next = cluster.active
 	}
 	return cluster, nil
 }
@@ -159,13 +188,15 @@ func (cluster *MarathonCluster) MarkDown() {
 	member.status = MEMBER_UNAVAILABLE
 	/* step: create a go-routine to place the member back in */
 	go func() {
+		http_client := &http.Client{Timeout: (2 * time.Second),}
 		/* step: we wait a ping from the host to work */
 		for {
-			if response, err := http.Get(cluster.GetMarathonURL(member) + "/ping"); err == nil && response.StatusCode == 200 {
+			fmt.Printf("Attempting to connect to member: %s\n", member.hostname)
+			if response, err := http_client.Get(cluster.GetMarathonURL(member) + "/ping"); err == nil && response.StatusCode == 200 {
 				member.status = MEMBER_AVAILABLE
 				return
 			} else {
-				time.Sleep(2 * time.Second)
+				time.Sleep(10 * time.Second)
 			}
 		}
 	}()

@@ -22,11 +22,10 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"strings"
 	"sync"
-	"syscall"
+	"time"
 )
 
 const (
@@ -166,7 +165,9 @@ func NewClient(config Config) (Marathon, error) {
 		service.config = config
 		service.services = make(map[string]chan string, 0)
 		service.cluster = cluster
-		service.http = &http.Client{}
+		service.http = &http.Client{
+			Timeout: (5 * time.Second),
+		}
 		return service, nil
 	}
 }
@@ -278,7 +279,7 @@ func (client *Client) HttpCall(method, uri, body string) (int, string, *http.Res
 		return 0, "", nil, err
 	} else {
 		url := fmt.Sprintf("%s/%s", marathon, uri)
-		client.Debug("HTTPCall() method: %s, uri: %s, url: %s\n", method, uri, url)
+		client.Debug("HTTP method: %s, uri: %s, url: %s", method, uri, url)
 
 		if request, err := http.NewRequest(method, url, strings.NewReader(body)); err != nil {
 			return 0, "", nil, err
@@ -287,29 +288,29 @@ func (client *Client) HttpCall(method, uri, body string) (int, string, *http.Res
 			var content string
 			/* step: perform the request */
 			if response, err := client.http.Do(request); err != nil {
+				client.cluster.MarkDown()
+				/*
 				switch error_type := err.(type) {
 				case *net.OpError:
 					switch error_type.Op {
 					case "dial", "read":
-						/* step: we need to mark the host down */
-						client.cluster.MarkDown()
-						/* step: retry the request */
+						client.Debug("Connection dial|read error")
 						return client.HttpCall(method, uri, body)
 					default:
 					}
 				case *syscall.Errno:
 					switch *error_type {
 					case syscall.ECONNREFUSED:
-						/* step: we need to mark the host down */
-						client.cluster.MarkDown()
-						/* step: retry the request */
+						client.Debug("Connection refused")
 						return client.HttpCall(method, uri, body)
 					}
 				}
-				return 0, "", response, err
+				client.Debug("Unknown connection error: %s", err)
+				*/
+				return client.HttpCall(method, uri, body)
 			} else {
 				/* step: lets read in any content */
-				client.Debug("HTTPCall() method: %s, uri: %s, url: %s\n", method, uri, url)
+				client.Debug("HTTP method: %s, uri: %s, url: %s\n", method, uri, url)
 				if response.ContentLength != 0 {
 					/* step: read in the content from the request */
 					response_content, err := ioutil.ReadAll(response.Body)
