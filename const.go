@@ -17,7 +17,7 @@ limitations under the License.
 package marathon
 
 const (
-	DEFAULT_EVENTS_URL  = "/event"
+	DEFAULT_EVENTS_URL = "/event"
 
 	/* --- api related constants --- */
 	MARATHON_API_VERSION      = "v2"

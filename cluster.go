@@ -65,7 +65,7 @@ func (cluster MarathonCluster) String() string {
 }
 
 func (cluster *MarathonCluster) ClusterState() []string {
-	list := make([]string,0)
+	list := make([]string, 0)
 	member := cluster.members
 	for i := 0; i < cluster.size; i++ {
 		fmt.Printf("member: %v", member)
@@ -103,7 +103,7 @@ func NewMarathonCluster(marathon_url string) (Cluster, error) {
 			return nil, ErrInvalidEndpoint
 		}
 		cluster.protocol = marathon.Scheme
-		cluster.url      = marathon_url
+		cluster.url = marathon_url
 
 		/* step: create a link list of the hosts */
 		var previous *Member = nil
@@ -111,15 +111,15 @@ func NewMarathonCluster(marathon_url string) (Cluster, error) {
 			/* step: create a new cluster member */
 			member := new(Member)
 			member.hostname = host
-			cluster.size    += 1
+			cluster.size += 1
 			/* step: if the first member */
 			if index == 0 {
 				cluster.members = member
-				cluster.active  = member
-				previous        = member
+				cluster.active = member
+				previous = member
 			} else {
-				previous.next   = member
-				previous        = member
+				previous.next = member
+				previous = member
 			}
 		}
 		/* step: close the link list */

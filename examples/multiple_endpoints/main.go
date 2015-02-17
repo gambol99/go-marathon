@@ -52,6 +52,6 @@ func main() {
 			glog.Infof("Retrieved a list of applications, %v", application)
 		}
 		glog.Infof("Going to sleep for 20 seconds")
-		time.Sleep( 5 * time.Second )
+		time.Sleep(5 * time.Second)
 	}
 }

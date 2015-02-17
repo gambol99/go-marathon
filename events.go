@@ -51,7 +51,7 @@ var (
 )
 
 func init() {
-	Events = map[string]int {
+	Events = map[string]int{
 		"api_post_event":              EVENT_API_REQUEST,
 		"status_update_event":         EVENT_STATUS_UPDATE,
 		"framework_message_event":     EVENT_FRAMEWORK_MESSAGE,

@@ -18,13 +18,13 @@ package marathon
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"strings"
-	"errors"
 	"time"
-	"net"
 )
 
 type Subscriptions struct {
@@ -46,7 +46,7 @@ func (client *Client) AddEventsListener(channel EventsChannel, filter int) error
 	defer client.Unlock()
 	/* step: someone has asked to start listening to event, we need to register for events
 	if we haven't done so already
-	 */
+	*/
 	if err := client.RegisterSubscription(); err != nil {
 		return err
 	}
@@ -167,7 +167,7 @@ func (client *Client) HandleMarathonEvent(writer http.ResponseWriter, request *h
 			/* step: check if anyone is listen for this event */
 			for channel, filter := range client.listeners {
 				/* step: check if this person wants this event type */
-				if event.EventType & filter != 0 {
+				if event.EventType&filter != 0 {
 					go func() {
 						channel <- event
 					}()
@@ -220,5 +220,3 @@ func (client *Client) GetEventType(event_type string) *Event {
 	}
 	return event
 }
-
-
