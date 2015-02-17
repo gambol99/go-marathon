@@ -1,5 +1,6 @@
 [![Build Status](https://drone.io/github.com/gambol99/go-marathon/status.png)](https://drone.io/github.com/gambol99/go-marathon/latest)
 [![GoDoc](http://godoc.org/github.com/gambol99/go-marathon?status.png)](http://godoc.org/github.com/gambol99/go-marathon)
+[![Build Status](https://travis-ci.org/gambol99/go-marathon.svg?branch=master)](https://travis-ci.org/gambol99/go-marathon)
 
 #### **Go-Marathon**
 -----
