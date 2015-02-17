@@ -26,13 +26,13 @@ type Container struct {
 
 func (container *Container) Volume(host_path, container_path, mode string) *Container {
 	if container.Volumes == nil {
-		container.Volumes = make([]*Volume,0)
+		container.Volumes = make([]*Volume, 0)
 	}
 	container.Volumes = append(container.Volumes, &Volume{
-			ContainerPath: container_path,
-			HostPath: host_path,
-			Mode: mode,
-		})
+		ContainerPath: container_path,
+		HostPath:      host_path,
+		Mode:          mode,
+	})
 	return container
 }
 
@@ -40,11 +40,11 @@ func NewDockerContainer() *Container {
 	container := new(Container)
 	container.Type = "DOCKER"
 	container.Docker = &Docker{
-		Image: "",
-		Network: "BRIDGE",
-		PortMappings: make([]*PortMapping,0),
+		Image:        "",
+		Network:      "BRIDGE",
+		PortMappings: make([]*PortMapping, 0),
 	}
-	container.Volumes = make([]*Volume,0)
+	container.Volumes = make([]*Volume, 0)
 	return container
 }
 
@@ -82,13 +82,13 @@ func (docker *Docker) ExposeUDP(port int) *Docker {
 
 func (docker *Docker) ExposePort(container_port, host_port, service_port int, protocol string) *Docker {
 	if docker.PortMappings == nil {
-		docker.PortMappings = make([]*PortMapping,0)
+		docker.PortMappings = make([]*PortMapping, 0)
 	}
 	docker.PortMappings = append(docker.PortMappings, &PortMapping{
-			ContainerPort: container_port,
-			HostPort: host_port,
-			ServicePort: service_port,
-			Protocol: protocol,})
+		ContainerPort: container_port,
+		HostPort:      host_port,
+		ServicePort:   service_port,
+		Protocol:      protocol})
 	return docker
 }
 
@@ -105,7 +105,6 @@ func (docker *Docker) ServicePortIndex(port int) (int, error) {
 	/* step: we didn't find the port in the mappings */
 	return 0, errors.New("The container port required was not found in the container port mappings")
 }
-
 
 type PortMapping struct {
 	ContainerPort int    `json:"containerPort,omitempty"`
