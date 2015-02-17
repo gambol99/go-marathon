@@ -188,7 +188,7 @@ func (cluster *MarathonCluster) MarkDown() {
 	member.status = MEMBER_UNAVAILABLE
 	/* step: create a go-routine to place the member back in */
 	go func() {
-		http_client := &http.Client{Timeout: (2 * time.Second),}
+		http_client := &http.Client{}
 		/* step: we wait a ping from the host to work */
 		for {
 			fmt.Printf("Attempting to connect to member: %s\n", member.hostname)

@@ -26,6 +26,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"net"
 )
 
 const (
@@ -165,9 +166,7 @@ func NewClient(config Config) (Marathon, error) {
 		service.config = config
 		service.services = make(map[string]chan string, 0)
 		service.cluster = cluster
-		service.http = &http.Client{
-			Timeout: (5 * time.Second),
-		}
+		service.http = &http.Client{}
 		return service, nil
 	}
 }

@@ -25,6 +25,8 @@ type Config struct {
 	EventsInterface string
 	/* switch on debugging */
 	Debug bool
+	/* the timeout for requests */
+	RequestTimeout int
 }
 
 func NewDefaultConfig() Config {
@@ -32,5 +34,6 @@ func NewDefaultConfig() Config {
 		URL:             "http://localhost:8080",
 		EventsPort:      DEFAULT_EVENTS_PORT,
 		EventsInterface: DEFAULT_EVENTS_BIND,
-		Debug:           false}
+		Debug:           false,
+		RequestTimeout:  5}
 }
