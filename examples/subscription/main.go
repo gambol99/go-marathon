@@ -25,10 +25,12 @@ import (
 
 var marathon_url string
 var marathon_interface string
+var marathon_port int
 
 func init() {
 	flag.StringVar(&marathon_url, "url", "http://127.0.0.1:8080", "the url for the marathon endpoint")
 	flag.StringVar(&marathon_interface, "interface", "eth0", "the interface we should use for events")
+	flag.IntVar(&marathon_port, "port", 10001, "the port the events service should run on")
 }
 
 func Assert(err error) {
@@ -41,7 +43,8 @@ func main() {
 	flag.Parse()
 	config := marathon.NewDefaultConfig()
 	config.URL = marathon_url
-	config.Debug = true
+	config.Debug = false
+	config.EventsPort = marathon_port
 	config.EventsInterface = marathon_interface
 	client, err := marathon.NewClient(config)
 	if err != nil {
@@ -49,15 +52,13 @@ func main() {
 	}
 
 	/* step: lets register for events */
-	update := make(chan string)
-	if err := client.RegisterSubscription(); err != nil {
+	update := make(marathon.EventsChannel,5)
+	if err := client.AddEventsListener(update, marathon.EVENTS_APPLICATIONS); err != nil {
 		glog.Fatalf("Failed to register for subscriptions, %s", err)
 	} else {
-		/* step: lets ask for events on a service */
-		client.Watch("/product/web/frontend", update)
 		for {
-			application := <-update
-			glog.Infof("Application: %s changed", application)
+			event := <-update
+			glog.Infof("EVENT: %s", event )
 		}
 	}
 }

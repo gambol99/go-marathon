@@ -76,13 +76,13 @@ func init() {
 //
 
 type Event struct {
-	EventType     int
-	EventTypeName string
-	Event         interface{}
+	Type  int
+	Name  string
+	Event interface{}
 }
 
 func (event *Event) String() string {
-	return fmt.Sprintf("type: %s, event: %s", event.EventTypeName, event.Event)
+	return fmt.Sprintf("type: %s, event: %s", event.Name, event.Event)
 }
 
 type EventsChannel chan *Event

@@ -8,6 +8,7 @@ Gemfile.lock
 thin.*
 examples/applications/applications
 examples/multiple_endpoints/multiple_endpoints
+examples/subscription/subscription
 examples/groups/groups
 
 # Folders
@@ -29,4 +30,5 @@ _testmain.go
 *.exe
 *.test
 *.prof
+
 

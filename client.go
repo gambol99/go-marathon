@@ -132,12 +132,12 @@ type Client struct {
 	sync.RWMutex
 	/* the configuration for the client */
 	config Config
-	/* event handler */
-	events_running bool
 	/* protocol */
 	protocol string
 	/* the ip addess of the client */
 	ipaddress string
+	/* the http server */
+	events_http *http.Server
 	/* the http client */
 	http *http.Client
 	/* the marathon cluster */

@@ -75,7 +75,7 @@ func (client *Client) SubscriptionURL() string {
 }
 
 func (client *Client) RegisterSubscription() error {
-	if !client.events_running {
+	if client.events_http == nil {
 		if ip_address, err := GetInterfaceAddress(client.config.EventsInterface); err != nil {
 			return errors.New(fmt.Sprintf("Unable to get the ip address from the interface: %s, error: %s",
 				client.config.EventsInterface, err))
@@ -86,7 +86,8 @@ func (client *Client) RegisterSubscription() error {
 			/* step: register the handler */
 			http.HandleFunc(DEFAULT_EVENTS_URL, client.HandleMarathonEvent)
 			/* step: create the http server */
-			server := &http.Server{
+			client.Debug("Creating a event http server")
+			client.events_http = &http.Server{
 				Addr:           binding,
 				Handler:        nil,
 				ReadTimeout:    10 * time.Second,
@@ -99,8 +100,10 @@ func (client *Client) RegisterSubscription() error {
 			} else {
 				go func() {
 					for {
-						/* step: start listening in blocking mode */
-						server.Serve(listener)
+						client.Debug("Starting to listen on http events service")
+						// step: not sure how to handle an error from this, panic???
+						client.events_http.Serve(listener)
+						client.Debug("Exitted the http events service")
 					}
 				}()
 			}
@@ -113,21 +116,25 @@ func (client *Client) RegisterSubscription() error {
 	if found, err := client.HasSubscription(callback); err != nil {
 		return err
 	} else if !found {
+		client.Debug("Registering a subscription with Marathon: callback: %s", callback)
 		/* step: we need to register our self */
 		uri := fmt.Sprintf("%s?callbackUrl=%s", MARATHON_API_SUBSCRIPTION, callback)
 		if err := client.ApiPost(uri, "", nil); err != nil {
 			return err
 		}
+	} else {
+		client.Debug("A subscription already exists for this callback: %s", callback)
 	}
 	return nil
 }
 
 func (client *Client) UnSubscribe() error {
 	/* step: remove from the list of subscriptions */
-	return client.ApiDelete(fmt.Sprintf("%s?callbackUrl=%s", MARATHON_API_SUBSCRIPTION, client.ipaddress), "", nil)
+	return client.ApiDelete(fmt.Sprintf("%s?callbackUrl=%s", MARATHON_API_SUBSCRIPTION, client.SubscriptionURL()), "", nil)
 }
 
 func (client *Client) HasSubscription(callback string) (bool, error) {
+	client.Debug("Checking for subscription: %s", callback)
 	/* step: generate our events callback */
 	if subscriptions, err := client.Subscriptions(); err != nil {
 		return false, err
@@ -142,6 +149,7 @@ func (client *Client) HasSubscription(callback string) (bool, error) {
 }
 
 func (client *Client) HandleMarathonEvent(writer http.ResponseWriter, request *http.Request) {
+	client.Debug("Recieved a possible marathon event")
 	/* step: lets read in the post body */
 	if body, err := ioutil.ReadAll(request.Body); err == nil {
 		content := string(body[:])
@@ -153,70 +161,78 @@ func (client *Client) HandleMarathonEvent(writer http.ResponseWriter, request *h
 			client.Debug("Failed to decode the event type, content: %s, error: %s", content, err)
 			return
 		}
+
+		client.Debug("Recieved marathon event, %s", event_type.EventType)
 		/* step: check the type is handled */
-		if event_type_value, found := Events[event_type.EventType]; found {
-			event := client.GetEventType(event_type.EventType)
-			event.EventType = event_type_value
+		if event, err := client.GetEvent(event_type.EventType); err != nil {
+			client.Debug("Unable to retrieve the event, type: %s", event_type.EventType)
+		} else {
 			/* step: lets decode */
 			decoder = json.NewDecoder(strings.NewReader(content))
 			if err := decoder.Decode(event.Event); err != nil {
-				client.Debug("Failed to decode the event type: %s, error: %s", event_type, err)
+				client.Debug("Failed to decode the event type: %d, name: %s error: %s", event.Type, err)
 			}
+			client.Debug("Marathon event, %s", event)
 			client.RLock()
 			defer client.RUnlock()
 			/* step: check if anyone is listen for this event */
 			for channel, filter := range client.listeners {
 				/* step: check if this person wants this event type */
-				if event.EventType&filter != 0 {
+				if event.Type&filter != 0 {
+					client.Debug("Event type: %d being listen to, sending to lister: %s", event.Type, channel)
 					go func() {
 						channel <- event
 					}()
 				}
 			}
-		} else {
-			client.Debug("The event type: %s was not found", event_type.EventType)
 		}
 	} else {
 		client.Debug("Failed to decode the event type, content: %s, error: %s")
 	}
 }
 
-func (client *Client) GetEventType(event_type string) *Event {
-	event := new(Event)
-	event.EventTypeName = event_type
-	switch event_type {
-	case "api_post_event":
-		event.Event = new(EventAPIRequest)
-	case "status_update_event":
-		event.Event = new(EventStatusUpdate)
-	case "framework_message_event":
-		event.Event = new(EventFrameworkMessage)
-	case "subscribe_event":
-		event.Event = new(EventSubscription)
-	case "unsubscribe_event":
-		event.Event = new(EventUnsubscription)
-	case "add_health_check_event":
-		event.Event = new(EventAddHealthCheck)
-	case "remove_health_check_event":
-		event.Event = new(EventRemoveHealthCheck)
-	case "failed_health_check_event":
-		event.Event = new(EventFailedHealthCheck)
-	case "health_status_changed_event":
-		event.Event = new(EventHealthCheckChanged)
-	case "group_change_success":
-		event.Event = new(EventGroupChangeSuccess)
-	case "group_change_failed":
-		event.Event = new(EventGroupChangeFailed)
-	case "deployment_success":
-		event.Event = new(EventDeploymentSuccess)
-	case "deployment_failed":
-		event.Event = new(EventDeploymentFailed)
-	case "deployment_info":
-		event.Event = new(EventDeploymentInfo)
-	case "deployment_step_success":
-		event.Event = new(EventDeploymentStepSuccess)
-	case "deployment_step_failure":
-		event.Event = new(EventDeploymentStepFailure)
+func (client *Client) GetEvent(name string) (*Event, error) {
+	/* step: check it's supported */
+	if event_id, found := Events[name]; found {
+		event := new(Event)
+		event.Type = event_id
+		event.Name = name
+		switch name {
+		case "api_post_event":
+			event.Event = new(EventAPIRequest)
+		case "status_update_event":
+			event.Event = new(EventStatusUpdate)
+		case "framework_message_event":
+			event.Event = new(EventFrameworkMessage)
+		case "subscribe_event":
+			event.Event = new(EventSubscription)
+		case "unsubscribe_event":
+			event.Event = new(EventUnsubscription)
+		case "add_health_check_event":
+			event.Event = new(EventAddHealthCheck)
+		case "remove_health_check_event":
+			event.Event = new(EventRemoveHealthCheck)
+		case "failed_health_check_event":
+			event.Event = new(EventFailedHealthCheck)
+		case "health_status_changed_event":
+			event.Event = new(EventHealthCheckChanged)
+		case "group_change_success":
+			event.Event = new(EventGroupChangeSuccess)
+		case "group_change_failed":
+			event.Event = new(EventGroupChangeFailed)
+		case "deployment_success":
+			event.Event = new(EventDeploymentSuccess)
+		case "deployment_failed":
+			event.Event = new(EventDeploymentFailed)
+		case "deployment_info":
+			event.Event = new(EventDeploymentInfo)
+		case "deployment_step_success":
+			event.Event = new(EventDeploymentStepSuccess)
+		case "deployment_step_failure":
+			event.Event = new(EventDeploymentStepFailure)
+		}
+		return event, nil
+	} else {
+		return nil, errors.New(fmt.Sprintf("The event type: %d was not found or supported", name))
 	}
-	return event
 }
