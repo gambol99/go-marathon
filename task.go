@@ -58,25 +58,3 @@ func (client *Client) Tasks(application_id string) (*Tasks, error) {
 		return tasks, nil
 	}
 }
-
-// Get the endpoints i.e. HOST_IP:DYNAMIC_PORT for a specific application service
-// I.e. a container running apache, might have ports 80/443 (translated to X dynamic ports), but i want
-// port 80 only and i only want those whom have passed the health check
-// Params:
-//		name:		the identifier for the application
-//		port:		the container port you are interested in
-//		health: 	whether to check the health or not
-func (client *Client) TaskEndpoints(name string, port int) ([]string, error) {
-	/* step: get the application details */
-	if application, err := client.Application(name); err != nil {
-		return nil, err
-	} else {
-		/* step: we need to get the port index of the service we are interested in */
-		if port_index, err := application.Container.Docker.ServicePortIndex(port); err != nil {
-			return nil, err
-		} else {
-			var _ = port_index
-		}
-	}
-	return nil, nil
-}
