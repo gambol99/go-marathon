@@ -34,28 +34,29 @@ type ApplicationWrap struct {
 }
 
 type Application struct {
-	ID            string            `json:"id",omitempty`
-	Cmd           string            `json:"cmd,omitempty"`
-	Args          []string          `json:"args,omitempty"`
-	Constraints   [][]string        `json:"constraints,omitempty"`
-	Container     *Container        `json:"container,omitempty"`
-	CPUs          float32           `json:"cpus,omitempty"`
-	Disk          float32           `json:"disk,omitempty"`
-	Env           map[string]string `json:"env,omitempty"`
-	Executor      string            `json:"executor,omitempty"`
-	HealthChecks  []*HealthCheck    `json:"healthChecks,omitempty"`
-	Instances     int               `json:"instances,omitemptys"`
-	Mem           float32           `json:"mem,omitempty"`
-	Tasks         []*Task           `json:"tasks,omitempty"`
-	Ports         []int             `json:"ports,omitempty"`
-	RequirePorts  bool              `json:"requirePorts,omitempty"`
-	BackoffFactor float32           `json:"backoffFactor,omitempty"`
-	Dependencies  []string          `json:"dependencies,omitempty"`
-	TasksRunning  int               `json:"tasksRunning,omitempty"`
-	TasksStaged   int               `json:"tasksStaged,omitempty"`
-	User          string            `json:"user,omitempty"`
-	Uris          []string          `json:"uris,omitempty"`
-	Version       string            `json:"version,omitempty"`
+	ID              string            `json:"id",omitempty`
+	Cmd             string            `json:"cmd,omitempty"`
+	Args            []string          `json:"args,omitempty"`
+	Constraints     [][]string        `json:"constraints,omitempty"`
+	Container       *Container        `json:"container,omitempty"`
+	CPUs            float32           `json:"cpus,omitempty"`
+	Disk            float32           `json:"disk,omitempty"`
+	Env             map[string]string `json:"env,omitempty"`
+	Executor        string            `json:"executor,omitempty"`
+	HealthChecks    []*HealthCheck    `json:"healthChecks,omitempty"`
+	Instances       int               `json:"instances,omitemptys"`
+	Mem             float32           `json:"mem,omitempty"`
+	Tasks           []*Task           `json:"tasks,omitempty"`
+	Ports           []int             `json:"ports,omitempty"`
+	RequirePorts    bool              `json:"requirePorts,omitempty"`
+	BackoffFactor   float32           `json:"backoffFactor,omitempty"`
+	Dependencies    []string          `json:"dependencies,omitempty"`
+	TasksRunning    int               `json:"tasksRunning,omitempty"`
+	TasksStaged     int               `json:"tasksStaged,omitempty"`
+	User            string            `json:"user,omitempty"`
+	UpgradeStrategy *UpgradeStrategy  `json:"upgradeStrategy,omitempty"`
+	Uris            []string          `json:"uris,omitempty"`
+	Version         string            `json:"version,omitempty"`
 }
 
 type ApplicationVersions struct {
@@ -124,7 +125,7 @@ func (application *Application) AddEnv(name, value string) *Application {
 
 func (application *Application) CheckHTTP(uri string, port, interval int) (*Application, error) {
 	if application.HealthChecks == nil {
-		application.HealthChecks = make([]*HealthCheck,0)
+		application.HealthChecks = make([]*HealthCheck, 0)
 	}
 	if application.Container == nil || application.Container.Docker == nil {
 		return nil, errors.New("You have not specified a docker container yet")

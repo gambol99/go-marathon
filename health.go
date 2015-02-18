@@ -17,22 +17,24 @@ limitations under the License.
 package marathon
 
 type HealthCheck struct {
-	Protocol           string `json:"protocol,omitempty"`
-	Path               string `json:"path,omitempty"`
-	GracePeriodSeconds int    `json:"gracePeriodSeconds,omitempty"`
-	IntervalSeconds    int    `json:"intervalSeconds,omitempty"`
-	PortIndex          int    `json:"portIndex,omitempty"`
-	TimeoutSeconds     int    `json:"timeoutSeconds,omitempty"`
+	Protocol               string `json:"protocol,omitempty"`
+	Path                   string `json:"path,omitempty"`
+	GracePeriodSeconds     int    `json:"gracePeriodSeconds,omitempty"`
+	IntervalSeconds        int    `json:"intervalSeconds,omitempty"`
+	PortIndex              int    `json:"portIndex,omitempty"`
+	MaxConsecutiveFailures int    `json:"maxConsecutiveFailures,omitempty"`
+	TimeoutSeconds         int    `json:"timeoutSeconds,omitempty"`
 }
 
 func NewDefaultHealthCheck() *HealthCheck {
 	return &HealthCheck{
-		Protocol: "HTTP",
-		Path: "",
-		GracePeriodSeconds: 30,
-		IntervalSeconds: 10,
-		PortIndex: 0,
-		TimeoutSeconds: 5,}
+		Protocol:               "HTTP",
+		Path:                   "",
+		GracePeriodSeconds:     30,
+		IntervalSeconds:        10,
+		PortIndex:              0,
+		MaxConsecutiveFailures: 3,
+		TimeoutSeconds:         5}
 }
 
 type HealthCheckResult struct {

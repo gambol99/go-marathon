@@ -73,6 +73,7 @@ type Marathon interface {
 	TaskEndpoints(name string, port int) ([]string, error)
 
 	/* --- GROUPS --- */
+
 	/* list all the groups in the system */
 	Groups() (*Groups, error)
 	/* retrieve a specific group from marathon */
@@ -132,8 +133,6 @@ type Client struct {
 	sync.RWMutex
 	/* the configuration for the client */
 	config Config
-	/* protocol */
-	protocol string
 	/* the ip addess of the client */
 	ipaddress string
 	/* the http server */

@@ -52,13 +52,13 @@ func main() {
 	}
 
 	/* step: lets register for events */
-	update := make(marathon.EventsChannel,5)
+	update := make(marathon.EventsChannel, 5)
 	if err := client.AddEventsListener(update, marathon.EVENTS_APPLICATIONS); err != nil {
 		glog.Fatalf("Failed to register for subscriptions, %s", err)
 	} else {
 		for {
 			event := <-update
-			glog.Infof("EVENT: %s", event )
+			glog.Infof("EVENT: %s", event)
 		}
 	}
 }

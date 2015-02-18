@@ -56,7 +56,7 @@ func main() {
 
 	GROUP_NAME := "/product/group"
 
-	found, err := client.HasGroup(GROUP_NAME);
+	found, err := client.HasGroup(GROUP_NAME)
 	Assert(err)
 	if found {
 		client.DeleteGroup(GROUP_NAME)
@@ -83,7 +83,7 @@ func main() {
 	mysql.CPU(0.1).Memory(128).Storage(0.0).Count(1)
 	mysql.AddEnv("NAME", "group_cache")
 	mysql.AddEnv("SERVICE_3306_NAME", "mysql")
-	mysql.AddEnv("MYSQL_PASS","mysql")
+	mysql.AddEnv("MYSQL_PASS", "mysql")
 	mysql.Container.Docker.Container("tutum/mysql").Expose(3306)
 	_, err = mysql.CheckTCP(3306, 10)
 	Assert(err)
