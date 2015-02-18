@@ -253,9 +253,9 @@ func (client *Client) ApiCall(method, uri, body string, result interface{}) (int
 		}
 		switch status {
 		case 500:
-			return 0, "", ErrInvalidResponse
+			return status, "", ErrInvalidResponse
 		case 404:
-			return 0, "", ErrDoesNotExist
+			return status, "", ErrDoesNotExist
 		}
 
 		/* step: lets decode into a error message */

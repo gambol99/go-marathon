@@ -50,12 +50,26 @@ type Application struct {
 	Ports         []int             `json:"ports,omitempty"`
 	RequirePorts  bool              `json:"requirePorts,omitempty"`
 	BackoffFactor float32           `json:"backoffFactor,omitempty"`
-	Dependencies  []string          `json:"dependencies,omitempty`
+	Dependencies  []string          `json:"dependencies,omitempty"`
 	TasksRunning  int               `json:"tasksRunning,omitempty"`
 	TasksStaged   int               `json:"tasksStaged,omitempty"`
 	User          string            `json:"user,omitempty"`
 	Uris          []string          `json:"uris,omitempty"`
 	Version       string            `json:"version,omitempty"`
+}
+
+type ApplicationVersions struct {
+	Versions []string `json:"versions"`
+}
+
+type ApplicationVersion struct {
+	Version string `json:"version"`
+}
+
+func NewDockerApplication() *Application {
+	application := new(Application)
+	application.Container = NewDockerContainer()
+	return application
 }
 
 func (application *Application) Name(id string) *Application {
@@ -108,12 +122,46 @@ func (application *Application) AddEnv(name, value string) *Application {
 	return application
 }
 
-type ApplicationVersions struct {
-	Versions []string `json:"versions"`
+func (application *Application) CheckHTTP(uri string, port, interval int) (*Application, error) {
+	if application.HealthChecks == nil {
+		application.HealthChecks = make([]*HealthCheck,0)
+	}
+	if application.Container == nil || application.Container.Docker == nil {
+		return nil, errors.New("You have not specified a docker container yet")
+	}
+	/* step: get the port index */
+	if port_index, err := application.Container.Docker.ServicePortIndex(port); err != nil {
+		return nil, err
+	} else {
+		health := NewDefaultHealthCheck()
+		health.Path = uri
+		health.IntervalSeconds = interval
+		health.PortIndex = port_index
+		/* step: add to the checks */
+		application.HealthChecks = append(application.HealthChecks, health)
+		return application, nil
+	}
 }
 
-type ApplicationVersion struct {
-	Version string `json:"version"`
+func (application *Application) CheckTCP(port, interval int) (*Application, error) {
+	if application.HealthChecks == nil {
+		application.HealthChecks = make([]*HealthCheck, 0)
+	}
+	if application.Container == nil || application.Container.Docker == nil {
+		return nil, errors.New("You have not specified a docker container yet")
+	}
+	/* step: get the port index */
+	if port_index, err := application.Container.Docker.ServicePortIndex(port); err != nil {
+		return nil, err
+	} else {
+		health := NewDefaultHealthCheck()
+		health.Protocol = "TCP"
+		health.IntervalSeconds = interval
+		health.PortIndex = port_index
+		/* step: add to the checks */
+		application.HealthChecks = append(application.HealthChecks, health)
+		return application, nil
+	}
 }
 
 // Retrieve an array of all the applications which are running in marathon

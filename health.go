@@ -25,6 +25,16 @@ type HealthCheck struct {
 	TimeoutSeconds     int    `json:"timeoutSeconds,omitempty"`
 }
 
+func NewDefaultHealthCheck() *HealthCheck {
+	return &HealthCheck{
+		Protocol: "HTTP",
+		Path: "",
+		GracePeriodSeconds: 30,
+		IntervalSeconds: 10,
+		PortIndex: 0,
+		TimeoutSeconds: 5,}
+}
+
 type HealthCheckResult struct {
 	Alive               bool   `json:"alive"`
 	ConsecutiveFailures int    `json:"consecutiveFailures"`

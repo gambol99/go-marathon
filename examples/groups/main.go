@@ -54,28 +54,51 @@ func main() {
 		}
 	}
 
+	GROUP_NAME := "/product/group"
+
+	found, err := client.HasGroup(GROUP_NAME);
+	Assert(err)
+	if found {
+		client.DeleteGroup(GROUP_NAME)
+	}
+
 	/* step: the frontend app */
-	frontend := new(marathon.Application)
+	frontend := marathon.NewDockerApplication()
 	frontend.Name("/product/group/frontend")
 	frontend.CPU(0.1).Memory(64).Storage(0.0).Count(2)
 	frontend.Arg("/usr/sbin/apache2ctl").Arg("-D").Arg("FOREGROUND")
 	frontend.AddEnv("NAME", "frontend_http")
-	frontend.AddEnv("SERVICE_80_NAME", "test_http")
-	frontend.Container = marathon.NewDockerContainer()
+	frontend.AddEnv("SERVICE_80_NAME", "frontend_http")
+	frontend.AddEnv("SERVICE_443_NAME", "frontend_https")
+	frontend.AddEnv("BACKEND_MYSQL", "/product/group/mysql/3306;3306")
+	frontend.AddEnv("BACKEND_CACHE", "/product/group/cache/6379;6379")
 	frontend.DependsOn("/product/group/cache")
+	frontend.DependsOn("/product/group/mysql")
 	frontend.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80).Expose(443)
+	_, err = frontend.CheckHTTP("/hostname.php", 80, 10)
+	Assert(err)
 
-	redis := new(marathon.Application)
+	mysql := marathon.NewDockerApplication()
+	mysql.Name("/product/group/mysql")
+	mysql.CPU(0.1).Memory(128).Storage(0.0).Count(1)
+	mysql.AddEnv("NAME", "group_cache")
+	mysql.AddEnv("SERVICE_3306_NAME", "mysql")
+	mysql.AddEnv("MYSQL_PASS","mysql")
+	mysql.Container.Docker.Container("tutum/mysql").Expose(3306)
+	_, err = mysql.CheckTCP(3306, 10)
+	Assert(err)
+
+	redis := marathon.NewDockerApplication()
 	redis.Name("/product/group/cache")
 	redis.CPU(0.1).Memory(64).Storage(0.0).Count(2)
-	redis.Arg("/usr/sbin/apache2ctl").Arg("-D").Arg("FOREGROUND")
 	redis.AddEnv("NAME", "group_cache")
-	redis.AddEnv("SERVICE_6379_NAME", "test_redis")
-	redis.Container = marathon.NewDockerContainer()
+	redis.AddEnv("SERVICE_6379_NAME", "redis")
 	redis.Container.Docker.Container("redis:latest").Expose(6379)
+	_, err = redis.CheckTCP(6379, 10)
+	Assert(err)
 
-	group := marathon.NewApplicationGroup("/product/group")
-	group.App(frontend).App(redis)
+	group := marathon.NewApplicationGroup(GROUP_NAME)
+	group.App(frontend).App(redis).App(mysql)
 
 	if version, err := client.CreateGroup(group); err != nil {
 		glog.Errorf("Failed to create the group: %s, error: %s", group.ID, err)
