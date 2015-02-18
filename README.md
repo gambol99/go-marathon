@@ -87,9 +87,50 @@ The first one specified will be used, if that goes offline the member is marked 
 Change the number of instance of the application to 4 
 
     glog.Infof("Scale to 4 instances")
-		if err := client.ScaleApplicationInstances(application.ID, 4); err != nil {
-			glog.Errorf("Failed to delete the application: %s, error: %s", application, err)
-		} else {
-			glog.Infof("Successfully scaled the application")
-		}
-	
+    if err := client.ScaleApplicationInstances(application.ID, 4); err != nil {
+        glog.Errorf("Failed to delete the application: %s, error: %s", application, err)
+    } else {
+        glog.Infof("Successfully scaled the application")
+    }
+
+> ##### **Subscription**
+
+Request to listen to events related to applications - namely status updates, health checks changes and failures
+
+    /* step: lets register for events */
+    update := make(marathon.EventsChannel,5)
+    if err := client.AddEventsListener(update, marathon.EVENTS_APPLICATIONS); err != nil {
+        glog.Fatalf("Failed to register for subscriptions, %s", err)
+    } else {
+        for {
+            event := <-update
+            glog.Infof("EVENT: %s", event )
+        }
+    }
+
+    # A full list of the events
+
+    const (
+    	EVENT_API_REQUEST = 1 << iota
+    	EVENT_STATUS_UPDATE
+    	EVENT_FRAMEWORK_MESSAGE
+    	EVENT_SUBSCRIPTION
+    	EVENT_UNSUBSCRIBED
+    	EVENT_ADD_HEALTH_CHECK
+    	EVENT_REMOVE_HEALTH_CHECK
+    	EVENT_FAILED_HEALTH_CHECK
+    	EVENT_CHANGED_HEALTH_CHECK
+    	EVENT_GROUP_CHANGE_SUCCESS
+    	EVENT_GROUP_CHANGE_FAILED
+    	EVENT_DEPLOYMENT_SUCCESS
+    	EVENT_DEPLOYMENT_FAILED
+    	EVENT_DEPLOYMENT_INFO
+    	EVENT_DEPLOYMENT_STEP_SUCCESS
+    	EVENT_DEPLOYMENT_STEP_FAILED
+    )
+
+    const (
+    	EVENTS_APPLICATIONS  = EVENT_STATUS_UPDATE | EVENT_CHANGED_HEALTH_CHECK | EVENT_FAILED_HEALTH_CHECK
+    	EVENTS_SUBSCRIPTIONS = EVENT_SUBSCRIPTION | EVENT_UNSUBSCRIBED
+    )
+
