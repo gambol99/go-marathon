@@ -4,18 +4,21 @@
 #### **Go-Marathon**
 -----
 
-Go-marathon is a api library for working with [Marathon](https://mesosphere.github.io/marathon/). It currently supports 
+Go-marathon is a API library for working with [Marathon](https://mesosphere.github.io/marathon/). It currently supports 
 
   > - Application and group deployment
   > - Helper filters for pulling the status, configuration and tasks
   > - Multiple Endpoint support for HA deployments
   > - Marathon Subscriptions and Event callbacks
-  
-> ##### **Examples**
+ 
+ Note: the library active development; requires >= Go 1.3
 
-Check out the examples directory for more code examples
+#### **Code Examples**
+ -------
 
-> ##### **Creating a client**
+There is also a examples directory in the source, which show hints and snippets of code of how to use it.
+
+**Creating a client**
 
     import (
     	"flag"
@@ -41,7 +44,7 @@ Check out the examples directory for more code examples
 	
 The first one specified will be used, if that goes offline the member is marked as *"unavailable"* and a background process will continue to ping the member until it's back online.
 
-> ##### **Listing the applications**
+**Listing the applications**
 
 	if applications, err := client.Applications(); err != nil 
 		glog.Errorf("Failed to list applications")
@@ -62,19 +65,19 @@ The first one specified will be used, if that goes offline the member is marked 
 		}	
 
 
-> ##### **Creating a new application**
+ **Creating a new application**
 
 	
 		glog.Infof("Deploying a new application")
-		application := new(marathon.Application)
+		application := marathon.NewDockerApplication()
 		application.Name("/product/name/frontend)
 		application.CPU(0.1).Memory(64).Storage(0.0).Count(2)
 		application.Arg("/usr/sbin/apache2ctl").Arg("-D").Arg("FOREGROUND")
 		application.AddEnv("NAME", "frontend_http")
 		application.AddEnv("SERVICE_80_NAME", "test_http")
 		// add the docker container
-		application.Container = marathon.NewDockerContainer()
 		application.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80).Expose(443)
+		application.CheckHTTP("/health", 10)
 
 		if err := client.CreateApplication(application); err != nil {
 			glog.Errorf("Failed to create application: %s, error: %s", application, err)
@@ -82,7 +85,7 @@ The first one specified will be used, if that goes offline the member is marked 
 			glog.Infof("Created the application: %s", application)
 		}
 		
-> ##### **Scale Application**
+**Scale Application**
 
 Change the number of instance of the application to 4 
 
@@ -93,7 +96,7 @@ Change the number of instance of the application to 4
         glog.Infof("Successfully scaled the application")
     }
 
-> ##### **Subscription**
+**Subscription & Events**
 
 Request to listen to events related to applications - namely status updates, health checks changes and failures
 
@@ -134,3 +137,13 @@ Request to listen to events related to applications - namely status updates, hea
     	EVENTS_SUBSCRIPTIONS = EVENT_SUBSCRIPTION | EVENT_UNSUBSCRIBED
     )
 
+----
+
+#### **Contributing**
+
+ - Fork it
+ - Create your feature branch (git checkout -b my-new-feature)
+ - Commit your changes (git commit -am 'Add some feature')
+ - Push to the branch (git push origin my-new-feature)
+ - Create new Pull Request
+ - If applicable, update the README.md
