@@ -69,6 +69,8 @@ type Marathon interface {
 	Tasks(application string) (*Tasks, error)
 	/* get a list of all tasks */
 	AllTasks() (*Tasks, error)
+	/* get the endpoints for a service on a application */
+	TaskEndpoints(name string, port int, health_check bool) ([]string, error)
 
 	/* --- GROUPS --- */
 

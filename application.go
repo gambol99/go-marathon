@@ -23,6 +23,9 @@ import (
 
 var (
 	ErrApplicationExists = errors.New("The application already exists in marathon, you must update")
+	/* no container has been specified yet */
+	ErrNoApplicationContainer = errors.New("You have not specified a docker container yet")
+
 )
 
 type Applications struct {
@@ -123,12 +126,19 @@ func (application *Application) AddEnv(name, value string) *Application {
 	return application
 }
 
+func (application *Application) HasHealthChecks() bool {
+	if application.HealthChecks != nil && len(application.HealthChecks) > 0 {
+		return true
+	}
+	return false
+}
+
 func (application *Application) CheckHTTP(uri string, port, interval int) (*Application, error) {
 	if application.HealthChecks == nil {
 		application.HealthChecks = make([]*HealthCheck, 0)
 	}
 	if application.Container == nil || application.Container.Docker == nil {
-		return nil, errors.New("You have not specified a docker container yet")
+		return nil, ErrNoApplicationContainer
 	}
 	/* step: get the port index */
 	if port_index, err := application.Container.Docker.ServicePortIndex(port); err != nil {
@@ -149,7 +159,7 @@ func (application *Application) CheckTCP(port, interval int) (*Application, erro
 		application.HealthChecks = make([]*HealthCheck, 0)
 	}
 	if application.Container == nil || application.Container.Docker == nil {
-		return nil, errors.New("You have not specified a docker container yet")
+		return nil, ErrNoApplicationContainer
 	}
 	/* step: get the port index */
 	if port_index, err := application.Container.Docker.ServicePortIndex(port); err != nil {
@@ -203,7 +213,7 @@ func (client *Client) HasApplicationVersion(name, version string) (bool, error) 
 	}
 }
 
-// A list of versions which has been deployed with marathon for a specfic application
+// A list of versions which has been deployed with marathon for a specific application
 // Params:
 //		name:		the id used to identify the application
 func (client *Client) ApplicationVersions(name string) (*ApplicationVersions, error) {
@@ -274,7 +284,6 @@ func (client *Client) ApplicationOK(name string) (bool, error) {
 						return false, nil
 					}
 				}
-
 			}
 		}
 		return true, nil
