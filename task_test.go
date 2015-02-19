@@ -27,3 +27,20 @@ func TestAllTasks(t *testing.T) {
 	AssertOnNull(tasks, t)
 	AssertOnInteger(len(tasks.Tasks), 2, t)
 }
+
+func TestTaskEndpoints(t *testing.T) {
+	NewFakeMarathonEndpoint()
+	endpoints, err := test_client.TaskEndpoints(FAKE_APP_NAME_BROKEN, 80, true)
+	AssertOnNoError(err, t)
+	endpoints, err = test_client.TaskEndpoints(FAKE_APP_NAME_BROKEN, 8080, true)
+	AssertOnError(err, t)
+	AssertOnNull(endpoints, t)
+	AssertOnInteger(len(endpoints), 1, t)
+	AssertOnString(endpoints[0], "10.141.141.10:31045", t)
+	endpoints, err = test_client.TaskEndpoints(FAKE_APP_NAME_BROKEN, 8080, false)
+	AssertOnError(err, t)
+	AssertOnNull(endpoints, t)
+	AssertOnInteger(len(endpoints), 2, t)
+	AssertOnString(endpoints[0], "10.141.141.10:31045", t)
+	AssertOnString(endpoints[1], "10.141.141.10:31234", t)
+}

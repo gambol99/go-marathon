@@ -213,7 +213,22 @@
         "backoffSeconds": 1,
         "cmd": "python toggle.py $PORT0",
         "constraints": [],
-        "container": null,
+        "container": {
+            "docker": {
+                "image": "python:3",
+                "network": "BRIDGE",
+                "portMappings": [
+                    {
+                        "containerPort": 8080,
+                        "hostPort": 0,
+                        "servicePort": 9000,
+                        "protocol": "tcp"
+                    }
+                ]
+            },
+            "type": "DOCKER",
+            "volumes": []
+        },
         "cpus": 0.2,
         "dependencies": [],
         "deployments": [],
@@ -315,7 +330,22 @@
         "backoffSeconds": 1,
         "cmd": "python toggle.py $PORT0",
         "constraints": [],
-        "container": null,
+        "container": {
+            "docker": {
+                "image": "python:3",
+                "network": "BRIDGE",
+                "portMappings": [
+                    {
+                        "containerPort": 8080,
+                        "hostPort": 0,
+                        "servicePort": 9000,
+                        "protocol": "tcp"
+                    }
+                ]
+            },
+            "type": "DOCKER",
+            "volumes": []
+        },
         "cpus": 0.2,
         "dependencies": [],
         "deployments": [],
