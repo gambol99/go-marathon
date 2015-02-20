@@ -25,7 +25,6 @@ var (
 	ErrApplicationExists = errors.New("The application already exists in marathon, you must update")
 	/* no container has been specified yet */
 	ErrNoApplicationContainer = errors.New("You have not specified a docker container yet")
-
 )
 
 type Applications struct {
