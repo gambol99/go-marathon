@@ -656,8 +656,8 @@
             "http://localhost:9292/callback"
         ]
     }
-- uri: /v2/eventSubscriptions
-  method: GET
+- uri: /v2/eventSubscriptions?callbackUrl=http://localhost:9292/callback
+  method: DELETE
   content: |
     {
         "callbackUrl": "http://localhost:9292/callback",

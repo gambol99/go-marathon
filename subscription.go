@@ -102,25 +102,29 @@ func (client *Client) RegisterSubscription() error {
 				WriteTimeout:   10 * time.Second,
 				MaxHeaderBytes: 1 << 20,
 			}
-			/* step: try and listen on the port */
-			if listener, err := net.Listen("tcp", binding); err != nil {
+			client.Debug("Attempting to listen on binding: %s", binding)
+
+			// @todo need to add a timeout value here
+			listener, err := net.Listen("tcp", binding)
+			if err != nil {
 				return nil
-			} else {
-				go func() {
-					for {
-						client.Debug("Starting to listen on http events service")
-						// step: not sure how to handle an error from this, panic???
-						client.events_http.Serve(listener)
-						client.Debug("Exitted the http events service")
-					}
-				}()
 			}
+
+			client.Debug("Starting to listen on http events service")
+			go func() {
+				for {
+					client.events_http.Serve(listener)
+					client.Debug("Exitted the http events service")
+				}
+			}()
 		}
 	}
 
 	/* step: get the callback url */
 	callback := client.SubscriptionURL()
 	/* step: check if the callback is registered */
+
+	client.Debug("Checking if we already have a subscription for callback %s", callback)
 	if found, err := client.HasSubscription(callback); err != nil {
 		return err
 	} else if !found {

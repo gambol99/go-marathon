@@ -32,3 +32,5 @@ _testmain.go
 *.prof
 
 
+
+examples/events/events

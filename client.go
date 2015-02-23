@@ -102,7 +102,8 @@ type Marathon interface {
 	AddEventsListener(channel EventsChannel, filter int) error
 	/* remove a events listener */
 	RemoveEventsListener(channel EventsChannel)
-	/* notify me of changes to application */
+	/* remove our self from subscriptions */
+	UnSubscribe() error
 
 	/* --- MISC --- */
 
