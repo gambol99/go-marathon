@@ -130,7 +130,7 @@ func (client *Client) RegisterSubscription() error {
 
 func (client *Client) UnSubscribe() error {
 	/* step: remove from the list of subscriptions */
-	return client.ApiDelete(fmt.Sprintf("%s?callbackUrl=%s", MARATHON_API_SUBSCRIPTION, client.SubscriptionURL()), "", nil)
+	return client.ApiDelete(fmt.Sprintf("%s?callbackUrl=%s", MARATHON_API_SUBSCRIPTION, client.SubscriptionURL()), nil, nil)
 }
 
 func (client *Client) HasSubscription(callback string) (bool, error) {

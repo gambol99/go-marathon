@@ -102,13 +102,22 @@ func main() {
 			glog.Infof("Successfully deleted the application")
 		}
 
-		glog.Infof("Retrieving a list of groups")
-		if groups, err := client.Groups(); err != nil {
-			glog.Errorf("Failed to retrieve the groups from maratho, error: %s", err)
+		time.Sleep(10 * time.Second)
+
+		glog.Infof("Starting the application again")
+		if err := client.CreateApplication(application); err != nil {
+			glog.Errorf("Failed to create application: %s, error: %s", application, err)
 		} else {
-			for _, group := range groups.Groups {
-				glog.Infof("Found group: %s", group.ID)
-			}
+			glog.Infof("Created the application: %s", application)
+		}
+
+		time.Sleep(10 * time.Second)
+
+		glog.Infof("Delete all the tasks")
+		if _, err := client.KillApplicationTasks(application.ID, "", false); err != nil {
+			glog.Errorf("Failed to create application: %s, error: %s", application, err)
+		} else {
+			glog.Infof("Created the application: %s", application)
 		}
 
 	}

@@ -25,7 +25,6 @@ var (
 	ErrApplicationExists = errors.New("The application already exists in marathon, you must update")
 	/* no container has been specified yet */
 	ErrNoApplicationContainer = errors.New("You have not specified a docker container yet")
-
 )
 
 type Applications struct {
@@ -327,7 +326,7 @@ func (client *Client) HasApplication(name string) (bool, error) {
 func (client *Client) DeleteApplication(name string) error {
 	/* step: check of the application already exists */
 	client.Debug("Deleting the application: %s", name)
-	return client.ApiDelete(fmt.Sprintf("%s%s", MARATHON_API_APPS, name), "", nil)
+	return client.ApiDelete(fmt.Sprintf("%s%s", MARATHON_API_APPS, name), nil, nil)
 }
 
 // Performs a rolling restart of marathon application (http://mesosphere.github.io/marathon/docs/rest-api.html#post-/v2/apps/%7Bappid%7D/restart)
