@@ -44,3 +44,10 @@ func TestTaskEndpoints(t *testing.T) {
 	AssertOnString(endpoints[0], "10.141.141.10:31045", t)
 	AssertOnString(endpoints[1], "10.141.141.10:31234", t)
 }
+
+func TestKillApplicationTasks(t *testing.T) {
+	NewFakeMarathonEndpoint()
+	tasks, err := test_client.KillApplicationTasks(FAKE_APP_NAME, "", false)
+	AssertOnError(err, t)
+	AssertOnNull(tasks, t)
+}

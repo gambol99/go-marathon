@@ -24,6 +24,25 @@ type Container struct {
 	Volumes []*Volume `json:"volumes,omitempty"`
 }
 
+type PortMapping struct {
+	ContainerPort int    `json:"containerPort,omitempty"`
+	HostPort      int    `json:"hostPort"`
+	ServicePort   int    `json:"servicePort,omitempty"`
+	Protocol      string `json:"protocol"`
+}
+
+type Volume struct {
+	ContainerPath string `json:"containerPath,omitempty"`
+	HostPath      string `json:"hostPath,omitempty"`
+	Mode          string `json:"mode,omitempty"`
+}
+
+type Docker struct {
+	Image        string         `json:"image,omitempty"`
+	Network      string         `json:"network,omitempty"`
+	PortMappings []*PortMapping `json:"portMappings,omitempty"`
+}
+
 func (container *Container) Volume(host_path, container_path, mode string) *Container {
 	if container.Volumes == nil {
 		container.Volumes = make([]*Volume, 0)
@@ -46,18 +65,6 @@ func NewDockerContainer() *Container {
 	}
 	container.Volumes = make([]*Volume, 0)
 	return container
-}
-
-type Volume struct {
-	ContainerPath string `json:"containerPath,omitempty"`
-	HostPath      string `json:"hostPath,omitempty"`
-	Mode          string `json:"mode,omitempty"`
-}
-
-type Docker struct {
-	Image        string         `json:"image,omitempty"`
-	Network      string         `json:"network,omitempty"`
-	PortMappings []*PortMapping `json:"portMappings,omitempty"`
 }
 
 func (docker *Docker) Container(image string) *Docker {
@@ -104,11 +111,4 @@ func (docker *Docker) ServicePortIndex(port int) (int, error) {
 	}
 	/* step: we didn't find the port in the mappings */
 	return 0, errors.New("The container port required was not found in the container port mappings")
-}
-
-type PortMapping struct {
-	ContainerPort int    `json:"containerPort,omitempty"`
-	HostPort      int    `json:"hostPort"`
-	ServicePort   int    `json:"servicePort,omitempty"`
-	Protocol      string `json:"protocol"`
 }
