@@ -34,7 +34,8 @@ func NewDefaultHealthCheck() *HealthCheck {
 		IntervalSeconds:        10,
 		PortIndex:              0,
 		MaxConsecutiveFailures: 3,
-		TimeoutSeconds:         5}
+		TimeoutSeconds:         5,
+	}
 }
 
 type HealthCheckResult struct {

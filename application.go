@@ -75,21 +75,34 @@ func NewDockerApplication() *Application {
 	return application
 }
 
+// The name of the application i.e. the identifier for this application
 func (application *Application) Name(id string) *Application {
 	application.ID = id
 	return application
 }
 
+// The amount of CPU shares per instance which is assigned to the application
+// Params:
+//		cpu:	the CPU shared (check Docker docs) per instance
 func (application *Application) CPU(cpu float32) *Application {
 	application.CPUs = cpu
 	return application
 }
 
+// The amount of disk space the application is assigned, which for docker
+// application I don't believe is relevant
+// Params:
+//		disk:	the disk space in MB
 func (application *Application) Storage(disk float32) *Application {
 	application.Disk = disk
 	return application
 }
 
+// Adds a dependency for this application. Note, if you want to wait for a application
+// dependency to actually be UP, i.e. not just deployed, you need a health check on the
+// dependant app.
+// Params:
+//		name:	the application id which this application depends on
 func (application *Application) DependsOn(name string) *Application {
 	if application.Dependencies == nil {
 		application.Dependencies = make([]string, 0)
@@ -99,16 +112,25 @@ func (application *Application) DependsOn(name string) *Application {
 
 }
 
+// The amount of memory the application can consume per instance
+// Params:
+//		memory:	the amount of MB to assign
 func (application *Application) Memory(memory float32) *Application {
 	application.Mem = memory
 	return application
 }
 
+// Set the number of instances of the application to run
+// Params:
+//		count:	the number of instances to run
 func (application *Application) Count(count int) *Application {
 	application.Instances = count
 	return application
 }
 
+// Add a argument to the applications
+// Params:
+//		argument:	the argument you are adding
 func (application *Application) Arg(argument string) *Application {
 	if application.Args == nil {
 		application.Args = make([]string, 0)
@@ -117,6 +139,10 @@ func (application *Application) Arg(argument string) *Application {
 	return application
 }
 
+// Add a environment variable to the application
+// Params:
+//		name:	the name of the variable
+//		value:	go figure, the value associated to the above
 func (application *Application) AddEnv(name, value string) *Application {
 	if application.Env == nil {
 		application.Env = make(map[string]string, 0)
@@ -125,6 +151,7 @@ func (application *Application) AddEnv(name, value string) *Application {
 	return application
 }
 
+// More of a helper method, used to check if a application has healtchecks
 func (application *Application) HasHealthChecks() bool {
 	if application.HealthChecks != nil && len(application.HealthChecks) > 0 {
 		return true
@@ -132,6 +159,10 @@ func (application *Application) HasHealthChecks() bool {
 	return false
 }
 
+// Add a HTTP check to an application
+// Params:
+//		port: 		the port the check should be checking
+// 		interval:	the interval in seconds the check should be performed
 func (application *Application) CheckHTTP(uri string, port, interval int) (*Application, error) {
 	if application.HealthChecks == nil {
 		application.HealthChecks = make([]*HealthCheck, 0)
@@ -153,6 +184,11 @@ func (application *Application) CheckHTTP(uri string, port, interval int) (*Appl
 	}
 }
 
+// Add a TCP check to a application; note the port mapping must already exist, or an
+// error will thrown
+// Params:
+//		port: 		the port the check should, err, check
+// 		interval:	the interval in seconds the check should be performed
 func (application *Application) CheckTCP(port, interval int) (*Application, error) {
 	if application.HealthChecks == nil {
 		application.HealthChecks = make([]*HealthCheck, 0)

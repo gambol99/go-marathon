@@ -41,6 +41,9 @@ func (client *Client) Subscriptions() (*Subscriptions, error) {
 	}
 }
 
+// Add your self as a listener to events from Marathon
+// Params:
+//		channel:	a EventsChannel used to receive event on
 func (client *Client) AddEventsListener(channel EventsChannel, filter int) error {
 	client.Lock()
 	defer client.Unlock()
@@ -57,6 +60,9 @@ func (client *Client) AddEventsListener(channel EventsChannel, filter int) error
 	return nil
 }
 
+// Remove the channel from the events listeners
+// Params:
+//		channel:	the channel you are removing
 func (client *Client) RemoveEventsListener(channel EventsChannel) {
 	client.Lock()
 	defer client.Unlock()
@@ -70,10 +76,12 @@ func (client *Client) RemoveEventsListener(channel EventsChannel) {
 	}
 }
 
+// Retrieve the subscription call back URL used when registering
 func (client *Client) SubscriptionURL() string {
 	return fmt.Sprintf("http://%s:%d%s", client.ipaddress, client.config.EventsPort, DEFAULT_EVENTS_URL)
 }
 
+// Register ourselves with Marathon to receive events from it's callback facility
 func (client *Client) RegisterSubscription() error {
 	if client.events_http == nil {
 		if ip_address, err := GetInterfaceAddress(client.config.EventsInterface); err != nil {
@@ -94,25 +102,29 @@ func (client *Client) RegisterSubscription() error {
 				WriteTimeout:   10 * time.Second,
 				MaxHeaderBytes: 1 << 20,
 			}
-			/* step: try and listen on the port */
-			if listener, err := net.Listen("tcp", binding); err != nil {
+			client.Debug("Attempting to listen on binding: %s", binding)
+
+			// @todo need to add a timeout value here
+			listener, err := net.Listen("tcp", binding)
+			if err != nil {
 				return nil
-			} else {
-				go func() {
-					for {
-						client.Debug("Starting to listen on http events service")
-						// step: not sure how to handle an error from this, panic???
-						client.events_http.Serve(listener)
-						client.Debug("Exitted the http events service")
-					}
-				}()
 			}
+
+			client.Debug("Starting to listen on http events service")
+			go func() {
+				for {
+					client.events_http.Serve(listener)
+					client.Debug("Exitted the http events service")
+				}
+			}()
 		}
 	}
 
 	/* step: get the callback url */
 	callback := client.SubscriptionURL()
 	/* step: check if the callback is registered */
+
+	client.Debug("Checking if we already have a subscription for callback %s", callback)
 	if found, err := client.HasSubscription(callback); err != nil {
 		return err
 	} else if !found {
@@ -128,11 +140,15 @@ func (client *Client) RegisterSubscription() error {
 	return nil
 }
 
+// Remove ourselves from Marathon's callback facility
 func (client *Client) UnSubscribe() error {
 	/* step: remove from the list of subscriptions */
 	return client.ApiDelete(fmt.Sprintf("%s?callbackUrl=%s", MARATHON_API_SUBSCRIPTION, client.SubscriptionURL()), nil, nil)
 }
 
+// Check to see a subscription already exists with Marathon
+// Params:
+//		callback:	the url of the callback
 func (client *Client) HasSubscription(callback string) (bool, error) {
 	client.Debug("Checking for subscription: %s", callback)
 	/* step: generate our events callback */
