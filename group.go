@@ -91,15 +91,11 @@ func (client *Client) Group(name string) (*Group, error) {
 func (client *Client) HasGroup(name string) (bool, error) {
 	uri := fmt.Sprintf("%s%s", MARATHON_API_GROUPS, name)
 	status, _, err := client.ApiCall(HTTP_GET, uri, "", nil)
-	fmt.Printf("STATUS: %d", status)
 	if err == nil {
-		fmt.Printf("GHELLO")
 		return true, nil
 	} else if status == 404 {
-		fmt.Printf("404")
 		return false, nil
 	} else {
-		fmt.Printf("NONONON")
 		return false, err
 	}
 }
@@ -121,7 +117,7 @@ func (client *Client) CreateGroup(group *Group) (*ApplicationVersion, error) {
 func (client *Client) DeleteGroup(name string) (*ApplicationVersion, error) {
 	version := new(ApplicationVersion)
 	uri := fmt.Sprintf("%s%s", MARATHON_API_GROUPS, name)
-	if err := client.ApiDelete(uri, "", version); err != nil {
+	if err := client.ApiDelete(uri, nil, version); err != nil {
 		return nil, err
 	}
 	return version, nil

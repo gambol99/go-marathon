@@ -68,7 +68,6 @@ func (cluster *MarathonCluster) ClusterState() []string {
 	list := make([]string, 0)
 	member := cluster.members
 	for i := 0; i < cluster.size; i++ {
-		fmt.Printf("member: %v", member)
 		list = append(list, fmt.Sprintf("%s", member))
 		member = member.next
 	}
@@ -194,7 +193,6 @@ func (cluster *MarathonCluster) MarkDown() {
 
 		/* step: we wait a ping from the host to work */
 		for {
-			fmt.Printf("Attempting to connect to member: %s\n", member.hostname)
 			if response, err := http_client.Get(cluster.GetMarathonURL(member) + "/ping"); err == nil && response.StatusCode == 200 {
 				member.status = MEMBER_AVAILABLE
 				return

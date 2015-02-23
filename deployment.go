@@ -71,7 +71,7 @@ func (client *Client) Deployments() ([]Deployment, error) {
 
 func (client *Client) DeleteDeployment(deployment Deployment, force bool) (Deployment, error) {
 	var result Deployment
-	if err := client.ApiDelete(fmt.Sprintf("%s/%s", MARATHON_API_DEPLOYMENTS, deployment.ID), "", &result); err != nil {
+	if err := client.ApiDelete(fmt.Sprintf("%s/%s", MARATHON_API_DEPLOYMENTS, deployment.ID), nil, &result); err != nil {
 		return Deployment{}, err
 	} else {
 		return result, nil
