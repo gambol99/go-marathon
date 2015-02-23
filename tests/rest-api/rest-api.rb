@@ -14,29 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-require 'sinatra'
 require 'yaml'
 
 module RestAPI
   class Application < Sinatra::Base
-    enable :logging, :static, :raise_errors
-    set :filename, "methods.yml"
+    enable :logging, :raise_errors
 
-    unless File.exists? settings.filename
-      raise ArgumentError, "you need to specify create #{settings.filename} rest methods"
-    end
-
-    YAML.load(File.read(settings.filename)).each do |rest|
-      method_type = rest['method'].downcase
-      next unless method_type =~ /^(post|get|delete|put)$/
-      send(method_type,rest['uri']) do
-        write rest['content']
+    YAML.load(File.read("methods.yml")).each do |rest|
+      method = rest['method'].downcase
+      if method =~ /^(post|get|delete|put)$/
+        send(method.to_sym, rest['uri']) do
+          content_type :json
+          rest['content']
+        end
       end
-    end
-
-    def write message
-      content_type :json
-      message
     end
   end
 end
