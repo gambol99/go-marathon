@@ -117,7 +117,7 @@ func (client *Client) CreateGroup(group *Group) (*ApplicationVersion, error) {
 func (client *Client) DeleteGroup(name string) (*ApplicationVersion, error) {
 	version := new(ApplicationVersion)
 	uri := fmt.Sprintf("%s%s", MARATHON_API_GROUPS, name)
-	if err := client.ApiDelete(uri, "", version); err != nil {
+	if err := client.ApiDelete(uri, nil, version); err != nil {
 		return nil, err
 	}
 	return version, nil

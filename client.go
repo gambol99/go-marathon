@@ -71,6 +71,8 @@ type Marathon interface {
 	AllTasks() (*Tasks, error)
 	/* get the endpoints for a service on a application */
 	TaskEndpoints(name string, port int, health_check bool) ([]string, error)
+	/* kill all the tasks for any application */
+	KillApplicationTasks(application_id, hostname string, scale bool) (*Tasks, error)
 
 	/* --- GROUPS --- */
 
@@ -231,8 +233,18 @@ func (client *Client) ApiPost(uri string, post interface{}, result interface{}) 
 	return error
 }
 
-func (client *Client) ApiDelete(uri, body string, result interface{}) error {
-	_, _, error := client.ApiCall(HTTP_DELETE, uri, body, result)
+func (client *Client) ApiDelete(uri string, post interface{}, result interface{}) error {
+	var content string
+	var err error
+	if post == nil {
+		content = ""
+	} else {
+		content, err = client.MarshallJSON(post)
+		if err != nil {
+			return err
+		}
+	}
+	_, _, error := client.ApiCall(HTTP_DELETE, uri, content, result)
 	return error
 }
 

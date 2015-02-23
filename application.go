@@ -325,7 +325,7 @@ func (client *Client) HasApplication(name string) (bool, error) {
 func (client *Client) DeleteApplication(name string) error {
 	/* step: check of the application already exists */
 	client.Debug("Deleting the application: %s", name)
-	return client.ApiDelete(fmt.Sprintf("%s%s", MARATHON_API_APPS, name), "", nil)
+	return client.ApiDelete(fmt.Sprintf("%s%s", MARATHON_API_APPS, name), nil, nil)
 }
 
 // Performs a rolling restart of marathon application (http://mesosphere.github.io/marathon/docs/rest-api.html#post-/v2/apps/%7Bappid%7D/restart)

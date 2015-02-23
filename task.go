@@ -41,6 +41,7 @@ func (task Task) String() string {
 		task.ID, task.AppID, task.Host, task.Ports, task.StartedAt)
 }
 
+// Check if the task has any health checks
 func (task *Task) HasHealthCheckResults() bool {
 	if task.HealthCheckResult == nil || len(task.HealthCheckResult) <= 0 {
 		return false
@@ -48,7 +49,7 @@ func (task *Task) HasHealthCheckResults() bool {
 	return true
 }
 
-
+// Retrieve all the tasks currently running
 func (client *Client) AllTasks() (*Tasks, error) {
 	tasks := new(Tasks)
 	if err := client.ApiGet(MARATHON_API_TASKS, "", tasks); err != nil {
@@ -58,6 +59,9 @@ func (client *Client) AllTasks() (*Tasks, error) {
 	}
 }
 
+// Retrieve a list of tasks for an application
+// Params:
+//		application_id:		the id for the application
 func (client *Client) Tasks(application_id string) (*Tasks, error) {
 	tasks := new(Tasks)
 	if err := client.ApiGet(fmt.Sprintf("%s%s/tasks", MARATHON_API_APPS, application_id), "", tasks); err != nil {
@@ -65,6 +69,26 @@ func (client *Client) Tasks(application_id string) (*Tasks, error) {
 	} else {
 		return tasks, nil
 	}
+}
+
+// Kill all tasks relating to an application
+// Params:
+//		application_id:		the id for the application
+//      host:				kill only those tasks on a specific host (optional)
+//		scale:              Scale the app down (i.e. decrement its instances setting by the number of tasks killed) after killing the specified tasks
+func (client *Client) KillApplicationTasks(application_id, hostname string, scale bool) (*Tasks, error) {
+	var options struct {
+		Host  string `json:"host"`
+		Scale bool   `json:bool`
+	}
+	options.Host = hostname
+	options.Scale = scale
+	tasks := new(Tasks)
+	client.Debug("Killing application tasks for: %s, hostname: %s, scale: %t", application_id, hostname, scale)
+	if err := client.ApiDelete(fmt.Sprintf("%s%s/tasks", MARATHON_API_APPS, application_id), &options, tasks); err != nil {
+		return nil, err
+	}
+	return tasks, nil
 }
 
 // Get the endpoints i.e. HOST_IP:DYNAMIC_PORT for a specific application service
@@ -89,7 +113,7 @@ func (client *Client) TaskEndpoints(name string, port int, health_check bool) ([
 		if port_index, err := application.Container.Docker.ServicePortIndex(port); err != nil {
 			return nil, err
 		} else {
-			list := make([]string,0)
+			list := make([]string, 0)
 			/* step: do we have any tasks? */
 			if application.Tasks == nil || len(application.Tasks) <= 0 {
 				return list, nil
@@ -100,8 +124,8 @@ func (client *Client) TaskEndpoints(name string, port int, health_check bool) ([
 				/* step: if we are checking health the 'service' has a health check? */
 				if health_check && application.HasHealthChecks() {
 					/*
-					check: does the task have a health check result, if NOT, it's because the
-					health of the task hasn't yet been performed, hence we assume it as DOWN
+						check: does the task have a health check result, if NOT, it's because the
+						health of the task hasn't yet been performed, hence we assume it as DOWN
 					*/
 					if task.HasHealthCheckResults() == false {
 						client.Debug("The task: %s for application: %s hasn't been checked yet, skipping", task, application)
@@ -122,10 +146,9 @@ func (client *Client) TaskEndpoints(name string, port int, health_check bool) ([
 					}
 				}
 				/* else we can just add it */
-				list = append(list, fmt.Sprintf("%s:%d",task.Host, task.Ports[port_index]))
+				list = append(list, fmt.Sprintf("%s:%d", task.Host, task.Ports[port_index]))
 			}
 			return list, nil
 		}
 	}
-
 }
