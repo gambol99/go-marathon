@@ -82,7 +82,6 @@ func (application *Application) Name(id string) *Application {
 }
 
 // The amount of CPU shares per instance which is assigned to the application
-// Params:
 //		cpu:	the CPU shared (check Docker docs) per instance
 func (application *Application) CPU(cpu float32) *Application {
 	application.CPUs = cpu
@@ -91,7 +90,6 @@ func (application *Application) CPU(cpu float32) *Application {
 
 // The amount of disk space the application is assigned, which for docker
 // application I don't believe is relevant
-// Params:
 //		disk:	the disk space in MB
 func (application *Application) Storage(disk float32) *Application {
 	application.Disk = disk
@@ -101,7 +99,6 @@ func (application *Application) Storage(disk float32) *Application {
 // Adds a dependency for this application. Note, if you want to wait for a application
 // dependency to actually be UP, i.e. not just deployed, you need a health check on the
 // dependant app.
-// Params:
 //		name:	the application id which this application depends on
 func (application *Application) DependsOn(name string) *Application {
 	if application.Dependencies == nil {
@@ -113,7 +110,6 @@ func (application *Application) DependsOn(name string) *Application {
 }
 
 // The amount of memory the application can consume per instance
-// Params:
 //		memory:	the amount of MB to assign
 func (application *Application) Memory(memory float32) *Application {
 	application.Mem = memory
@@ -121,7 +117,6 @@ func (application *Application) Memory(memory float32) *Application {
 }
 
 // Set the number of instances of the application to run
-// Params:
 //		count:	the number of instances to run
 func (application *Application) Count(count int) *Application {
 	application.Instances = count
@@ -129,7 +124,6 @@ func (application *Application) Count(count int) *Application {
 }
 
 // Add a argument to the applications
-// Params:
 //		argument:	the argument you are adding
 func (application *Application) Arg(argument string) *Application {
 	if application.Args == nil {
@@ -140,7 +134,6 @@ func (application *Application) Arg(argument string) *Application {
 }
 
 // Add a environment variable to the application
-// Params:
 //		name:	the name of the variable
 //		value:	go figure, the value associated to the above
 func (application *Application) AddEnv(name, value string) *Application {
@@ -160,7 +153,6 @@ func (application *Application) HasHealthChecks() bool {
 }
 
 // Add a HTTP check to an application
-// Params:
 //		port: 		the port the check should be checking
 // 		interval:	the interval in seconds the check should be performed
 func (application *Application) CheckHTTP(uri string, port, interval int) (*Application, error) {
@@ -186,7 +178,6 @@ func (application *Application) CheckHTTP(uri string, port, interval int) (*Appl
 
 // Add a TCP check to a application; note the port mapping must already exist, or an
 // error will thrown
-// Params:
 //		port: 		the port the check should, err, check
 // 		interval:	the interval in seconds the check should be performed
 func (application *Application) CheckTCP(port, interval int) (*Application, error) {
@@ -213,7 +204,7 @@ func (application *Application) CheckTCP(port, interval int) (*Application, erro
 // Retrieve an array of all the applications which are running in marathon
 func (client *Client) Applications() (*Applications, error) {
 	applications := new(Applications)
-	if err := client.ApiGet(MARATHON_API_APPS, "", applications); err != nil {
+	if err := client.apiGet(MARATHON_API_APPS, "", applications); err != nil {
 		return nil, err
 	} else {
 		return applications, nil
@@ -234,7 +225,6 @@ func (client *Client) ListApplications() ([]string, error) {
 }
 
 // Checks to see if the application version exists in Marathon
-// Params:
 // 		name: 		the id used to identify the application
 //		version: 	the version (normally a timestamp) your looking for
 func (client *Client) HasApplicationVersion(name, version string) (bool, error) {
@@ -249,38 +239,35 @@ func (client *Client) HasApplicationVersion(name, version string) (bool, error) 
 }
 
 // A list of versions which has been deployed with marathon for a specific application
-// Params:
 //		name:		the id used to identify the application
 func (client *Client) ApplicationVersions(name string) (*ApplicationVersions, error) {
 	uri := fmt.Sprintf("%s%s/versions", MARATHON_API_APPS, name)
 	versions := new(ApplicationVersions)
-	if err := client.ApiGet(uri, "", versions); err != nil {
+	if err := client.apiGet(uri, "", versions); err != nil {
 		return nil, err
 	}
 	return versions, nil
 }
 
 // Change / Revert the version of the application
-// Params:
 // 		name: 		the id used to identify the application
 //		version: 	the version (normally a timestamp) you wish to change to
 func (client *Client) SetApplicationVersion(name string, version *ApplicationVersion) (*DeploymentID, error) {
-	client.Debug("Changing the application: %s to version: %s", name, version)
+	client.debug("Changing the application: %s to version: %s", name, version)
 	uri := fmt.Sprintf("%s%s", MARATHON_API_APPS, name)
 	deploymentId := new(DeploymentID)
-	if err := client.ApiPut(uri, version, deploymentId); err != nil {
-		client.Debug("Failed to change the application to version: %s, error: %s", version.Version, err)
+	if err := client.apiPut(uri, version, deploymentId); err != nil {
+		client.debug("Failed to change the application to version: %s, error: %s", version.Version, err)
 		return nil, err
 	}
 	return deploymentId, nil
 }
 
 // Retrieve the application configuration from marathon
-// Params:
 // 		name: 		the id used to identify the application
 func (client *Client) Application(name string) (*Application, error) {
 	application := new(ApplicationWrap)
-	if err := client.ApiGet(fmt.Sprintf("%s%s", MARATHON_API_APPS, name), "", application); err != nil {
+	if err := client.apiGet(fmt.Sprintf("%s%s", MARATHON_API_APPS, name), "", application); err != nil {
 		return nil, err
 	} else {
 		return &application.Application, nil
@@ -289,7 +276,6 @@ func (client *Client) Application(name string) (*Application, error) {
 
 // Validates that the application, or more appropriately it's tasks have passed all the health checks.
 // If no health checks exist, we simply return true
-// Params:
 // 		name: 		the id used to identify the application
 func (client *Client) ApplicationOK(name string) (bool, error) {
 	/* step: check the application even exists */
@@ -326,18 +312,16 @@ func (client *Client) ApplicationOK(name string) (bool, error) {
 }
 
 // Creates a new application in Marathon
-// Params:
 // 		application: 		the structure holding the application configuration
 func (client *Client) CreateApplication(application *Application) error {
-	client.Debug("Creating an application: %s", application)
-	return client.ApiPost(MARATHON_API_APPS, &application, nil)
+	client.debug("Creating an application: %s", application)
+	return client.apiPost(MARATHON_API_APPS, &application, nil)
 }
 
 // Checks to see if the application exists in marathon
-// Params:
 // 		name: 		the id used to identify the application
 func (client *Client) HasApplication(name string) (bool, error) {
-	client.Debug("Checking if application: %s exists in marathon", name)
+	client.debug("Checking if application: %s exists in marathon", name)
 	if name == "" {
 		return false, ErrInvalidArgument
 	} else {
@@ -346,7 +330,7 @@ func (client *Client) HasApplication(name string) (bool, error) {
 		} else {
 			for _, id := range applications {
 				if name == id {
-					client.Debug("The application: %s presently exist in maration", name)
+					client.debug("The application: %s presently exist in maration", name)
 					return true, nil
 				}
 			}
@@ -356,35 +340,32 @@ func (client *Client) HasApplication(name string) (bool, error) {
 }
 
 // Deletes an application from marathon
-// Params:
 // 		name: 		the id used to identify the application
 func (client *Client) DeleteApplication(name string) error {
 	/* step: check of the application already exists */
-	client.Debug("Deleting the application: %s", name)
-	return client.ApiDelete(fmt.Sprintf("%s%s", MARATHON_API_APPS, name), nil, nil)
+	client.debug("Deleting the application: %s", name)
+	return client.apiDelete(fmt.Sprintf("%s%s", MARATHON_API_APPS, name), nil, nil)
 }
 
 // Performs a rolling restart of marathon application (http://mesosphere.github.io/marathon/docs/rest-api.html#post-/v2/apps/%7Bappid%7D/restart)
-// Params:
 // 		name: 		the id used to identify the application
 func (client *Client) RestartApplication(name string, force bool) (*DeploymentID, error) {
-	client.Debug("Restarting the application: %s, force: %s", name, force)
+	client.debug("Restarting the application: %s, force: %s", name, force)
 	deployment := new(DeploymentID)
-	if err := client.ApiGet(fmt.Sprintf("%s%s/restart", MARATHON_API_APPS, name), "", deployment); err != nil {
+	if err := client.apiGet(fmt.Sprintf("%s%s/restart", MARATHON_API_APPS, name), "", deployment); err != nil {
 		return nil, err
 	}
 	return deployment, nil
 }
 
 // Change the number of instance an application is running
-// Params:
 // 		name: 		the id used to identify the application
 // 		instances:	the number of instances you wish to change to
 func (client *Client) ScaleApplicationInstances(name string, instances int) error {
-	client.Debug("ScaleApplication: application: %s, instance: %d", name, instances)
+	client.debug("ScaleApplication: application: %s, instance: %d", name, instances)
 	changes := new(Application)
 	changes.ID = name
 	changes.Instances = instances
 	uri := fmt.Sprintf("%s%s", MARATHON_API_APPS, name)
-	return client.ApiPut(uri, &changes, nil)
+	return client.apiPut(uri, &changes, nil)
 }

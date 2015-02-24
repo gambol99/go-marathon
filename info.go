@@ -59,7 +59,7 @@ type Info struct {
 
 func (client *Client) Info() (*Info, error) {
 	info := new(Info)
-	if err := client.ApiGet(MARATHON_API_INFO, "", info); err != nil {
+	if err := client.apiGet(MARATHON_API_INFO, "", info); err != nil {
 		return nil, err
 	} else {
 		return info, nil

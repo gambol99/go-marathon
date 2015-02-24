@@ -35,7 +35,6 @@ type Groups struct {
 }
 
 // Create a new Application Group
-// Params:
 //		name:	the name of the group
 func NewApplicationGroup(name string) *Group {
 	return &Group{
@@ -47,7 +46,6 @@ func NewApplicationGroup(name string) *Group {
 }
 
 // Specify the name of the group
-// Params:
 // 		name:	the name of the group
 func (group *Group) Name(name string) *Group {
 	group.ID = name
@@ -55,7 +53,6 @@ func (group *Group) Name(name string) *Group {
 }
 
 // Add a application to the group in question
-// Params:
 // 		application:	a pointer to the Application
 func (group *Group) App(application *Application) *Group {
 	if group.Apps == nil {
@@ -68,29 +65,27 @@ func (group *Group) App(application *Application) *Group {
 // Retrieve a list of all the groups from marathon
 func (client *Client) Groups() (*Groups, error) {
 	groups := new(Groups)
-	if err := client.ApiGet(MARATHON_API_GROUPS, "", groups); err != nil {
+	if err := client.apiGet(MARATHON_API_GROUPS, "", groups); err != nil {
 		return nil, err
 	}
 	return groups, nil
 }
 
 // Retrieve the configuration of a specific group from marathon
-// Params:
 //		name:	the identifier for the group
 func (client *Client) Group(name string) (*Group, error) {
 	group := new(Group)
-	if err := client.ApiGet(fmt.Sprintf("%s%s", MARATHON_API_GROUPS, name), "", group); err != nil {
+	if err := client.apiGet(fmt.Sprintf("%s%s", MARATHON_API_GROUPS, name), "", group); err != nil {
 		return nil, err
 	}
 	return group, nil
 }
 
 // Check if the group exists in marathon
-// Params:
 // 		name:	the identifier for the group
 func (client *Client) HasGroup(name string) (bool, error) {
 	uri := fmt.Sprintf("%s%s", MARATHON_API_GROUPS, name)
-	status, _, err := client.ApiCall(HTTP_GET, uri, "", nil)
+	status, _, err := client.apiCall(HTTP_GET, uri, "", nil)
 	if err == nil {
 		return true, nil
 	} else if status == 404 {
@@ -101,23 +96,21 @@ func (client *Client) HasGroup(name string) (bool, error) {
 }
 
 // Create a new group in marathon
-// Params:
 //		group:	a pointer the Group structure defining the group
 func (client *Client) CreateGroup(group *Group) (*ApplicationVersion, error) {
 	version := new(ApplicationVersion)
-	if err := client.ApiPost(MARATHON_API_GROUPS, group, version); err != nil {
+	if err := client.apiPost(MARATHON_API_GROUPS, group, version); err != nil {
 		return nil, err
 	}
 	return version, nil
 }
 
 // Delete a group from marathon
-// Params:
 // 		name:	the identifier for the group
 func (client *Client) DeleteGroup(name string) (*ApplicationVersion, error) {
 	version := new(ApplicationVersion)
 	uri := fmt.Sprintf("%s%s", MARATHON_API_GROUPS, name)
-	if err := client.ApiDelete(uri, nil, version); err != nil {
+	if err := client.apiDelete(uri, nil, version); err != nil {
 		return nil, err
 	}
 	return version, nil

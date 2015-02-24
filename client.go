@@ -174,14 +174,14 @@ func (client *Client) GetMarathonURL() string {
 }
 
 func (client *Client) Ping() (bool, error) {
-	if err := client.ApiGet(MARATHON_API_PING, "", nil); err != nil {
+	if err := client.apiGet(MARATHON_API_PING, "", nil); err != nil {
 		return false, err
 	} else {
 		return true, nil
 	}
 }
 
-func (client *Client) MarshallJSON(data interface{}) (string, error) {
+func (client *Client) marshallJSON(data interface{}) (string, error) {
 	if response, err := json.Marshal(data); err != nil {
 		return "", err
 	} else {
@@ -189,7 +189,7 @@ func (client *Client) MarshallJSON(data interface{}) (string, error) {
 	}
 }
 
-func (client *Client) UnMarshallDataToJson(stream io.Reader, result interface{}) error {
+func (client *Client) unMarshallDataToJson(stream io.Reader, result interface{}) error {
 	decoder := json.NewDecoder(stream)
 	if err := decoder.Decode(result); err != nil {
 		return err
@@ -197,67 +197,67 @@ func (client *Client) UnMarshallDataToJson(stream io.Reader, result interface{})
 	return nil
 }
 
-func (client *Client) ApiGet(uri, body string, result interface{}) error {
-	client.Debug("ApiGet() uri: %s, body: %s", uri, body)
-	_, _, error := client.ApiCall(HTTP_GET, uri, body, result)
+func (client *Client) apiGet(uri, body string, result interface{}) error {
+	client.debug("apiGet() uri: %s, body: %s", uri, body)
+	_, _, error := client.apiCall(HTTP_GET, uri, body, result)
 	return error
 }
 
-func (client *Client) ApiPut(uri string, post interface{}, result interface{}) error {
+func (client *Client) apiPut(uri string, post interface{}, result interface{}) error {
 	var content string
 	var err error
 	if post == nil {
 		content = ""
 	} else {
-		content, err = client.MarshallJSON(post)
+		content, err = client.marshallJSON(post)
 		if err != nil {
 			return err
 		}
 	}
-	_, _, error := client.ApiCall(HTTP_PUT, uri, content, result)
+	_, _, error := client.apiCall(HTTP_PUT, uri, content, result)
 	return error
 }
 
-func (client *Client) ApiPost(uri string, post interface{}, result interface{}) error {
+func (client *Client) apiPost(uri string, post interface{}, result interface{}) error {
 	/* step: we need to marshall the post data into json */
 	var content string
 	var err error
 	if post == nil {
 		content = ""
 	} else {
-		content, err = client.MarshallJSON(post)
+		content, err = client.marshallJSON(post)
 		if err != nil {
 			return err
 		}
 	}
-	_, _, error := client.ApiCall(HTTP_POST, uri, content, result)
+	_, _, error := client.apiCall(HTTP_POST, uri, content, result)
 	return error
 }
 
-func (client *Client) ApiDelete(uri string, post interface{}, result interface{}) error {
+func (client *Client) apiDelete(uri string, post interface{}, result interface{}) error {
 	var content string
 	var err error
 	if post == nil {
 		content = ""
 	} else {
-		content, err = client.MarshallJSON(post)
+		content, err = client.marshallJSON(post)
 		if err != nil {
 			return err
 		}
 	}
-	_, _, error := client.ApiCall(HTTP_DELETE, uri, content, result)
+	_, _, error := client.apiCall(HTTP_DELETE, uri, content, result)
 	return error
 }
 
-func (client *Client) ApiCall(method, uri, body string, result interface{}) (int, string, error) {
-	client.Debug("ApiCall() method: %s, uri: %s, body: %s", method, uri, body)
+func (client *Client) apiCall(method, uri, body string, result interface{}) (int, string, error) {
+	client.debug("ApiCall() method: %s, uri: %s, body: %s", method, uri, body)
 	if status, content, _, err := client.HttpCall(method, uri, body); err != nil {
 		return 0, "", err
 	} else {
-		client.Debug("ApiCall() status: %s, content: %s\n", status, content)
+		client.debug("ApiCall() status: %s, content: %s\n", status, content)
 		if status >= 200 && status <= 299 {
 			if result != nil {
-				if err := client.UnMarshallDataToJson(strings.NewReader(content), result); err != nil {
+				if err := client.unMarshallDataToJson(strings.NewReader(content), result); err != nil {
 					return status, content, err
 				}
 			}
@@ -272,7 +272,7 @@ func (client *Client) ApiCall(method, uri, body string, result interface{}) (int
 
 		/* step: lets decode into a error message */
 		var message Message
-		if err := client.UnMarshallDataToJson(strings.NewReader(content), &message); err != nil {
+		if err := client.unMarshallDataToJson(strings.NewReader(content), &message); err != nil {
 			return status, content, ErrInvalidResponse
 		} else {
 			return status, message.Message, ErrMarathonError
@@ -286,7 +286,7 @@ func (client *Client) HttpCall(method, uri, body string) (int, string, *http.Res
 		return 0, "", nil, err
 	} else {
 		url := fmt.Sprintf("%s/%s", marathon, uri)
-		client.Debug("HTTP method: %s, uri: %s, url: %s", method, uri, url)
+		client.debug("HTTP method: %s, uri: %s, url: %s", method, uri, url)
 
 		if request, err := http.NewRequest(method, url, strings.NewReader(body)); err != nil {
 			return 0, "", nil, err
@@ -301,7 +301,7 @@ func (client *Client) HttpCall(method, uri, body string) (int, string, *http.Res
 				return client.HttpCall(method, uri, body)
 			} else {
 				/* step: lets read in any content */
-				client.Debug("HTTP method: %s, uri: %s, url: %s\n", method, uri, url)
+				client.debug("HTTP method: %s, uri: %s, url: %s\n", method, uri, url)
 				if response.ContentLength != 0 {
 					/* step: read in the content from the request */
 					response_content, err := ioutil.ReadAll(response.Body)

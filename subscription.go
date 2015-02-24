@@ -34,7 +34,7 @@ type Subscriptions struct {
 // Retrieve a list of registered subscriptions
 func (client *Client) Subscriptions() (*Subscriptions, error) {
 	subscriptions := new(Subscriptions)
-	if err := client.ApiGet(MARATHON_API_SUBSCRIPTION, "", subscriptions); err != nil {
+	if err := client.apiGet(MARATHON_API_SUBSCRIPTION, "", subscriptions); err != nil {
 		return nil, err
 	} else {
 		return subscriptions, nil
@@ -42,7 +42,6 @@ func (client *Client) Subscriptions() (*Subscriptions, error) {
 }
 
 // Add your self as a listener to events from Marathon
-// Params:
 //		channel:	a EventsChannel used to receive event on
 func (client *Client) AddEventsListener(channel EventsChannel, filter int) error {
 	client.Lock()
@@ -61,7 +60,6 @@ func (client *Client) AddEventsListener(channel EventsChannel, filter int) error
 }
 
 // Remove the channel from the events listeners
-// Params:
 //		channel:	the channel you are removing
 func (client *Client) RemoveEventsListener(channel EventsChannel) {
 	client.Lock()
@@ -94,7 +92,7 @@ func (client *Client) RegisterSubscription() error {
 			/* step: register the handler */
 			http.HandleFunc(DEFAULT_EVENTS_URL, client.HandleMarathonEvent)
 			/* step: create the http server */
-			client.Debug("Creating a event http server")
+			client.debug("Creating a event http server")
 			client.events_http = &http.Server{
 				Addr:           binding,
 				Handler:        nil,
@@ -102,7 +100,7 @@ func (client *Client) RegisterSubscription() error {
 				WriteTimeout:   10 * time.Second,
 				MaxHeaderBytes: 1 << 20,
 			}
-			client.Debug("Attempting to listen on binding: %s", binding)
+			client.debug("Attempting to listen on binding: %s", binding)
 
 			// @todo need to add a timeout value here
 			listener, err := net.Listen("tcp", binding)
@@ -110,11 +108,11 @@ func (client *Client) RegisterSubscription() error {
 				return nil
 			}
 
-			client.Debug("Starting to listen on http events service")
+			client.debug("Starting to listen on http events service")
 			go func() {
 				for {
 					client.events_http.Serve(listener)
-					client.Debug("Exitted the http events service")
+					client.debug("Exitted the http events service")
 				}
 			}()
 		}
@@ -124,18 +122,18 @@ func (client *Client) RegisterSubscription() error {
 	callback := client.SubscriptionURL()
 	/* step: check if the callback is registered */
 
-	client.Debug("Checking if we already have a subscription for callback %s", callback)
+	client.debug("Checking if we already have a subscription for callback %s", callback)
 	if found, err := client.HasSubscription(callback); err != nil {
 		return err
 	} else if !found {
-		client.Debug("Registering a subscription with Marathon: callback: %s", callback)
+		client.debug("Registering a subscription with Marathon: callback: %s", callback)
 		/* step: we need to register our self */
 		uri := fmt.Sprintf("%s?callbackUrl=%s", MARATHON_API_SUBSCRIPTION, callback)
-		if err := client.ApiPost(uri, "", nil); err != nil {
+		if err := client.apiPost(uri, "", nil); err != nil {
 			return err
 		}
 	} else {
-		client.Debug("A subscription already exists for this callback: %s", callback)
+		client.debug("A subscription already exists for this callback: %s", callback)
 	}
 	return nil
 }
@@ -143,14 +141,13 @@ func (client *Client) RegisterSubscription() error {
 // Remove ourselves from Marathon's callback facility
 func (client *Client) UnSubscribe() error {
 	/* step: remove from the list of subscriptions */
-	return client.ApiDelete(fmt.Sprintf("%s?callbackUrl=%s", MARATHON_API_SUBSCRIPTION, client.SubscriptionURL()), nil, nil)
+	return client.apiDelete(fmt.Sprintf("%s?callbackUrl=%s", MARATHON_API_SUBSCRIPTION, client.SubscriptionURL()), nil, nil)
 }
 
 // Check to see a subscription already exists with Marathon
-// Params:
 //		callback:	the url of the callback
 func (client *Client) HasSubscription(callback string) (bool, error) {
-	client.Debug("Checking for subscription: %s", callback)
+	client.debug("Checking for subscription: %s", callback)
 	/* step: generate our events callback */
 	if subscriptions, err := client.Subscriptions(); err != nil {
 		return false, err
@@ -165,7 +162,7 @@ func (client *Client) HasSubscription(callback string) (bool, error) {
 }
 
 func (client *Client) HandleMarathonEvent(writer http.ResponseWriter, request *http.Request) {
-	client.Debug("Recieved a possible marathon event")
+	client.debug("Recieved a possible marathon event")
 	/* step: lets read in the post body */
 	if body, err := ioutil.ReadAll(request.Body); err == nil {
 		content := string(body[:])
@@ -174,28 +171,28 @@ func (client *Client) HandleMarathonEvent(writer http.ResponseWriter, request *h
 		/* step: decode the event type */
 		event_type := new(EventType)
 		if err := decoder.Decode(event_type); err != nil {
-			client.Debug("Failed to decode the event type, content: %s, error: %s", content, err)
+			client.debug("Failed to decode the event type, content: %s, error: %s", content, err)
 			return
 		}
 
-		client.Debug("Recieved marathon event, %s", event_type.EventType)
+		client.debug("Recieved marathon event, %s", event_type.EventType)
 		/* step: check the type is handled */
 		if event, err := client.GetEvent(event_type.EventType); err != nil {
-			client.Debug("Unable to retrieve the event, type: %s", event_type.EventType)
+			client.debug("Unable to retrieve the event, type: %s", event_type.EventType)
 		} else {
 			/* step: lets decode */
 			decoder = json.NewDecoder(strings.NewReader(content))
 			if err := decoder.Decode(event.Event); err != nil {
-				client.Debug("Failed to decode the event type: %d, name: %s error: %s", event.Type, err)
+				client.debug("Failed to decode the event type: %d, name: %s error: %s", event.Type, err)
 			}
-			client.Debug("Marathon event, %s", event)
+			client.debug("Marathon event, %s", event)
 			client.RLock()
 			defer client.RUnlock()
 			/* step: check if anyone is listen for this event */
 			for channel, filter := range client.listeners {
 				/* step: check if this person wants this event type */
 				if event.Type&filter != 0 {
-					client.Debug("Event type: %d being listen to, sending to lister: %s", event.Type, channel)
+					client.debug("Event type: %d being listen to, sending to lister: %s", event.Type, channel)
 					go func() {
 						channel <- event
 					}()
@@ -203,7 +200,7 @@ func (client *Client) HandleMarathonEvent(writer http.ResponseWriter, request *h
 			}
 		}
 	} else {
-		client.Debug("Failed to decode the event type, content: %s, error: %s")
+		client.debug("Failed to decode the event type, content: %s, error: %s")
 	}
 }
 

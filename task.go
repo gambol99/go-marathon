@@ -52,7 +52,7 @@ func (task *Task) HasHealthCheckResults() bool {
 // Retrieve all the tasks currently running
 func (client *Client) AllTasks() (*Tasks, error) {
 	tasks := new(Tasks)
-	if err := client.ApiGet(MARATHON_API_TASKS, "", tasks); err != nil {
+	if err := client.apiGet(MARATHON_API_TASKS, "", tasks); err != nil {
 		return nil, err
 	} else {
 		return tasks, nil
@@ -60,11 +60,10 @@ func (client *Client) AllTasks() (*Tasks, error) {
 }
 
 // Retrieve a list of tasks for an application
-// Params:
 //		application_id:		the id for the application
 func (client *Client) Tasks(application_id string) (*Tasks, error) {
 	tasks := new(Tasks)
-	if err := client.ApiGet(fmt.Sprintf("%s%s/tasks", MARATHON_API_APPS, application_id), "", tasks); err != nil {
+	if err := client.apiGet(fmt.Sprintf("%s%s/tasks", MARATHON_API_APPS, application_id), "", tasks); err != nil {
 		return nil, err
 	} else {
 		return tasks, nil
@@ -72,7 +71,6 @@ func (client *Client) Tasks(application_id string) (*Tasks, error) {
 }
 
 // Kill all tasks relating to an application
-// Params:
 //		application_id:		the id for the application
 //      host:				kill only those tasks on a specific host (optional)
 //		scale:              Scale the app down (i.e. decrement its instances setting by the number of tasks killed) after killing the specified tasks
@@ -84,8 +82,8 @@ func (client *Client) KillApplicationTasks(application_id, hostname string, scal
 	options.Host = hostname
 	options.Scale = scale
 	tasks := new(Tasks)
-	client.Debug("Killing application tasks for: %s, hostname: %s, scale: %t", application_id, hostname, scale)
-	if err := client.ApiDelete(fmt.Sprintf("%s%s/tasks", MARATHON_API_APPS, application_id), &options, tasks); err != nil {
+	client.debug("Killing application tasks for: %s, hostname: %s, scale: %t", application_id, hostname, scale)
+	if err := client.apiDelete(fmt.Sprintf("%s%s/tasks", MARATHON_API_APPS, application_id), &options, tasks); err != nil {
 		return nil, err
 	}
 	return tasks, nil
@@ -100,7 +98,6 @@ func (client *Client) KillApplicationTasks(application_id, hostname string, scal
 // down, the per port check is redundant??? .. personally, I like it anyhow, but hey
 //
 
-// Params:
 //		name:		the identifier for the application
 //		port:		the container port you are interested in
 //		health: 	whether to check the health or not
@@ -128,7 +125,7 @@ func (client *Client) TaskEndpoints(name string, port int, health_check bool) ([
 						health of the task hasn't yet been performed, hence we assume it as DOWN
 					*/
 					if task.HasHealthCheckResults() == false {
-						client.Debug("The task: %s for application: %s hasn't been checked yet, skipping", task, application)
+						client.debug("The task: %s for application: %s hasn't been checked yet, skipping", task, application)
 						continue
 					}
 
@@ -136,7 +133,7 @@ func (client *Client) TaskEndpoints(name string, port int, health_check bool) ([
 					skip_endpoint := false
 					for _, health := range task.HealthCheckResult {
 						if health.Alive == false {
-							client.Debug("The task: %s for application: %s failed health checks", task, application)
+							client.debug("The task: %s for application: %s failed health checks", task, application)
 							skip_endpoint = true
 						}
 					}
