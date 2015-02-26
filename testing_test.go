@@ -28,6 +28,7 @@ const (
 	FAKE_GROUP_NAME      = "/test"
 	FAKE_APP_NAME        = "/fake_app"
 	FAKE_APP_NAME_BROKEN = "/fake_app_broken"
+	FAKE_DEPLOYMENT_ID   = "867ed450-f6a8-4d33-9b0e-e11c5513990b"
 )
 
 var test_client Marathon
@@ -37,6 +38,7 @@ func NewFakeMarathonEndpoint() {
 		var err error
 		config := NewDefaultConfig()
 		config.URL = FAKE_MARATHON_URL
+		config.Debug = false
 		test_client, err = NewClient(config)
 		if err != nil {
 			fmt.Printf("Failed to create the fake client, %s, error: %s", FAKE_MARATHON_URL, err)

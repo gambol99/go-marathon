@@ -313,9 +313,14 @@ func (client *Client) ApplicationOK(name string) (bool, error) {
 
 // Creates a new application in Marathon
 // 		application: 		the structure holding the application configuration
-func (client *Client) CreateApplication(application *Application) error {
+func (client *Client) CreateApplication(application *Application) (*DeploymentID, error) {
+	deployID := new(DeploymentID)
 	client.debug("Creating an application: %s", application)
-	return client.apiPost(MARATHON_API_APPS, &application, nil)
+	if err := client.apiPost(MARATHON_API_APPS, &application, deployID); err != nil {
+		return nil, err
+	} else {
+ 		return deployID, nil
+	}
 }
 
 // Checks to see if the application exists in marathon
@@ -341,10 +346,15 @@ func (client *Client) HasApplication(name string) (bool, error) {
 
 // Deletes an application from marathon
 // 		name: 		the id used to identify the application
-func (client *Client) DeleteApplication(name string) error {
+func (client *Client) DeleteApplication(name string) (*DeploymentID, error) {
 	/* step: check of the application already exists */
 	client.debug("Deleting the application: %s", name)
-	return client.apiDelete(fmt.Sprintf("%s%s", MARATHON_API_APPS, name), nil, nil)
+	deployID := new(DeploymentID)
+	if err := client.apiDelete(fmt.Sprintf("%s%s", MARATHON_API_APPS, name), nil, deployID); err != nil {
+		return nil, err
+	} else {
+		return deployID, nil
+	}
 }
 
 // Performs a rolling restart of marathon application (http://mesosphere.github.io/marathon/docs/rest-api.html#post-/v2/apps/%7Bappid%7D/restart)
@@ -361,11 +371,16 @@ func (client *Client) RestartApplication(name string, force bool) (*DeploymentID
 // Change the number of instance an application is running
 // 		name: 		the id used to identify the application
 // 		instances:	the number of instances you wish to change to
-func (client *Client) ScaleApplicationInstances(name string, instances int) error {
+func (client *Client) ScaleApplicationInstances(name string, instances int) (*DeploymentID, error) {
 	client.debug("ScaleApplication: application: %s, instance: %d", name, instances)
 	changes := new(Application)
 	changes.ID = name
 	changes.Instances = instances
 	uri := fmt.Sprintf("%s%s", MARATHON_API_APPS, name)
-	return client.apiPut(uri, &changes, nil)
+	deployID := new(DeploymentID)
+	if err := client.apiPut(uri, &changes, deployID); err != nil {
+		return nil, err
+	} else {
+		return deployID, nil
+	}
 }

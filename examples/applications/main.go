@@ -77,26 +77,26 @@ func main() {
 		application.Container = marathon.NewDockerContainer()
 		application.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80).Expose(443)
 
-		if err := client.CreateApplication(application); err != nil {
+		if deployId, err := client.CreateApplication(application); err != nil {
 			glog.Errorf("Failed to create application: %s, error: %s", application, err)
 		} else {
-			glog.Infof("Created the application: %s", application)
+			glog.Infof("Created the application: %s, deploymentId: %s", application, deployId.DeploymentID)
 		}
 
 		time.Sleep(20 * time.Second)
 
 		glog.Infof("Scale to 4 instances")
-		if err := client.ScaleApplicationInstances(application.ID, 4); err != nil {
+		if deployId, err := client.ScaleApplicationInstances(application.ID, 4); err != nil {
 			glog.Errorf("Failed to delete the application: %s, error: %s", application, err)
 		} else {
-			glog.Infof("Successfully scaled the application")
+			glog.Infof("Successfully scaled the application, deployId: %s", deployId.DeploymentID)
 		}
 
 		time.Sleep(20 * time.Second)
 
 		glog.Infof("Deleting the application: %s", APPLICATION_NAME)
 
-		if err := client.DeleteApplication(application.ID); err != nil {
+		if _, err := client.DeleteApplication(application.ID); err != nil {
 			glog.Errorf("Failed to delete the application: %s, error: %s", application, err)
 		} else {
 			glog.Infof("Successfully deleted the application")
@@ -105,7 +105,7 @@ func main() {
 		time.Sleep(10 * time.Second)
 
 		glog.Infof("Starting the application again")
-		if err := client.CreateApplication(application); err != nil {
+		if _, err := client.CreateApplication(application); err != nil {
 			glog.Errorf("Failed to create application: %s, error: %s", application, err)
 		} else {
 			glog.Infof("Created the application: %s", application)

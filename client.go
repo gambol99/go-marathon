@@ -51,11 +51,11 @@ type Marathon interface {
 	/* check if an application is ok */
 	ApplicationOK(name string) (bool, error)
 	/* create an application in marathon */
-	CreateApplication(application *Application) error
+	CreateApplication(application *Application) (*DeploymentID, error)
 	/* delete an application */
-	DeleteApplication(name string) error
+	DeleteApplication(name string) (*DeploymentID, error)
 	/* scale a application */
-	ScaleApplicationInstances(name string, instances int) error
+	ScaleApplicationInstances(name string, instances int) (*DeploymentID, error)
 	/* restart an application */
 	RestartApplication(name string, force bool) (*DeploymentID, error)
 	/* get a list of applications from marathon */
@@ -81,18 +81,24 @@ type Marathon interface {
 	/* retrieve a specific group from marathon */
 	Group(name string) (*Group, error)
 	/* create a group deployment */
-	CreateGroup(group *Group) (*ApplicationVersion, error)
+	CreateGroup(group *Group) (*DeploymentID, error)
 	/* delete a group */
-	DeleteGroup(name string) (*ApplicationVersion, error)
+	DeleteGroup(name string) (*DeploymentID, error)
+	/* update a groups */
+	UpdateGroup(id string, group *Group) (*DeploymentID, error)
 	/* check if a group exists */
 	HasGroup(name string) (bool, error)
 
 	/* --- DEPLOYMENTS --- */
 
 	/* get a list of the deployments */
-	Deployments() ([]Deployment, error)
+	Deployments() ([]*Deployment, error)
 	/* delete a deployment */
-	DeleteDeployment(deployment Deployment, force bool) (Deployment, error)
+	DeleteDeployment(id string, force bool) (*DeploymentID, error)
+	/* check to see if a deployment exists */
+	HasDeployment(id string) (bool, error)
+	/* wait of a deployment to finish */
+	WaitOnDeployment(version string, timeout time.Duration) error
 
 	/* --- SUBSCRIPTIONS --- */
 
@@ -130,6 +136,8 @@ var (
 	ErrInvalidArgument = errors.New("The argument passed is invalid")
 	/* error return by marathon */
 	ErrMarathonError = errors.New("Marathon error")
+	/* the operation has timed out */
+	ErrTimeoutError = errors.New("The operation has timed out")
 )
 
 type Client struct {
@@ -197,70 +205,72 @@ func (client *Client) unMarshallDataToJson(stream io.Reader, result interface{})
 	return nil
 }
 
+func (client *Client) unmarshallJsonArray(stream io.Reader, results []interface{}) error {
+	decoder := json.NewDecoder(stream)
+	if err := decoder.Decode(results); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (client *Client) apiGet(uri, body string, result interface{}) error {
 	client.debug("apiGet() uri: %s, body: %s", uri, body)
 	_, _, error := client.apiCall(HTTP_GET, uri, body, result)
 	return error
 }
 
-func (client *Client) apiPut(uri string, post interface{}, result interface{}) error {
-	var content string
-	var err error
-	if post == nil {
-		content = ""
-	} else {
-		content, err = client.marshallJSON(post)
-		if err != nil {
-			return err
-		}
+func (client *Client) apiPostData(data interface {}) (string, error) {
+	if data == nil {
+		return "", nil
 	}
-	_, _, error := client.apiCall(HTTP_PUT, uri, content, result)
-	return error
+	content, err := client.marshallJSON(data)
+	if err != nil {
+		return "", err
+	}
+	return content, nil
+}
+
+func (client *Client) apiPut(uri string, post interface{}, result interface{}) error {
+	if content, err := client.apiPostData(post); err != nil {
+		return err
+	} else {
+		_, _, error := client.apiCall(HTTP_PUT, uri, content, result)
+		return error
+	}
 }
 
 func (client *Client) apiPost(uri string, post interface{}, result interface{}) error {
-	/* step: we need to marshall the post data into json */
-	var content string
-	var err error
-	if post == nil {
-		content = ""
+	if content, err := client.apiPostData(post); err != nil {
+		return err
 	} else {
-		content, err = client.marshallJSON(post)
-		if err != nil {
-			return err
-		}
+		_, _, error := client.apiCall(HTTP_POST, uri, content, result)
+		return error
 	}
-	_, _, error := client.apiCall(HTTP_POST, uri, content, result)
-	return error
 }
 
 func (client *Client) apiDelete(uri string, post interface{}, result interface{}) error {
-	var content string
-	var err error
-	if post == nil {
-		content = ""
+	if content, err := client.apiPostData(post); err != nil {
+		return err
 	} else {
-		content, err = client.marshallJSON(post)
-		if err != nil {
-			return err
-		}
+		_, _, error := client.apiCall(HTTP_DELETE, uri, content, result)
+		return error
 	}
-	_, _, error := client.apiCall(HTTP_DELETE, uri, content, result)
-	return error
 }
 
 func (client *Client) apiCall(method, uri, body string, result interface{}) (int, string, error) {
-	client.debug("ApiCall() method: %s, uri: %s, body: %s", method, uri, body)
-	if status, content, _, err := client.HttpCall(method, uri, body); err != nil {
+	client.debug("apiCall() method: %s, uri: %s, body: %s", method, uri, body)
+	if status, content, _, err := client.httpCall(method, uri, body); err != nil {
 		return 0, "", err
 	} else {
-		client.debug("ApiCall() status: %s, content: %s\n", status, content)
+		client.debug("apiCall() status: %d, content: %s\n", status, content)
 		if status >= 200 && status <= 299 {
 			if result != nil {
 				if err := client.unMarshallDataToJson(strings.NewReader(content), result); err != nil {
-					return status, content, err
+					client.debug("apiCal(): failed to unmarshall the response from marathon, error: %s", err)
+					return status, content, ErrInvalidResponse
 				}
 			}
+			client.debug("apiCall() result: %V", result)
 			return status, content, nil
 		}
 		switch status {
@@ -275,18 +285,22 @@ func (client *Client) apiCall(method, uri, body string, result interface{}) (int
 		if err := client.unMarshallDataToJson(strings.NewReader(content), &message); err != nil {
 			return status, content, ErrInvalidResponse
 		} else {
-			return status, message.Message, ErrMarathonError
+			errorMessage := "unknown error"
+			if message.Message != "" {
+				errorMessage = message.Message
+			}
+			return status, message.Message, errors.New(errorMessage)
 		}
 	}
 }
 
-func (client *Client) HttpCall(method, uri, body string) (int, string, *http.Response, error) {
+func (client *Client) httpCall(method, uri, body string) (int, string, *http.Response, error) {
 	/* step: get a member from the cluster */
 	if marathon, err := client.cluster.GetMember(); err != nil {
 		return 0, "", nil, err
 	} else {
 		url := fmt.Sprintf("%s/%s", marathon, uri)
-		client.debug("HTTP method: %s, uri: %s, url: %s", method, uri, url)
+		client.debug("httpCall(): %s, uri: %s, url: %s", method, uri, url)
 
 		if request, err := http.NewRequest(method, url, strings.NewReader(body)); err != nil {
 			return 0, "", nil, err
@@ -298,10 +312,10 @@ func (client *Client) HttpCall(method, uri, body string) (int, string, *http.Res
 				/* step: mark the endpoint as down */
 				client.cluster.MarkDown()
 				/* step: retry the request with another endpoint */
-				return client.HttpCall(method, uri, body)
+				return client.httpCall(method, uri, body)
 			} else {
 				/* step: lets read in any content */
-				client.debug("HTTP method: %s, uri: %s, url: %s\n", method, uri, url)
+				client.debug("httpCall: %s, uri: %s, url: %s\n", method, uri, url)
 				if response.ContentLength != 0 {
 					/* step: read in the content from the request */
 					response_content, err := ioutil.ReadAll(response.Body)

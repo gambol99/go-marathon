@@ -630,10 +630,10 @@
             ],
             "version": "2014-08-26T08:18:03.595Z",
             "currentStep": 1,
-            "totalSteps" 1
+            "totalSteps": 1
         }
     ]
-- uri: /v2/deployments/:deploymentId
+- uri: /v2/deployments/867ed450-f6a8-4d33-9b0e-e11c5513990b
   method: DELETE
   content: |
     {

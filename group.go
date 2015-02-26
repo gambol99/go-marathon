@@ -97,8 +97,8 @@ func (client *Client) HasGroup(name string) (bool, error) {
 
 // Create a new group in marathon
 //		group:	a pointer the Group structure defining the group
-func (client *Client) CreateGroup(group *Group) (*ApplicationVersion, error) {
-	version := new(ApplicationVersion)
+func (client *Client) CreateGroup(group *Group) (*DeploymentID, error) {
+	version := new(DeploymentID)
 	if err := client.apiPost(MARATHON_API_GROUPS, group, version); err != nil {
 		return nil, err
 	}
@@ -107,11 +107,23 @@ func (client *Client) CreateGroup(group *Group) (*ApplicationVersion, error) {
 
 // Delete a group from marathon
 // 		name:	the identifier for the group
-func (client *Client) DeleteGroup(name string) (*ApplicationVersion, error) {
-	version := new(ApplicationVersion)
+func (client *Client) DeleteGroup(name string) (*DeploymentID, error) {
+	version := new(DeploymentID)
 	uri := fmt.Sprintf("%s%s", MARATHON_API_GROUPS, name)
 	if err := client.apiDelete(uri, nil, version); err != nil {
 		return nil, err
 	}
 	return version, nil
+}
+
+// Update the parameters of a groups
+// 		name:	the identifier for the group
+//      group:  the group structure with the new params
+func (client *Client) UpdateGroup(id string, group *Group) (*DeploymentID, error) {
+	deploymentId := new(DeploymentID)
+	uri := fmt.Sprintf("%s%s", MARATHON_API_GROUPS, id)
+	if err := client.apiPut(uri, group, deploymentId); err != nil {
+		return nil, err
+	}
+	return deploymentId, nil
 }
