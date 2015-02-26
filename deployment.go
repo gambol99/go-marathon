@@ -22,13 +22,13 @@ import (
 )
 
 type Deployment struct {
-	ID             string            	`json:"id"`
-	Version        string            	`json:"version"`
-	CurrentStep    int               	`json:"currentStep"`
-	TotalSteps     int               	`json:"totalSteps"`
-	AffectedApps   []string          	`json:"affectedApps"`
-	Steps          [][]*DeploymentStep 	`json:"steps"`
-	CurrentActions []*DeploymentStep 	`json:"currentActions"`
+	ID             string              `json:"id"`
+	Version        string              `json:"version"`
+	CurrentStep    int                 `json:"currentStep"`
+	TotalSteps     int                 `json:"totalSteps"`
+	AffectedApps   []string            `json:"affectedApps"`
+	Steps          [][]*DeploymentStep `json:"steps"`
+	CurrentActions []*DeploymentStep   `json:"currentActions"`
 }
 
 type DeploymentID struct {
@@ -61,6 +61,7 @@ type DeploymentPlan struct {
 	} `json:"target"`
 }
 
+// Retrieve a list of current deployments
 func (client *Client) Deployments() ([]*Deployment, error) {
 	var deployments []*Deployment
 	if err := client.apiGet(MARATHON_API_DEPLOYMENTS, "", &deployments); err != nil {
@@ -70,6 +71,9 @@ func (client *Client) Deployments() ([]*Deployment, error) {
 	}
 }
 
+// Delete a current deployment from marathon
+// 	id:		the deployment id you wish to delete
+// 	force:	whether or not to force the deletion
 func (client *Client) DeleteDeployment(id string, force bool) (*DeploymentID, error) {
 	deployment := new(DeploymentID)
 	if err := client.apiDelete(fmt.Sprintf("%s/%s", MARATHON_API_DEPLOYMENTS, id), nil, deployment); err != nil {
@@ -96,6 +100,7 @@ func (client *Client) HasDeployment(id string) (bool, error) {
 
 // Wait of a deployment to finish
 //  version:    the version of the application
+// 	timeout:	the timeout to wait for the deployment to take, otherwise return an error
 func (client *Client) WaitOnDeployment(id string, timeout time.Duration) error {
 	found, err := client.HasDeployment(id)
 	if err != nil {

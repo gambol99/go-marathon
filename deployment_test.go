@@ -41,5 +41,3 @@ func TestDeleteDeployment(t *testing.T) {
 	AssertOnString(id.DeploymentID, "0b1467fc-d5cd-4bbc-bac2-2805351cee1e", t)
 	AssertOnString(id.Version, "2014-08-26T08:20:26.171Z", t)
 }
-
-

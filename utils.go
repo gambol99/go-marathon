@@ -22,7 +22,7 @@ import (
 	"strings"
 )
 
-func GetInterfaceAddress(name string) (string, error) {
+func getInterfaceAddress(name string) (string, error) {
 	if interfaces, err := net.Interfaces(); err != nil {
 		return "", err
 	} else {
@@ -43,7 +43,7 @@ func GetInterfaceAddress(name string) (string, error) {
 	return "", errors.New("Unable to determine or find the interface")
 }
 
-func Contains(elements []string, value string) bool {
+func contains(elements []string, value string) bool {
 	for _, element := range elements {
 		if element == value {
 			return true

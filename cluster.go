@@ -131,6 +131,7 @@ func (cluster *MarathonCluster) Url() string {
 	return cluster.url
 }
 
+// Retrieve a list of active members
 func (cluster *MarathonCluster) Active() []string {
 	cluster.RLock()
 	defer cluster.RUnlock()
@@ -144,6 +145,7 @@ func (cluster *MarathonCluster) Active() []string {
 	return list
 }
 
+// Retrieve a list of endpoints which are non-active
 func (cluster *MarathonCluster) NonActive() []string {
 	cluster.RLock()
 	defer cluster.RUnlock()
@@ -157,6 +159,7 @@ func (cluster *MarathonCluster) NonActive() []string {
 	return list
 }
 
+// Retrieve the current member, i.e. the current endpoint in use
 func (cluster *MarathonCluster) GetMember() (string, error) {
 	cluster.Lock()
 	defer cluster.Unlock()
@@ -175,10 +178,12 @@ func (cluster *MarathonCluster) GetMember() (string, error) {
 	return "", errors.New("No cluster memebers available at the moment")
 }
 
+// Retrieves the current marathon url
 func (cluster *MarathonCluster) GetMarathonURL(member *Member) string {
 	return fmt.Sprintf("%s://%s", cluster.protocol, member.hostname)
 }
 
+// Marks the current endpoint as down and waits for it to come back only
 func (cluster *MarathonCluster) MarkDown() {
 	cluster.Lock()
 	defer cluster.Unlock()
@@ -208,6 +213,7 @@ func (cluster *MarathonCluster) MarkDown() {
 	}
 }
 
+// Retrieve the size of the cluster
 func (cluster *MarathonCluster) Size() int {
 	return cluster.size
 }

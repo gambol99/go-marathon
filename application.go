@@ -231,7 +231,7 @@ func (client *Client) HasApplicationVersion(name, version string) (bool, error) 
 	if versions, err := client.ApplicationVersions(name); err != nil {
 		return false, err
 	} else {
-		if Contains(versions.Versions, version) {
+		if contains(versions.Versions, version) {
 			return true, nil
 		}
 		return false, nil
@@ -319,7 +319,7 @@ func (client *Client) CreateApplication(application *Application) (*DeploymentID
 	if err := client.apiPost(MARATHON_API_APPS, &application, deployID); err != nil {
 		return nil, err
 	} else {
- 		return deployID, nil
+		return deployID, nil
 	}
 }
 

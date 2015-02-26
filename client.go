@@ -181,6 +181,7 @@ func (client *Client) GetMarathonURL() string {
 	return client.cluster.Url()
 }
 
+// Pings the current marathon endpoint (note, this is not a ICMP ping, but a rest api call)
 func (client *Client) Ping() (bool, error) {
 	if err := client.apiGet(MARATHON_API_PING, "", nil); err != nil {
 		return false, err

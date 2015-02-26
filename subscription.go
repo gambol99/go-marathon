@@ -82,7 +82,7 @@ func (client *Client) SubscriptionURL() string {
 // Register ourselves with Marathon to receive events from it's callback facility
 func (client *Client) RegisterSubscription() error {
 	if client.events_http == nil {
-		if ip_address, err := GetInterfaceAddress(client.config.EventsInterface); err != nil {
+		if ip_address, err := getInterfaceAddress(client.config.EventsInterface); err != nil {
 			return errors.New(fmt.Sprintf("Unable to get the ip address from the interface: %s, error: %s",
 				client.config.EventsInterface, err))
 		} else {
