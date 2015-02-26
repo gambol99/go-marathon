@@ -16,4 +16,4 @@ limitations under the License.
 
 package marathon
 
-const VERSION = "0.0.1"
+const VERSION = "0.0.2"

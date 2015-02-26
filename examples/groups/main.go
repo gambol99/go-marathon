@@ -39,7 +39,7 @@ func main() {
 	flag.Parse()
 	config := marathon.NewDefaultConfig()
 	config.URL = marathon_url
-	config.Debug = true
+	config.Debug = false
 	client, err := marathon.NewClient(config)
 	if err != nil {
 		glog.Fatalf("Failed to create a client for marathon, error: %s", err)
@@ -59,7 +59,11 @@ func main() {
 	found, err := client.HasGroup(GROUP_NAME)
 	Assert(err)
 	if found {
-		client.DeleteGroup(GROUP_NAME)
+		glog.Infof("Deleting the grouy: %s, as it already exists", GROUP_NAME)
+		id, err := client.DeleteGroup(GROUP_NAME)
+		Assert(err)
+		err = client.WaitOnDeployment(id.DeploymentID, 0)
+		Assert(err)
 	}
 
 	/* step: the frontend app */
@@ -100,9 +104,22 @@ func main() {
 	group := marathon.NewApplicationGroup(GROUP_NAME)
 	group.App(frontend).App(redis).App(mysql)
 
-	if version, err := client.CreateGroup(group); err != nil {
+	if id, err := client.CreateGroup(group); err != nil {
 		glog.Errorf("Failed to create the group: %s, error: %s", group.ID, err)
 	} else {
-		glog.Infof("Successfully created the group: %s, version: %s", group.ID, version)
+		glog.Infof("Successfully created the group: %s, version: %s", group.ID, id.DeploymentID)
+		err := client.WaitOnDeployment(id.DeploymentID, 0)
+		Assert(err)
+	}
+
+	glog.Infof("Updating the group paramaters")
+	frontend.Count(4)
+
+	if id, err := client.UpdateGroup(GROUP_NAME, group); err != nil {
+		glog.Errorf("Failed to update the group, error: %s", err)
+	} else {
+		glog.Infof("Successfully updated the group: %s, version: %s", group.ID, id.DeploymentID)
+		err := client.WaitOnDeployment(id.DeploymentID, 0)
+		Assert(err)
 	}
 }
