@@ -357,12 +357,16 @@ func (client *Client) DeleteApplication(name string) (*DeploymentID, error) {
 	}
 }
 
-// Performs a rolling restart of marathon application (http://mesosphere.github.io/marathon/docs/rest-api.html#post-/v2/apps/%7Bappid%7D/restart)
+// Performs a rolling restart of marathon application
 // 		name: 		the id used to identify the application
 func (client *Client) RestartApplication(name string, force bool) (*DeploymentID, error) {
 	client.debug("Restarting the application: %s, force: %s", name, force)
 	deployment := new(DeploymentID)
-	if err := client.apiGet(fmt.Sprintf("%s%s/restart", MARATHON_API_APPS, name), nil, deployment); err != nil {
+	var options struct {
+		Force bool `json:"force"`
+		}
+	options.Force = force
+	if err := client.apiGet(fmt.Sprintf("%s%s/restart", MARATHON_API_APPS, name), &options, deployment); err != nil {
 		return nil, err
 	}
 	return deployment, nil
