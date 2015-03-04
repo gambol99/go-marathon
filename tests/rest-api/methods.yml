@@ -702,6 +702,18 @@
             }
         ]
     }
+- uri: /v2/leader
+  method: GET
+  content: |
+    {
+       "leader": "127.0.0.1:8080"
+    }
+- uri: /v2/leader
+  method: DELETE
+  content: |
+    {
+      "message": "Leadership abdicted"
+    }
 - uri: /v2/info
   method: GET
   content: |

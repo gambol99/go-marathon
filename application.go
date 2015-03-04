@@ -204,7 +204,7 @@ func (application *Application) CheckTCP(port, interval int) (*Application, erro
 // Retrieve an array of all the applications which are running in marathon
 func (client *Client) Applications() (*Applications, error) {
 	applications := new(Applications)
-	if err := client.apiGet(MARATHON_API_APPS, "", applications); err != nil {
+	if err := client.apiGet(MARATHON_API_APPS, nil, applications); err != nil {
 		return nil, err
 	} else {
 		return applications, nil
@@ -243,7 +243,7 @@ func (client *Client) HasApplicationVersion(name, version string) (bool, error) 
 func (client *Client) ApplicationVersions(name string) (*ApplicationVersions, error) {
 	uri := fmt.Sprintf("%s%s/versions", MARATHON_API_APPS, name)
 	versions := new(ApplicationVersions)
-	if err := client.apiGet(uri, "", versions); err != nil {
+	if err := client.apiGet(uri, nil, versions); err != nil {
 		return nil, err
 	}
 	return versions, nil
@@ -267,7 +267,7 @@ func (client *Client) SetApplicationVersion(name string, version *ApplicationVer
 // 		name: 		the id used to identify the application
 func (client *Client) Application(name string) (*Application, error) {
 	application := new(ApplicationWrap)
-	if err := client.apiGet(fmt.Sprintf("%s%s", MARATHON_API_APPS, name), "", application); err != nil {
+	if err := client.apiGet(fmt.Sprintf("%s%s", MARATHON_API_APPS, name), nil, application); err != nil {
 		return nil, err
 	} else {
 		return &application.Application, nil
@@ -362,7 +362,7 @@ func (client *Client) DeleteApplication(name string) (*DeploymentID, error) {
 func (client *Client) RestartApplication(name string, force bool) (*DeploymentID, error) {
 	client.debug("Restarting the application: %s, force: %s", name, force)
 	deployment := new(DeploymentID)
-	if err := client.apiGet(fmt.Sprintf("%s%s/restart", MARATHON_API_APPS, name), "", deployment); err != nil {
+	if err := client.apiGet(fmt.Sprintf("%s%s/restart", MARATHON_API_APPS, name), nil, deployment); err != nil {
 		return nil, err
 	}
 	return deployment, nil

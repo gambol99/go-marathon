@@ -11,12 +11,12 @@ Go-marathon is a API library for working with [Marathon](https://mesosphere.gith
   > - Multiple Endpoint support for HA deployments
   > - Marathon Subscriptions and Event callbacks
  
- Note: the library active development; requires >= Go 1.3
+ Note: the library still under active development; requires >= Go 1.3
 
 #### **Code Examples**
  -------
 
-There is also a examples directory in the source, which show hints and snippets of code of how to use it.
+There is also a examples directory in the source, which show hints and snippets of code of how to use it - which is probably the best place to start.
 
 **Creating a client**
 

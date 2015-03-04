@@ -75,7 +75,7 @@ func (client *Client) Groups() (*Groups, error) {
 //		name:	the identifier for the group
 func (client *Client) Group(name string) (*Group, error) {
 	group := new(Group)
-	if err := client.apiGet(fmt.Sprintf("%s%s", MARATHON_API_GROUPS, name), "", group); err != nil {
+	if err := client.apiGet(fmt.Sprintf("%s%s", MARATHON_API_GROUPS, name), nil, group); err != nil {
 		return nil, err
 	}
 	return group, nil

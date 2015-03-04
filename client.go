@@ -119,6 +119,10 @@ type Marathon interface {
 	Ping() (bool, error)
 	/* grab the marathon server info */
 	Info() (*Info, error)
+	/* retrieve the leader info */
+	Leader() (string, error)
+	/* cause the current leader to abdicate */
+	AbdicateLeader() (string, error)
 }
 
 var (
@@ -183,7 +187,7 @@ func (client *Client) GetMarathonURL() string {
 
 // Pings the current marathon endpoint (note, this is not a ICMP ping, but a rest api call)
 func (client *Client) Ping() (bool, error) {
-	if err := client.apiGet(MARATHON_API_PING, "", nil); err != nil {
+	if err := client.apiGet(MARATHON_API_PING, nil, nil); err != nil {
 		return false, err
 	} else {
 		return true, nil
@@ -214,14 +218,8 @@ func (client *Client) unmarshallJsonArray(stream io.Reader, results []interface{
 	return nil
 }
 
-func (client *Client) apiGet(uri, body string, result interface{}) error {
-	client.debug("apiGet() uri: %s, body: %s", uri, body)
-	_, _, error := client.apiCall(HTTP_GET, uri, body, result)
-	return error
-}
-
 func (client *Client) apiPostData(data interface {}) (string, error) {
-	if data == nil {
+	if data == nil  {
 		return "", nil
 	}
 	content, err := client.marshallJSON(data)
@@ -231,7 +229,16 @@ func (client *Client) apiPostData(data interface {}) (string, error) {
 	return content, nil
 }
 
-func (client *Client) apiPut(uri string, post interface{}, result interface{}) error {
+func (client *Client) apiGet(uri string, post, result interface{}) error {
+	if content, err := client.apiPostData(post); err != nil {
+		return err
+	} else {
+		_, _, error := client.apiCall(HTTP_GET, uri, content, result)
+		return error
+	}
+}
+
+func (client *Client) apiPut(uri string, post, result interface{}) error {
 	if content, err := client.apiPostData(post); err != nil {
 		return err
 	} else {
@@ -240,7 +247,7 @@ func (client *Client) apiPut(uri string, post interface{}, result interface{}) e
 	}
 }
 
-func (client *Client) apiPost(uri string, post interface{}, result interface{}) error {
+func (client *Client) apiPost(uri string, post, result interface{}) error {
 	if content, err := client.apiPostData(post); err != nil {
 		return err
 	} else {
@@ -249,7 +256,7 @@ func (client *Client) apiPost(uri string, post interface{}, result interface{}) 
 	}
 }
 
-func (client *Client) apiDelete(uri string, post interface{}, result interface{}) error {
+func (client *Client) apiDelete(uri string, post, result interface{}) error {
 	if content, err := client.apiPostData(post); err != nil {
 		return err
 	} else {

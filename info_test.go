@@ -28,3 +28,17 @@ func TestInfo(t *testing.T) {
 	AssertOnString(info.Leader, "127.0.0.1:8080", t)
 	AssertOnString(info.Version, "0.7.0-SNAPSHOT", t)
 }
+
+func TestLeader(t *testing.T) {
+	NewFakeMarathonEndpoint()
+	leader, err := test_client.Leader()
+	AssertOnError(err, t)
+	AssertOnString(leader, "127.0.0.1:8080", t)
+}
+
+func TestAbdicateLeader(t *testing.T) {
+	NewFakeMarathonEndpoint()
+	message, err := test_client.AbdicateLeader()
+	AssertOnError(err, t)
+	AssertOnString(message, "Leadership abdicted", t)
+}
