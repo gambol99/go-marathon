@@ -34,7 +34,7 @@ type Subscriptions struct {
 // Retrieve a list of registered subscriptions
 func (client *Client) Subscriptions() (*Subscriptions, error) {
 	subscriptions := new(Subscriptions)
-	if err := client.apiGet(MARATHON_API_SUBSCRIPTION, "", subscriptions); err != nil {
+	if err := client.apiGet(MARATHON_API_SUBSCRIPTION, nil, subscriptions); err != nil {
 		return nil, err
 	} else {
 		return subscriptions, nil

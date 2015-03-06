@@ -28,6 +28,7 @@ const (
 	MARATHON_API_GROUPS       = MARATHON_API_VERSION + "/groups"
 	MARATHON_API_QUEUE        = MARATHON_API_VERSION + "/queue"
 	MARATHON_API_INFO         = MARATHON_API_VERSION + "/info"
+	MARATHON_API_LEADER       = MARATHON_API_VERSION + "/leader"
 	MARATHON_API_PING         = "/ping"
 	MARATHON_API_LOGGING      = "/logging"
 	MARATHON_API_HELP         = "/help"

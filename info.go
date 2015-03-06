@@ -37,7 +37,7 @@ type Info struct {
 		LocalPortMax               float64     `json:"local_port_max"`
 		LocalPortMin               float64     `json:"local_port_min"`
 		Master                     string      `json:"master"`
-		MesosRole                  interface{} `json:"mesos_role"`
+		MesosRole                  string      `json:"mesos_role"`
 		MesosUser                  string      `json:"mesos_user"`
 		ReconciliationInitialDelay float64     `json:"reconciliation_initial_delay"`
 		ReconciliationInterval     float64     `json:"reconciliation_interval"`
@@ -59,9 +59,29 @@ type Info struct {
 
 func (client *Client) Info() (*Info, error) {
 	info := new(Info)
-	if err := client.apiGet(MARATHON_API_INFO, "", info); err != nil {
+	if err := client.apiGet(MARATHON_API_INFO, nil, info); err != nil {
 		return nil, err
 	} else {
 		return info, nil
+	}
+}
+
+func (client *Client) Leader() (string, error) {
+	var leader struct {
+		Leader string `json:"leader"`
+		}
+	if err := client.apiGet(MARATHON_API_LEADER, nil, &leader); err != nil {
+		return "", err
+	} else {
+ 		return leader.Leader, nil
+	}
+}
+
+func (client *Client) AbdicateLeader() (string, error) {
+	message := new(Message)
+	if err := client.apiDelete(MARATHON_API_LEADER, nil, message); err != nil {
+		return "", err
+	} else {
+		return message.Message, err
 	}
 }

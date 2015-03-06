@@ -64,7 +64,7 @@ type DeploymentPlan struct {
 // Retrieve a list of current deployments
 func (client *Client) Deployments() ([]*Deployment, error) {
 	var deployments []*Deployment
-	if err := client.apiGet(MARATHON_API_DEPLOYMENTS, "", &deployments); err != nil {
+	if err := client.apiGet(MARATHON_API_DEPLOYMENTS, nil, &deployments); err != nil {
 		return nil, err
 	} else {
 		return deployments, nil
