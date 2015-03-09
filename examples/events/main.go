@@ -28,11 +28,13 @@ import (
 var marathon_url string
 var marathon_interface string
 var marathon_port int
+var timeout int
 
 func init() {
 	flag.StringVar(&marathon_url, "url", "http://127.0.0.1:8080", "the url for the marathon endpoint")
 	flag.StringVar(&marathon_interface, "interface", "eth0", "the interface we should use for events")
 	flag.IntVar(&marathon_port, "port", 19999, "the port the events service should run on")
+	flag.IntVar(&timeout, "timeout", 60, "listen to events for x seconds")
 }
 
 func Assert(err error) {
@@ -49,37 +51,40 @@ func main() {
 	config.EventsPort = marathon_port
 	config.EventsInterface = marathon_interface
 	glog.Infof("Creating a client Marathon: %s", marathon_url)
+
 	client, err := marathon.NewClient(config)
-	if err != nil {
-		glog.Fatalf("Failed to create a client for marathon, error: %s", err)
-	}
+	Assert(err)
 
 	/* step: lets register for events */
-	update := make(marathon.EventsChannel, 5)
-	if err := client.AddEventsListener(update, marathon.EVENTS_APPLICATIONS); err != nil {
-		glog.Fatalf("Failed to register for subscriptions, %s", err)
-	} else {
-		// lets listen for 10 seconds and then split
-		timer := time.After(10 * time.Second)
-		kill_off := false
-		for {
-			if kill_off {
-				break
-			}
-			select {
-			case <-timer:
-				glog.Infof("Exitting the loop")
-				kill_off = true
-			case event := <-update:
-				glog.Infof("EVENT: %s", event)
-			}
+	events := make(marathon.EventsChannel, 5)
+	deployments := make(marathon.EventsChannel, 5)
+	Assert(client.AddEventsListener(events, marathon.EVENTS_APPLICATIONS))
+	Assert(client.AddEventsListener(deployments, marathon.EVENT_DEPLOYMENT_STEP_SUCCESS))
+
+	// lets listen for 10 seconds and then split
+	timer := time.After(time.Duration(timeout) * time.Second)
+	kill_off := false
+	for {
+		if kill_off {
+			break
 		}
-
-		glog.Infof("Removing our subscription")
-		client.RemoveEventsListener(update)
-
-		if err := client.UnSubscribe(); err != nil {
-			glog.Fatalf("Failed to unsubscribe, error: %s", err)
+		select {
+		case <-timer:
+			glog.Infof("Exitting the loop")
+			kill_off = true
+		case event := <-events:
+			glog.Infof("Recieved application event: %s", event)
+		case event := <-deployments:
+			glog.Infof("Recieved deployment event: %v", event)
+			var deployment *marathon.EventDeploymentStepSuccess
+			deployment = event.Event.(*marathon.EventDeploymentStepSuccess)
+			glog.Infof("deployment step:: %v", deployment.CurrentStep)
 		}
 	}
+
+	glog.Infof("Removing our subscription")
+	client.RemoveEventsListener(events)
+	client.RemoveEventsListener(deployments)
+
+	Assert(client.UnSubscribe())
 }

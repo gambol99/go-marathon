@@ -46,14 +46,14 @@ func (client *Client) Subscriptions() (*Subscriptions, error) {
 func (client *Client) AddEventsListener(channel EventsChannel, filter int) error {
 	client.Lock()
 	defer client.Unlock()
-	/* step: someone has asked to start listening to event, we need to register for events
-	if we haven't done so already
-	*/
+	// step: someone has asked to start listening to event, we need to register for events
+	// if we haven't done so already
 	if err := client.RegisterSubscription(); err != nil {
 		return err
 	}
 
 	if _, found := client.listeners[channel]; !found {
+		client.debug("Adding a watch for events: %d, channel: %v", filter, channel)
 		client.listeners[channel] = filter
 	}
 	return nil
@@ -86,12 +86,12 @@ func (client *Client) RegisterSubscription() error {
 			return errors.New(fmt.Sprintf("Unable to get the ip address from the interface: %s, error: %s",
 				client.config.EventsInterface, err))
 		} else {
-			/* step: set the ip address */
+			// step: set the ip address
 			client.ipaddress = ip_address
 			binding := fmt.Sprintf("%s:%d", ip_address, client.config.EventsPort)
-			/* step: register the handler */
+			// step: register the handler
 			http.HandleFunc(DEFAULT_EVENTS_URL, client.HandleMarathonEvent)
-			/* step: create the http server */
+			// step: create the http server
 			client.debug("Creating a event http server")
 			client.events_http = &http.Server{
 				Addr:           binding,
@@ -118,16 +118,16 @@ func (client *Client) RegisterSubscription() error {
 		}
 	}
 
-	/* step: get the callback url */
+	// step: get the callback url
 	callback := client.SubscriptionURL()
-	/* step: check if the callback is registered */
 
+	// step: check if the callback is registered
 	client.debug("Checking if we already have a subscription for callback %s", callback)
 	if found, err := client.HasSubscription(callback); err != nil {
 		return err
 	} else if !found {
 		client.debug("Registering a subscription with Marathon: callback: %s", callback)
-		/* step: we need to register our self */
+		// step: we need to register our self
 		uri := fmt.Sprintf("%s?callbackUrl=%s", MARATHON_API_SUBSCRIPTION, callback)
 		if err := client.apiPost(uri, "", nil); err != nil {
 			return err
@@ -162,53 +162,62 @@ func (client *Client) HasSubscription(callback string) (bool, error) {
 }
 
 func (client *Client) HandleMarathonEvent(writer http.ResponseWriter, request *http.Request) {
-	client.debug("Recieved a possible marathon event")
-	/* step: lets read in the post body */
-	if body, err := ioutil.ReadAll(request.Body); err == nil {
-		content := string(body[:])
-		/* step: phase one, get the event type */
-		decoder := json.NewDecoder(strings.NewReader(content))
-		/* step: decode the event type */
-		event_type := new(EventType)
-		if err := decoder.Decode(event_type); err != nil {
-			client.debug("Failed to decode the event type, content: %s, error: %s", content, err)
-			return
-		}
-
-		client.debug("Recieved marathon event, %s", event_type.EventType)
-		/* step: check the type is handled */
-		if event, err := client.GetEvent(event_type.EventType); err != nil {
-			client.debug("Unable to retrieve the event, type: %s", event_type.EventType)
-		} else {
-			/* step: lets decode */
-			decoder = json.NewDecoder(strings.NewReader(content))
-			if err := decoder.Decode(event.Event); err != nil {
-				client.debug("Failed to decode the event type: %d, name: %s error: %s", event.Type, err)
-			}
-			client.debug("Marathon event, %s", event)
-			client.RLock()
-			defer client.RUnlock()
-			/* step: check if anyone is listen for this event */
-			for channel, filter := range client.listeners {
-				/* step: check if this person wants this event type */
-				if event.Type&filter != 0 {
-					client.debug("Event type: %d being listen to, sending to lister: %s", event.Type, channel)
-					go func() {
-						channel <- event
-					}()
-				}
-			}
-		}
-	} else {
+	body, err := ioutil.ReadAll(request.Body)
+	if err != nil {
 		client.debug("Failed to decode the event type, content: %s, error: %s")
+		return
+	}
+
+	// step: process the event and decode the event
+	content := string(body[:])
+	event_type := new(EventType)
+	err = json.NewDecoder(strings.NewReader(content)).Decode(event_type)
+	if err != nil {
+		client.debug("Failed to decode the event type, content: %s, error: %s", content, err)
+		return
+	}
+
+	client.debug("Recieved marathon event, %s", event_type.EventType)
+
+	// step: check the type is handled
+	event, err := client.GetEvent(event_type.EventType)
+	if err != nil {
+		client.debug("Unable to retrieve the event, type: %s", event_type.EventType)
+		return
+	}
+
+	// step: lets decode message
+	err = json.NewDecoder(strings.NewReader(content)).Decode(event.Event)
+	if err != nil {
+		client.debug("Failed to decode the event type: %d, name: %s error: %s", event.ID, err)
+		return
+	}
+
+	client.debug("Decoded the marathon event, %s", event)
+
+	client.RLock()
+	defer client.RUnlock()
+
+	// step: check if anyone is listen for this event
+	for channel, filter := range client.listeners {
+		// step: check if this listener wants this event type
+		client.debug("checking: channel: %v, type: %d, filter: %d", channel, event.ID, filter)
+		if event.ID&filter != 0 {
+			client.debug("Event type: %d being listened to, sending to listener: %v", event.ID, channel)
+			go func(ch EventsChannel, e *Event) {
+				ch <- e
+			}(channel, event)
+		} else {
+			client.debug("Event type: %d is not being listened to by listener: %v", event.ID, channel)
+		}
 	}
 }
 
 func (client *Client) GetEvent(name string) (*Event, error) {
-	/* step: check it's supported */
-	if event_id, found := Events[name]; found {
+	// step: check it's supported
+	if id, found := Events[name]; found {
 		event := new(Event)
-		event.Type = event_id
+		event.ID = id
 		event.Name = name
 		switch name {
 		case "api_post_event":
