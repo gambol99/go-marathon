@@ -34,3 +34,4 @@ _testmain.go
 
 
 examples/events/events
+tests/rest-api/rest-api

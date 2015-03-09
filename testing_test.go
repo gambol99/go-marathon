@@ -18,9 +18,13 @@ package marathon
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"strings"
 	"testing"
+
+	yaml "gopkg.in/yaml.v2"
 )
 
 const (
@@ -29,13 +33,29 @@ const (
 	FAKE_APP_NAME        = "/fake_app"
 	FAKE_APP_NAME_BROKEN = "/fake_app_broken"
 	FAKE_DEPLOYMENT_ID   = "867ed450-f6a8-4d33-9b0e-e11c5513990b"
+	FAKE_API_FILENAME    = "./tests/rest-api/methods.yml"
+	FAKE_API_PORT        = 3000
 )
+
+type RestMethod struct {
+	// the uri of the method
+	URI string `yaml:"uri,omitempty"`
+	// the http method type (GET|PUT etc)
+	Method string `yaml:"method,omitempty"`
+	// the content i.e. response
+	Content string `yaml:"content,omitempty"`
+}
 
 var test_client Marathon
 
 func NewFakeMarathonEndpoint() {
 	if test_client == nil {
-		var err error
+		err := NewFakeMarathonAPI()
+		if err != nil {
+			fmt.Printf("Failed to create the fake api, error: %s", err)
+			os.Exit(1)
+		}
+
 		config := NewDefaultConfig()
 		config.URL = FAKE_MARATHON_URL
 		config.Debug = false
@@ -47,6 +67,38 @@ func NewFakeMarathonEndpoint() {
 	}
 }
 
+func NewFakeMarathonAPI() error {
+	// step: open and read in the methods yaml
+	contents, err := ioutil.ReadFile(FAKE_API_FILENAME)
+	if err != nil {
+		return err
+	}
+
+	// step: unmarshal the yaml
+	var methods []*RestMethod
+	err = yaml.Unmarshal([]byte(contents), &methods)
+	if err != nil {
+		return err
+	}
+
+	// step: construct a hash from the methods
+	uris := make(map[string]*string, 0)
+	for _, method := range methods {
+		uris[fmt.Sprintf("%s:%s", method.Method, method.URI)] = &method.Content
+	}
+
+	http.HandleFunc("/", func(writer http.ResponseWriter, reader *http.Request) {
+		key := fmt.Sprintf("%s:%s", reader.Method, reader.RequestURI)
+		if content, found := uris[key]; found {
+			writer.Header().Add("Content-Type", "application/json")
+			writer.Write([]byte(*content))
+		}
+	})
+
+	go http.ListenAndServe(fmt.Sprintf(":%d", FAKE_API_PORT), nil)
+	return nil
+}
+
 func AssertOnNull(data interface{}, t *testing.T) {
 	if data == nil {
 		t.FailNow()
@@ -55,7 +107,7 @@ func AssertOnNull(data interface{}, t *testing.T) {
 
 func AssertOnError(err error, t *testing.T) {
 	if err != nil {
-		t.Errorf("failed: was not exptecting an error")
+		t.Errorf("failed: was not expecting an error")
 		t.FailNow()
 	}
 }

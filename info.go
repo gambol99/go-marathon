@@ -29,19 +29,19 @@ type Info struct {
 	} `json:"http_config"`
 	Leader         string `json:"leader"`
 	MarathonConfig struct {
-		Checkpoint                 bool        `json:"checkpoint"`
-		Executor                   string      `json:"executor"`
-		FailoverTimeout            float64     `json:"failover_timeout"`
-		Ha                         bool        `json:"ha"`
-		Hostname                   string      `json:"hostname"`
-		LocalPortMax               float64     `json:"local_port_max"`
-		LocalPortMin               float64     `json:"local_port_min"`
-		Master                     string      `json:"master"`
-		MesosRole                  string      `json:"mesos_role"`
-		MesosUser                  string      `json:"mesos_user"`
-		ReconciliationInitialDelay float64     `json:"reconciliation_initial_delay"`
-		ReconciliationInterval     float64     `json:"reconciliation_interval"`
-		TaskLaunchTimeout          float64     `json:"task_launch_timeout"`
+		Checkpoint                 bool    `json:"checkpoint"`
+		Executor                   string  `json:"executor"`
+		FailoverTimeout            float64 `json:"failover_timeout"`
+		Ha                         bool    `json:"ha"`
+		Hostname                   string  `json:"hostname"`
+		LocalPortMax               float64 `json:"local_port_max"`
+		LocalPortMin               float64 `json:"local_port_min"`
+		Master                     string  `json:"master"`
+		MesosRole                  string  `json:"mesos_role"`
+		MesosUser                  string  `json:"mesos_user"`
+		ReconciliationInitialDelay float64 `json:"reconciliation_initial_delay"`
+		ReconciliationInterval     float64 `json:"reconciliation_interval"`
+		TaskLaunchTimeout          float64 `json:"task_launch_timeout"`
 	} `json:"marathon_config"`
 	Name            string `json:"name"`
 	Version         string `json:"version"`
@@ -69,11 +69,11 @@ func (client *Client) Info() (*Info, error) {
 func (client *Client) Leader() (string, error) {
 	var leader struct {
 		Leader string `json:"leader"`
-		}
+	}
 	if err := client.apiGet(MARATHON_API_LEADER, nil, &leader); err != nil {
 		return "", err
 	} else {
- 		return leader.Leader, nil
+		return leader.Leader, nil
 	}
 }
 
