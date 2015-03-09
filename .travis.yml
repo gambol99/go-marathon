@@ -6,14 +6,11 @@
 #
 language: go
 go:
-  - 1.3.1
+  - 1.3.3
   - 1.4
   - tip
 install:
   - go get
   - go build
-  - sudo apt-get install -y ruby-bundler
-  - export PATH=$PATH:/home/ubuntu/.rbenv/versions/1.9.3-p448/bin
-  - (cd tests/rest-api && bundle install)
-  - make start-restapi
-  - make api
+  - go get gopkg.in/yaml.v2
+  - go test -v

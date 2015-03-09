@@ -14,19 +14,8 @@ VERSION=$(shell awk '/const Version/ { print $$4 }' version.go | sed 's/"//g')
 build:
 	go build
 
-start-restapi:
-	thin -d -q start -c tests/rest-api
-
-stop-restapi:
-	thin stop -c tests/rest-api
-
 test:
-	make start-restapi
-	sleep 3
-	go test -v
-	make stop-restapi
-
-api:
+	go get gopkg.in/yaml.v2
 	go test -v
 
 changelog: release

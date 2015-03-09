@@ -364,7 +364,7 @@ func (client *Client) RestartApplication(name string, force bool) (*DeploymentID
 	deployment := new(DeploymentID)
 	var options struct {
 		Force bool `json:"force"`
-		}
+	}
 	options.Force = force
 	if err := client.apiGet(fmt.Sprintf("%s%s/restart", MARATHON_API_APPS, name), &options, deployment); err != nil {
 		return nil, err
