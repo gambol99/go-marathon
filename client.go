@@ -218,8 +218,8 @@ func (client *Client) unmarshallJsonArray(stream io.Reader, results []interface{
 	return nil
 }
 
-func (client *Client) apiPostData(data interface {}) (string, error) {
-	if data == nil  {
+func (client *Client) apiPostData(data interface{}) (string, error) {
+	if data == nil {
 		return "", nil
 	}
 	content, err := client.marshallJSON(data)

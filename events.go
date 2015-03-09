@@ -76,7 +76,7 @@ func init() {
 //
 
 type Event struct {
-	Type  int
+	ID    int
 	Name  string
 	Event interface{}
 }

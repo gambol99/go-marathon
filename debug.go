@@ -22,6 +22,6 @@ import (
 
 func (client *Client) debug(message string, args ...interface{}) {
 	if client.config.Debug == true {
-		fmt.Printf(message+"\n", args...)
+		fmt.Printf("debug: "+message+"\n", args...)
 	}
 }
