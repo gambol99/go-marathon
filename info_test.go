@@ -21,8 +21,8 @@ import (
 )
 
 func TestInfo(t *testing.T) {
-	NewFakeMarathonEndpoint()
-	info, err := test_client.Info()
+	client := NewFakeMarathonEndpoint(t)
+	info, err := client .Info()
 	AssertOnError(err, t)
 	AssertOnString(info.FrameworkId, "20140730-222531-1863654316-5050-10422-0000", t)
 	AssertOnString(info.Leader, "127.0.0.1:8080", t)
@@ -30,15 +30,15 @@ func TestInfo(t *testing.T) {
 }
 
 func TestLeader(t *testing.T) {
-	NewFakeMarathonEndpoint()
-	leader, err := test_client.Leader()
+	client := NewFakeMarathonEndpoint(t)
+	leader, err := client.Leader()
 	AssertOnError(err, t)
 	AssertOnString(leader, "127.0.0.1:8080", t)
 }
 
 func TestAbdicateLeader(t *testing.T) {
-	NewFakeMarathonEndpoint()
-	message, err := test_client.AbdicateLeader()
+	client := NewFakeMarathonEndpoint(t)
+	message, err := client.AbdicateLeader()
 	AssertOnError(err, t)
 	AssertOnString(message, "Leadership abdicted", t)
 }

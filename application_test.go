@@ -21,16 +21,16 @@ import (
 )
 
 func TestApplications(t *testing.T) {
-	NewFakeMarathonEndpoint()
-	applications, err := test_client.Applications()
+	client := NewFakeMarathonEndpoint(t)
+	applications, err := client.Applications()
 	AssertOnError(err, t)
 	AssertOnNull(applications, t)
 	AssertOnInteger(len(applications.Apps), 2, t)
 }
 
 func TestListApplications(t *testing.T) {
-	NewFakeMarathonEndpoint()
-	applications, err := test_client.ListApplications()
+	client := NewFakeMarathonEndpoint(t)
+	applications, err := client.ListApplications()
 	AssertOnError(err, t)
 	AssertOnNull(applications, t)
 	AssertOnInteger(len(applications), 2, t)
@@ -39,21 +39,21 @@ func TestListApplications(t *testing.T) {
 }
 
 func TestApplicationVersions(t *testing.T) {
-	NewFakeMarathonEndpoint()
-	versions, err := test_client.ApplicationVersions(FAKE_APP_NAME)
+	client := NewFakeMarathonEndpoint(t)
+	versions, err := client.ApplicationVersions(FAKE_APP_NAME)
 	AssertOnError(err, t)
 	AssertOnNull(versions, t)
 	AssertOnNull(versions.Versions, t)
 	AssertOnInteger(len(versions.Versions), 1, t)
 	AssertOnString(versions.Versions[0], "2014-04-04T06:25:31.399Z", t)
 	/* check we get an error on app not there */
-	versions, err = test_client.ApplicationVersions("/not/there")
+	versions, err = client.ApplicationVersions("/not/there")
 	AssertOnNoError(err, t)
 }
 
 func TestSetApplicationVersion(t *testing.T) {
-	NewFakeMarathonEndpoint()
-	deployment, err := test_client.SetApplicationVersion(FAKE_APP_NAME, &ApplicationVersion{Version: "2014-04-04T06:25:31.399Z"})
+	client := NewFakeMarathonEndpoint(t)
+	deployment, err := client.SetApplicationVersion(FAKE_APP_NAME, &ApplicationVersion{Version: "2014-04-04T06:25:31.399Z"})
 	AssertOnError(err, t)
 	AssertOnNull(deployment, t)
 	AssertOnNull(deployment.Version, t)
@@ -61,33 +61,33 @@ func TestSetApplicationVersion(t *testing.T) {
 	AssertOnString(deployment.Version, "2014-04-04T06:25:31.399Z", t)
 	AssertOnString(deployment.DeploymentID, "83b215a6-4e26-4e44-9333-5c385eda6438", t)
 
-	_, err = test_client.SetApplicationVersion("/not/there", &ApplicationVersion{Version: "2014-04-04T06:25:31.399Z"})
+	_, err = client.SetApplicationVersion("/not/there", &ApplicationVersion{Version: "2014-04-04T06:25:31.399Z"})
 	AssertOnNoError(err, t)
 }
 
 func TestHasApplicationVersion(t *testing.T) {
-	NewFakeMarathonEndpoint()
-	found, err := test_client.HasApplicationVersion(FAKE_APP_NAME, "2014-04-04T06:25:31.399Z")
+	client := NewFakeMarathonEndpoint(t)
+	found, err := client.HasApplicationVersion(FAKE_APP_NAME, "2014-04-04T06:25:31.399Z")
 	AssertOnError(err, t)
 	AssertOnBool(found, true, t)
-	found, err = test_client.HasApplicationVersion(FAKE_APP_NAME, "###2015-04-04T06:25:31.399Z")
+	found, err = client.HasApplicationVersion(FAKE_APP_NAME, "###2015-04-04T06:25:31.399Z")
 	AssertOnError(err, t)
 	AssertOnBool(found, false, t)
 }
 
 func TestApplicationOK(t *testing.T) {
-	NewFakeMarathonEndpoint()
-	ok, err := test_client.ApplicationOK(FAKE_APP_NAME)
+	client := NewFakeMarathonEndpoint(t)
+	ok, err := client.ApplicationOK(FAKE_APP_NAME)
 	AssertOnError(err, t)
 	AssertOnBool(ok, true, t)
-	ok, err = test_client.ApplicationOK(FAKE_APP_NAME_BROKEN)
+	ok, err = client.ApplicationOK(FAKE_APP_NAME_BROKEN)
 	AssertOnError(err, t)
 	AssertOnBool(ok, false, t)
 }
 
 func TestListApplication(t *testing.T) {
-	NewFakeMarathonEndpoint()
-	application, err := test_client.Application(FAKE_APP_NAME)
+	client := NewFakeMarathonEndpoint(t)
+	application, err := client.Application(FAKE_APP_NAME)
 	AssertOnError(err, t)
 	AssertOnNull(application, t)
 	AssertOnString(application.ID, FAKE_APP_NAME, t)
@@ -98,8 +98,8 @@ func TestListApplication(t *testing.T) {
 }
 
 func TestHasApplication(t *testing.T) {
-	NewFakeMarathonEndpoint()
-	found, err := test_client.HasApplication(FAKE_APP_NAME)
+	client := NewFakeMarathonEndpoint(t)
+	found, err := client.HasApplication(FAKE_APP_NAME)
 	AssertOnError(err, t)
 	AssertOnBool(found, true, t)
 }
