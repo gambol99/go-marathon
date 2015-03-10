@@ -20,11 +20,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
+	"sync"
 	"testing"
 
 	yaml "gopkg.in/yaml.v2"
+
 )
 
 const (
@@ -46,59 +47,51 @@ type RestMethod struct {
 	Content string `yaml:"content,omitempty"`
 }
 
-var test_client Marathon
+var testClient struct {
+	sync.Once
+	client Marathon
+}
 
-func NewFakeMarathonEndpoint() {
-	if test_client == nil {
-		err := NewFakeMarathonAPI()
+func NewFakeMarathonEndpoint(t *testing.T) Marathon {
+	testClient.Once.Do(func() {
+
+		// step: open and read in the methods yaml
+		contents, err := ioutil.ReadFile(FAKE_API_FILENAME)
 		if err != nil {
-			fmt.Printf("Failed to create the fake api, error: %s", err)
-			os.Exit(1)
+			t.Fatalf("unable to read in the methods yaml file: %s", FAKE_API_FILENAME)
 		}
+		// step: unmarshal the yaml
+		var methods []*RestMethod
+		err = yaml.Unmarshal([]byte(contents), &methods)
+		if err != nil {
+			t.Fatalf("Unable to unmarshall the methods yaml, error: %s", err)
+		}
+
+		// step: construct a hash from the methods
+		uris := make(map[string]*string, 0)
+		for _, method := range methods {
+			uris[fmt.Sprintf("%s:%s", method.Method, method.URI)] = &method.Content
+		}
+
+		http.HandleFunc("/", func(writer http.ResponseWriter, reader *http.Request) {
+				key := fmt.Sprintf("%s:%s", reader.Method, reader.RequestURI)
+				if content, found := uris[key]; found {
+					writer.Header().Add("Content-Type", "application/json")
+					writer.Write([]byte(*content))
+				}
+			})
+
+		go http.ListenAndServe(fmt.Sprintf("127.0.0.1:%d", FAKE_API_PORT), nil)
 
 		config := NewDefaultConfig()
 		config.URL = FAKE_MARATHON_URL
 		config.Debug = false
-		test_client, err = NewClient(config)
-		if err != nil {
-			fmt.Printf("Failed to create the fake client, %s, error: %s", FAKE_MARATHON_URL, err)
-			os.Exit(1)
-		}
-	}
-}
-
-func NewFakeMarathonAPI() error {
-	// step: open and read in the methods yaml
-	contents, err := ioutil.ReadFile(FAKE_API_FILENAME)
-	if err != nil {
-		return err
-	}
-
-	// step: unmarshal the yaml
-	var methods []*RestMethod
-	err = yaml.Unmarshal([]byte(contents), &methods)
-	if err != nil {
-		return err
-	}
-
-	// step: construct a hash from the methods
-	uris := make(map[string]*string, 0)
-	for _, method := range methods {
-		uris[fmt.Sprintf("%s:%s", method.Method, method.URI)] = &method.Content
-	}
-
-	http.HandleFunc("/", func(writer http.ResponseWriter, reader *http.Request) {
-		key := fmt.Sprintf("%s:%s", reader.Method, reader.RequestURI)
-		if content, found := uris[key]; found {
-			writer.Header().Add("Content-Type", "application/json")
-			writer.Write([]byte(*content))
+		if testClient.client, err = NewClient(config); err != nil {
+			t.Fatalf("Failed to create the fake client, %s, error: %s", FAKE_MARATHON_URL, err)
 		}
 	})
-
-	go http.ListenAndServe(fmt.Sprintf(":%d", FAKE_API_PORT), nil)
-	return nil
+	return testClient.client
 }
-
 func AssertOnNull(data interface{}, t *testing.T) {
 	if data == nil {
 		t.FailNow()

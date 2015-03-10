@@ -21,8 +21,8 @@ import (
 )
 
 func TestDeployments(t *testing.T) {
-	NewFakeMarathonEndpoint()
-	deployments, err := test_client.Deployments()
+	client := NewFakeMarathonEndpoint(t)
+	deployments, err := client.Deployments()
 	AssertOnError(err, t)
 	AssertOnNull(deployments, t)
 	AssertOnInteger(len(deployments), 1, t)
@@ -34,8 +34,8 @@ func TestDeployments(t *testing.T) {
 }
 
 func TestDeleteDeployment(t *testing.T) {
-	NewFakeMarathonEndpoint()
-	id, err := test_client.DeleteDeployment(FAKE_DEPLOYMENT_ID, false)
+	client := NewFakeMarathonEndpoint(t)
+	id, err := client.DeleteDeployment(FAKE_DEPLOYMENT_ID, false)
 	AssertOnError(err, t)
 	AssertOnNull(id, t)
 	AssertOnString(id.DeploymentID, "0b1467fc-d5cd-4bbc-bac2-2805351cee1e", t)

@@ -21,8 +21,8 @@ import (
 )
 
 func TestSubscriptions(t *testing.T) {
-	NewFakeMarathonEndpoint()
-	sub, err := test_client.Subscriptions()
+	client := NewFakeMarathonEndpoint(t)
+	sub, err := client.Subscriptions()
 	AssertOnError(err, t)
 	AssertOnNull(sub, t)
 	AssertOnNull(sub.CallbackURLs, t)

@@ -21,13 +21,13 @@ import (
 )
 
 func TestPing(t *testing.T) {
-	NewFakeMarathonEndpoint()
-	found, err := test_client.Ping()
+	client := NewFakeMarathonEndpoint(t)
+	found, err := client.Ping()
 	AssertOnError(err, t)
 	AssertOnBool(found, true, t)
 }
 
 func TestGetMarathonURL(t *testing.T) {
-	NewFakeMarathonEndpoint()
-	AssertOnString(test_client.GetMarathonURL(), FAKE_MARATHON_URL, t)
+	client := NewFakeMarathonEndpoint(t)
+	AssertOnString(client.GetMarathonURL(), FAKE_MARATHON_URL, t)
 }
