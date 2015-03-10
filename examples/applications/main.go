@@ -18,10 +18,10 @@ package main
 
 import (
 	"flag"
+	"time"
 
 	marathon "github.com/gambol99/go-marathon"
 	"github.com/golang/glog"
-	"time"
 )
 
 var marathon_url string
@@ -36,89 +36,71 @@ func Assert(err error) {
 	}
 }
 
+func waitOnDeployment(client marathon.Marathon, id *marathon.DeploymentID) {
+	Assert(client.WaitOnDeployment(id.DeploymentID, 0))
+}
+
 func main() {
 	flag.Parse()
 	config := marathon.NewDefaultConfig()
 	config.URL = marathon_url
-	config.Debug = true
-	if client, err := marathon.NewClient(config); err != nil {
-		glog.Fatalf("Failed to create a client for marathon, error: %s", err)
-	} else {
-		applications, err := client.Applications()
+	config.Debug = false
+	client, err := marathon.NewClient(config)
+	Assert(err)
+	applications, err := client.Applications()
+	Assert(err)
+
+	glog.Infof("Found %d application running", len(applications.Apps))
+	for _, application := range applications.Apps {
+		glog.Infof("Application: %s", application)
+		details, err := client.Application(application.ID)
 		Assert(err)
-		glog.Infof("Found %d application running", len(applications.Apps))
-		for _, application := range applications.Apps {
-			glog.Infof("Application: %s", application)
-			details, err := client.Application(application.ID)
-			Assert(err)
-			if details.Tasks != nil && len(details.Tasks) > 0 {
-				for _, task := range details.Tasks {
-					glog.Infof("task: %s", task)
-				}
-				health, err := client.ApplicationOK(details.ID)
-				Assert(err)
-				glog.Infof("Application: %s, healthy: %t", details.ID, health)
+		if details.Tasks != nil && len(details.Tasks) > 0 {
+			for _, task := range details.Tasks {
+				glog.Infof("task: %s", task)
 			}
+			health, err := client.ApplicationOK(details.ID)
+			Assert(err)
+			glog.Infof("Application: %s, healthy: %t", details.ID, health)
 		}
-
-		APPLICATION_NAME := "/my/product"
-
-		glog.Infof("Deploying a new application")
-		application := new(marathon.Application)
-		application.Name(APPLICATION_NAME)
-		application.CPU(0.1).Memory(64).Storage(0.0).Count(2)
-		application.Arg("/usr/sbin/apache2ctl").Arg("-D").Arg("FOREGROUND")
-		application.AddEnv("NAME", "frontend_http")
-		application.AddEnv("SERVICE_80_NAME", "test_http")
-		application.Constraints = make([][]string, 0)
-		application.RequirePorts = true
-		application.Uris = make([]string, 0)
-
-		application.Container = marathon.NewDockerContainer()
-		application.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80).Expose(443)
-
-		if deployId, err := client.CreateApplication(application); err != nil {
-			glog.Errorf("Failed to create application: %s, error: %s", application, err)
-		} else {
-			glog.Infof("Created the application: %s, deploymentId: %s", application, deployId.DeploymentID)
-		}
-
-		time.Sleep(20 * time.Second)
-
-		glog.Infof("Scale to 4 instances")
-		if deployId, err := client.ScaleApplicationInstances(application.ID, 4); err != nil {
-			glog.Errorf("Failed to delete the application: %s, error: %s", application, err)
-		} else {
-			glog.Infof("Successfully scaled the application, deployId: %s", deployId.DeploymentID)
-		}
-
-		time.Sleep(20 * time.Second)
-
-		glog.Infof("Deleting the application: %s", APPLICATION_NAME)
-
-		if _, err := client.DeleteApplication(application.ID); err != nil {
-			glog.Errorf("Failed to delete the application: %s, error: %s", application, err)
-		} else {
-			glog.Infof("Successfully deleted the application")
-		}
-
-		time.Sleep(10 * time.Second)
-
-		glog.Infof("Starting the application again")
-		if _, err := client.CreateApplication(application); err != nil {
-			glog.Errorf("Failed to create application: %s, error: %s", application, err)
-		} else {
-			glog.Infof("Created the application: %s", application)
-		}
-
-		time.Sleep(10 * time.Second)
-
-		glog.Infof("Delete all the tasks")
-		if _, err := client.KillApplicationTasks(application.ID, "", false); err != nil {
-			glog.Errorf("Failed to create application: %s, error: %s", application, err)
-		} else {
-			glog.Infof("Created the application: %s", application)
-		}
-
 	}
+
+	APPLICATION_NAME := "/my/product"
+
+	if found, _ := client.HasApplication(APPLICATION_NAME); found {
+		deployId, err := client.DeleteApplication(APPLICATION_NAME)
+		Assert(err)
+		waitOnDeployment(client, deployId)
+	}
+
+	glog.Infof("Deploying a new application")
+	application := marathon.NewDockerApplication()
+	application.Name(APPLICATION_NAME)
+	application.CPU(0.1).Memory(64).Storage(0.0).Count(2)
+	application.Arg("/usr/sbin/apache2ctl").Arg("-D").Arg("FOREGROUND")
+	application.AddEnv("NAME", "frontend_http")
+	application.AddEnv("SERVICE_80_NAME", "test_http")
+	application.RequirePorts = true
+	application.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80).Expose(443)
+	Assert(client.CreateApplication(application, true))
+
+	glog.Infof("Scaling the application to 4 instances")
+	deployId, err := client.ScaleApplicationInstances(application.ID, 4)
+	Assert(err)
+	client.WaitOnApplication(application.ID, 0)
+	glog.Infof("Successfully scaled the application, deployId: %s", deployId.DeploymentID)
+
+	glog.Infof("Deleting the application: %s", APPLICATION_NAME)
+	deployId, err = client.DeleteApplication(application.ID)
+	Assert(err)
+	time.Sleep(time.Duration(10) * time.Second)
+	glog.Infof("Successfully deleted the application")
+
+	glog.Infof("Starting the application again")
+	Assert(client.CreateApplication(application, true))
+	glog.Infof("Created the application: %s", application.ID)
+
+	glog.Infof("Delete all the tasks")
+	_, err = client.KillApplicationTasks(application.ID, "", false)
+	Assert(err)
 }

@@ -61,9 +61,9 @@ func (client *Client) AllTasks() (*Tasks, error) {
 
 // Retrieve a list of tasks for an application
 //		application_id:		the id for the application
-func (client *Client) Tasks(application_id string) (*Tasks, error) {
+func (client *Client) Tasks(id string) (*Tasks, error) {
 	tasks := new(Tasks)
-	if err := client.apiGet(fmt.Sprintf("%s%s/tasks", MARATHON_API_APPS, application_id), nil, tasks); err != nil {
+	if err := client.apiGet(fmt.Sprintf("%s/%s/tasks", MARATHON_API_APPS, trimRootPath(id)), nil, tasks); err != nil {
 		return nil, err
 	} else {
 		return tasks, nil
@@ -74,7 +74,7 @@ func (client *Client) Tasks(application_id string) (*Tasks, error) {
 //		application_id:		the id for the application
 //      host:				kill only those tasks on a specific host (optional)
 //		scale:              Scale the app down (i.e. decrement its instances setting by the number of tasks killed) after killing the specified tasks
-func (client *Client) KillApplicationTasks(application_id, hostname string, scale bool) (*Tasks, error) {
+func (client *Client) KillApplicationTasks(id, hostname string, scale bool) (*Tasks, error) {
 	var options struct {
 		Host  string `json:"host"`
 		Scale bool   `json:bool`
@@ -82,8 +82,8 @@ func (client *Client) KillApplicationTasks(application_id, hostname string, scal
 	options.Host = hostname
 	options.Scale = scale
 	tasks := new(Tasks)
-	client.debug("Killing application tasks for: %s, hostname: %s, scale: %t", application_id, hostname, scale)
-	if err := client.apiDelete(fmt.Sprintf("%s%s/tasks", MARATHON_API_APPS, application_id), &options, tasks); err != nil {
+	client.debug("Killing application tasks for: %s, hostname: %s, scale: %t", id, hostname, scale)
+	if err := client.apiDelete(fmt.Sprintf("%s/%s/tasks", MARATHON_API_APPS, trimRootPath(id)), &options, tasks); err != nil {
 		return nil, err
 	}
 	return tasks, nil

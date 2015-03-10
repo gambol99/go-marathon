@@ -22,7 +22,7 @@ import (
 
 func TestInfo(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
-	info, err := client .Info()
+	info, err := client.Info()
 	AssertOnError(err, t)
 	AssertOnString(info.FrameworkId, "20140730-222531-1863654316-5050-10422-0000", t)
 	AssertOnString(info.Leader, "127.0.0.1:8080", t)
