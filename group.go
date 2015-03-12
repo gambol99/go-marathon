@@ -18,6 +18,7 @@ package marathon
 
 import (
 	"fmt"
+	"time"
 )
 
 type Group struct {
@@ -48,7 +49,7 @@ func NewApplicationGroup(name string) *Group {
 // Specify the name of the group
 // 		name:	the name of the group
 func (group *Group) Name(name string) *Group {
-	group.ID = name
+	group.ID = validateID(name)
 	return group
 }
 
@@ -75,7 +76,7 @@ func (client *Client) Groups() (*Groups, error) {
 //		name:	the identifier for the group
 func (client *Client) Group(name string) (*Group, error) {
 	group := new(Group)
-	if err := client.apiGet(fmt.Sprintf("%s%s", MARATHON_API_GROUPS, name), nil, group); err != nil {
+	if err := client.apiGet(fmt.Sprintf("%s/%s", MARATHON_API_GROUPS, trimRootPath(name)), nil, group); err != nil {
 		return nil, err
 	}
 	return group, nil
@@ -84,7 +85,7 @@ func (client *Client) Group(name string) (*Group, error) {
 // Check if the group exists in marathon
 // 		name:	the identifier for the group
 func (client *Client) HasGroup(name string) (bool, error) {
-	uri := fmt.Sprintf("%s%s", MARATHON_API_GROUPS, name)
+	uri := fmt.Sprintf("%s/%s", MARATHON_API_GROUPS, trimRootPath(name))
 	status, _, err := client.apiCall(HTTP_GET, uri, "", nil)
 	if err == nil {
 		return true, nil
@@ -97,19 +98,68 @@ func (client *Client) HasGroup(name string) (bool, error) {
 
 // Create a new group in marathon
 //		group:	a pointer the Group structure defining the group
-func (client *Client) CreateGroup(group *Group) (*DeploymentID, error) {
-	version := new(DeploymentID)
-	if err := client.apiPost(MARATHON_API_GROUPS, group, version); err != nil {
-		return nil, err
+func (client *Client) CreateGroup(group *Group, wait_on_running bool) error {
+	if err := client.apiPost(MARATHON_API_GROUPS, group, nil); err != nil {
+		return err
 	}
-	return version, nil
+	if wait_on_running {
+		return client.WaitOnGroup(group.ID, 0)
+	}
+	return nil
+}
+
+// Waits for all the applications in a group to be deployed
+// 		group:	the identifier for the group
+func (client *Client) WaitOnGroup(name string, timeout time.Duration) error {
+	if timeout <= 0 {
+		timeout = time.Duration(500) * time.Second
+	}
+	err := deadline(time.Duration(1)*time.Second, timeout, func(tokens chan bool) error {
+		for _ = range tokens {
+			fmt.Println("RECIEVED TOKEN TO RUN")
+			if group, err := client.Group(name); err != nil {
+				continue
+			} else {
+				all_running := true
+				// for each of the application, check if the tasks and running
+				for _, appID := range group.Apps {
+					// Arrrgghhh!! .. so we can't use application instances from the Application struct like with app wait on as it
+					// appears the instance count is not set straight away!! .. it defaults to zero and changes probably at the
+					// dependencies gets deployed. Which is probably how it internally handles dependencies ..
+					// step: grab the application
+					application, err := client.Application(appID.ID)
+					if err != nil {
+						all_running = false
+						break
+					}
+
+					if application.Tasks == nil {
+						all_running = false
+					} else if len(application.Tasks) != appID.Instances {
+						all_running = false
+					} else if application.TasksRunning != appID.Instances {
+						all_running = false
+					} else if len(application.Deployments()) > 0 {
+						all_running = false
+					}
+				}
+				// has anyone toggle the flag?
+				if all_running {
+					fmt.Println("ALL FINISHED")
+					return nil
+				}
+			}
+		}
+		return nil
+	})
+	return err
 }
 
 // Delete a group from marathon
 // 		name:	the identifier for the group
 func (client *Client) DeleteGroup(name string) (*DeploymentID, error) {
 	version := new(DeploymentID)
-	uri := fmt.Sprintf("%s%s", MARATHON_API_GROUPS, name)
+	uri := fmt.Sprintf("%s/%s", MARATHON_API_GROUPS, trimRootPath(name))
 	if err := client.apiDelete(uri, nil, version); err != nil {
 		return nil, err
 	}
@@ -119,9 +169,9 @@ func (client *Client) DeleteGroup(name string) (*DeploymentID, error) {
 // Update the parameters of a groups
 // 		name:	the identifier for the group
 //      group:  the group structure with the new params
-func (client *Client) UpdateGroup(id string, group *Group) (*DeploymentID, error) {
+func (client *Client) UpdateGroup(name string, group *Group) (*DeploymentID, error) {
 	deploymentId := new(DeploymentID)
-	uri := fmt.Sprintf("%s%s", MARATHON_API_GROUPS, id)
+	uri := fmt.Sprintf("%s/%s", MARATHON_API_GROUPS, trimRootPath(name))
 	if err := client.apiPut(uri, group, deploymentId); err != nil {
 		return nil, err
 	}

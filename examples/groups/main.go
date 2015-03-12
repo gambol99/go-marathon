@@ -104,22 +104,14 @@ func main() {
 	group := marathon.NewApplicationGroup(GROUP_NAME)
 	group.App(frontend).App(redis).App(mysql)
 
-	if id, err := client.CreateGroup(group); err != nil {
-		glog.Errorf("Failed to create the group: %s, error: %s", group.ID, err)
-	} else {
-		glog.Infof("Successfully created the group: %s, version: %s", group.ID, id.DeploymentID)
-		err := client.WaitOnDeployment(id.DeploymentID, 0)
-		Assert(err)
-	}
+	Assert(client.CreateGroup(group, true))
+	glog.Infof("Successfully created the group: %s", group.ID)
 
 	glog.Infof("Updating the group paramaters")
 	frontend.Count(4)
 
-	if id, err := client.UpdateGroup(GROUP_NAME, group); err != nil {
-		glog.Errorf("Failed to update the group, error: %s", err)
-	} else {
-		glog.Infof("Successfully updated the group: %s, version: %s", group.ID, id.DeploymentID)
-		err := client.WaitOnDeployment(id.DeploymentID, 0)
-		Assert(err)
-	}
+	id, err := client.UpdateGroup(GROUP_NAME, group)
+	Assert(err)
+	glog.Infof("Successfully updated the group: %s, version: %s", group.ID, id.DeploymentID)
+	Assert(client.WaitOnGroup(GROUP_NAME, 0))
 }

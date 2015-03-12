@@ -25,7 +25,6 @@ import (
 	"testing"
 
 	yaml "gopkg.in/yaml.v2"
-
 )
 
 const (

@@ -51,9 +51,11 @@ type Marathon interface {
 	/* check if an application is ok */
 	ApplicationOK(name string) (bool, error)
 	/* create an application in marathon */
-	CreateApplication(application *Application) (*DeploymentID, error)
+	CreateApplication(application *Application, wait_on_running bool) error
 	/* delete an application */
 	DeleteApplication(name string) (*DeploymentID, error)
+	/* a list of deployments on a application */
+	ApplicationDeployments(name string) ([]*DeploymentID, error)
 	/* scale a application */
 	ScaleApplicationInstances(name string, instances int) (*DeploymentID, error)
 	/* restart an application */
@@ -62,6 +64,8 @@ type Marathon interface {
 	Applications() (*Applications, error)
 	/* get a specific application */
 	Application(name string) (*Application, error)
+	/* wait of application */
+	WaitOnApplication(name string, timeout time.Duration) error
 
 	/* -- TASKS --- */
 
@@ -81,13 +85,15 @@ type Marathon interface {
 	/* retrieve a specific group from marathon */
 	Group(name string) (*Group, error)
 	/* create a group deployment */
-	CreateGroup(group *Group) (*DeploymentID, error)
+	CreateGroup(group *Group, wait_on_running bool) error
 	/* delete a group */
 	DeleteGroup(name string) (*DeploymentID, error)
 	/* update a groups */
 	UpdateGroup(id string, group *Group) (*DeploymentID, error)
 	/* check if a group exists */
 	HasGroup(name string) (bool, error)
+	/* wait for an group to be deployed */
+	WaitOnGroup(name string, timeout time.Duration) error
 
 	/* --- DEPLOYMENTS --- */
 

@@ -18,9 +18,49 @@ package marathon
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"strings"
+	"time"
 )
+
+func validateID(id string) string {
+	if !strings.HasPrefix(id, "/") {
+		return fmt.Sprintf("/%s", id)
+	}
+	return id
+}
+
+func trimRootPath(id string) string {
+	if strings.HasPrefix(id, "/") {
+		return strings.TrimPrefix(id, "/")
+	}
+	return id
+}
+
+func deadline(attempt time.Duration, timeout time.Duration, work func(chan bool) error) error {
+	result := make(chan error)
+	timer := time.After(timeout)
+	ticker := time.NewTicker(attempt)
+	buckets := make(chan bool, 20)
+
+	// allow the method to attempt
+	go func() {
+		result <- work(buckets)
+	}()
+	for {
+		select {
+		case <-ticker.C:
+			buckets <- true
+		case err := <-result:
+			return err
+		case <-timer:
+			result = nil
+			close(buckets)
+			return ErrTimeoutError
+		}
+	}
+}
 
 func getInterfaceAddress(name string) (string, error) {
 	if interfaces, err := net.Interfaces(); err != nil {

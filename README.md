@@ -62,8 +62,7 @@ The first one specified will be used, if that goes offline the member is marked 
 				health, err := client.ApplicationOK(details.ID)
 				glog.Infof("Application: %s, healthy: %t", details.ID, health)
 			}
-		}	
-
+		}
 
  **Creating a new application**
 
@@ -79,20 +78,21 @@ The first one specified will be used, if that goes offline the member is marked 
 		application.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80).Expose(443)
 		application.CheckHTTP("/health", 10)
 
-		if err := client.CreateApplication(application); err != nil {
+		if err := client.CreateApplication(application, true); err != nil {
 			glog.Errorf("Failed to create application: %s, error: %s", application, err)
 		} else {
 			glog.Infof("Created the application: %s", application)
 		}
-		
+
 **Scale Application**
 
 Change the number of instance of the application to 4 
 
     glog.Infof("Scale to 4 instances")
-    if err := client.ScaleApplicationInstances(application.ID, 4); err != nil {
+    if err := client.ScaleApplicationInstances(application.ID, 10); err != nil {
         glog.Errorf("Failed to delete the application: %s, error: %s", application, err)
     } else {
+        client.WaitOnApplication(application.ID, 0)
         glog.Infof("Successfully scaled the application")
     }
 

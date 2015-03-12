@@ -19,6 +19,7 @@ package marathon
 import (
 	"errors"
 	"fmt"
+	"time"
 )
 
 var (
@@ -36,29 +37,30 @@ type ApplicationWrap struct {
 }
 
 type Application struct {
-	ID              string            `json:"id",omitempty`
-	Cmd             string            `json:"cmd,omitempty"`
-	Args            []string          `json:"args,omitempty"`
-	Constraints     [][]string        `json:"constraints,omitempty"`
-	Container       *Container        `json:"container,omitempty"`
-	CPUs            float32           `json:"cpus,omitempty"`
-	Disk            float32           `json:"disk,omitempty"`
-	Env             map[string]string `json:"env,omitempty"`
-	Executor        string            `json:"executor,omitempty"`
-	HealthChecks    []*HealthCheck    `json:"healthChecks,omitempty"`
-	Instances       int               `json:"instances,omitemptys"`
-	Mem             float32           `json:"mem,omitempty"`
-	Tasks           []*Task           `json:"tasks,omitempty"`
-	Ports           []int             `json:"ports,omitempty"`
-	RequirePorts    bool              `json:"requirePorts,omitempty"`
-	BackoffFactor   float32           `json:"backoffFactor,omitempty"`
-	Dependencies    []string          `json:"dependencies,omitempty"`
-	TasksRunning    int               `json:"tasksRunning,omitempty"`
-	TasksStaged     int               `json:"tasksStaged,omitempty"`
-	User            string            `json:"user,omitempty"`
-	UpgradeStrategy *UpgradeStrategy  `json:"upgradeStrategy,omitempty"`
-	Uris            []string          `json:"uris,omitempty"`
-	Version         string            `json:"version,omitempty"`
+	ID              string              `json:"id",omitempty`
+	Cmd             string              `json:"cmd,omitempty"`
+	Args            []string            `json:"args,omitempty"`
+	Constraints     [][]string          `json:"constraints,omitempty"`
+	Container       *Container          `json:"container,omitempty"`
+	CPUs            float32             `json:"cpus,omitempty"`
+	Disk            float32             `json:"disk,omitempty"`
+	Env             map[string]string   `json:"env,omitempty"`
+	Executor        string              `json:"executor,omitempty"`
+	HealthChecks    []*HealthCheck      `json:"healthChecks,omitempty"`
+	Instances       int                 `json:"instances,omitemptys"`
+	Mem             float32             `json:"mem,omitempty"`
+	Tasks           []*Task             `json:"tasks,omitempty"`
+	Ports           []int               `json:"ports,omitempty"`
+	RequirePorts    bool                `json:"requirePorts,omitempty"`
+	BackoffFactor   float32             `json:"backoffFactor,omitempty"`
+	DeploymentID    []map[string]string `json:"deployments,omitempty"`
+	Dependencies    []string            `json:"dependencies,omitempty"`
+	TasksRunning    int                 `json:"tasksRunning,omitempty"`
+	TasksStaged     int                 `json:"tasksStaged,omitempty"`
+	User            string              `json:"user,omitempty"`
+	UpgradeStrategy *UpgradeStrategy    `json:"upgradeStrategy,omitempty"`
+	Uris            []string            `json:"uris,omitempty"`
+	Version         string              `json:"version,omitempty"`
 }
 
 type ApplicationVersions struct {
@@ -77,7 +79,7 @@ func NewDockerApplication() *Application {
 
 // The name of the application i.e. the identifier for this application
 func (application *Application) Name(id string) *Application {
-	application.ID = id
+	application.ID = validateID(id)
 	return application
 }
 
@@ -94,6 +96,21 @@ func (application *Application) CPU(cpu float32) *Application {
 func (application *Application) Storage(disk float32) *Application {
 	application.Disk = disk
 	return application
+}
+
+// Check to see if all the application tasks are running, i.e. the instances is equal
+// to the number of running tasks
+func (application *Application) AllTaskRunning() bool {
+	if application.Instances == 0 {
+		return true
+	}
+	if application.Tasks == nil {
+		return false
+	}
+	if application.TasksRunning == application.Instances {
+		return true
+	}
+	return false
 }
 
 // Adds a dependency for this application. Note, if you want to wait for a application
@@ -150,6 +167,25 @@ func (application *Application) HasHealthChecks() bool {
 		return true
 	}
 	return false
+}
+
+// Retrieve the application deployments ID
+func (application *Application) Deployments() []*DeploymentID {
+	deployments := make([]*DeploymentID, 0)
+	if application.DeploymentID == nil || len(application.DeploymentID) <= 0 {
+		return deployments
+	}
+	// step: extract the deployment id from the result
+	for _, deploy := range application.DeploymentID {
+		if id, found := deploy["id"]; found {
+			deployment := &DeploymentID{
+				Version:      application.Version,
+				DeploymentID: id,
+			}
+			deployments = append(deployments, deployment)
+		}
+	}
+	return deployments
 }
 
 // Add a HTTP check to an application
@@ -228,7 +264,8 @@ func (client *Client) ListApplications() ([]string, error) {
 // 		name: 		the id used to identify the application
 //		version: 	the version (normally a timestamp) your looking for
 func (client *Client) HasApplicationVersion(name, version string) (bool, error) {
-	if versions, err := client.ApplicationVersions(name); err != nil {
+	id := trimRootPath(name)
+	if versions, err := client.ApplicationVersions(id); err != nil {
 		return false, err
 	} else {
 		if contains(versions.Versions, version) {
@@ -241,7 +278,7 @@ func (client *Client) HasApplicationVersion(name, version string) (bool, error) 
 // A list of versions which has been deployed with marathon for a specific application
 //		name:		the id used to identify the application
 func (client *Client) ApplicationVersions(name string) (*ApplicationVersions, error) {
-	uri := fmt.Sprintf("%s%s/versions", MARATHON_API_APPS, name)
+	uri := fmt.Sprintf("%s/%s/versions", MARATHON_API_APPS, trimRootPath(name))
 	versions := new(ApplicationVersions)
 	if err := client.apiGet(uri, nil, versions); err != nil {
 		return nil, err
@@ -254,7 +291,7 @@ func (client *Client) ApplicationVersions(name string) (*ApplicationVersions, er
 //		version: 	the version (normally a timestamp) you wish to change to
 func (client *Client) SetApplicationVersion(name string, version *ApplicationVersion) (*DeploymentID, error) {
 	client.debug("Changing the application: %s to version: %s", name, version)
-	uri := fmt.Sprintf("%s%s", MARATHON_API_APPS, name)
+	uri := fmt.Sprintf("%s/%s", MARATHON_API_APPS, trimRootPath(name))
 	deploymentId := new(DeploymentID)
 	if err := client.apiPut(uri, version, deploymentId); err != nil {
 		client.debug("Failed to change the application to version: %s, error: %s", version.Version, err)
@@ -267,7 +304,7 @@ func (client *Client) SetApplicationVersion(name string, version *ApplicationVer
 // 		name: 		the id used to identify the application
 func (client *Client) Application(name string) (*Application, error) {
 	application := new(ApplicationWrap)
-	if err := client.apiGet(fmt.Sprintf("%s%s", MARATHON_API_APPS, name), nil, application); err != nil {
+	if err := client.apiGet(fmt.Sprintf("%s/%s", MARATHON_API_APPS, trimRootPath(name)), nil, application); err != nil {
 		return nil, err
 	} else {
 		return &application.Application, nil
@@ -311,16 +348,53 @@ func (client *Client) ApplicationOK(name string) (bool, error) {
 	}
 }
 
-// Creates a new application in Marathon
-// 		application: 		the structure holding the application configuration
-func (client *Client) CreateApplication(application *Application) (*DeploymentID, error) {
-	deployID := new(DeploymentID)
-	client.debug("Creating an application: %s", application)
-	if err := client.apiPost(MARATHON_API_APPS, &application, deployID); err != nil {
+func (client *Client) ApplicationDeployments(name string) ([]*DeploymentID, error) {
+	if application, err := client.Application(name); err != nil {
 		return nil, err
 	} else {
-		return deployID, nil
+		return application.Deployments(), nil
 	}
+}
+
+// Creates a new application in Marathon
+// 		application: 		the structure holding the application configuration
+func (client *Client) CreateApplication(application *Application, wait_on_running bool) error {
+	result := new(Application)
+	client.debug("Creating an application: %s", application)
+	if err := client.apiPost(MARATHON_API_APPS, &application, result); err != nil {
+		return err
+	}
+	// step: are we waiting for the application to start?
+	if wait_on_running {
+		return client.WaitOnApplication(application.ID, 0)
+	}
+	return nil
+}
+
+// Wait for an application to be deployed
+//		name:		the id of the application
+func (client *Client) WaitOnApplication(name string, timeout time.Duration) error {
+	if timeout <= 0 {
+		timeout = time.Duration(300) * time.Second
+	}
+	// step: this is very naive approach - the problem with using deployment id's is
+	// one) from > 0.8.0 you can be handed a deployment Id on creation, but it may or may not exist in /v2/deployments
+	// two) there is NO WAY of checking if a deployment Id was successful (i.e. no history). So i poll /deployments
+	// as it's not there, was it sucessfull? has it not been scheduled yet? should i wait for a second to see if the
+	// deployment starts? or have i missed it? ...
+	err := deadline(time.Duration(1)*time.Second, timeout, func(tokens chan bool) error {
+		for _ = range tokens {
+			if found, err := client.HasApplication(name); err != nil {
+				continue
+			} else if found {
+				if app, err := client.Application(name); err == nil && app.AllTaskRunning() {
+					return nil
+				}
+			}
+		}
+		return nil
+	})
+	return err
 }
 
 // Checks to see if the application exists in marathon
@@ -350,7 +424,7 @@ func (client *Client) DeleteApplication(name string) (*DeploymentID, error) {
 	/* step: check of the application already exists */
 	client.debug("Deleting the application: %s", name)
 	deployID := new(DeploymentID)
-	if err := client.apiDelete(fmt.Sprintf("%s%s", MARATHON_API_APPS, name), nil, deployID); err != nil {
+	if err := client.apiDelete(fmt.Sprintf("%s/%s", MARATHON_API_APPS, trimRootPath(name)), nil, deployID); err != nil {
 		return nil, err
 	} else {
 		return deployID, nil
@@ -366,7 +440,7 @@ func (client *Client) RestartApplication(name string, force bool) (*DeploymentID
 		Force bool `json:"force"`
 	}
 	options.Force = force
-	if err := client.apiGet(fmt.Sprintf("%s%s/restart", MARATHON_API_APPS, name), &options, deployment); err != nil {
+	if err := client.apiGet(fmt.Sprintf("%s/%s/restart", MARATHON_API_APPS, trimRootPath(name)), &options, deployment); err != nil {
 		return nil, err
 	}
 	return deployment, nil
@@ -378,9 +452,9 @@ func (client *Client) RestartApplication(name string, force bool) (*DeploymentID
 func (client *Client) ScaleApplicationInstances(name string, instances int) (*DeploymentID, error) {
 	client.debug("ScaleApplication: application: %s, instance: %d", name, instances)
 	changes := new(Application)
-	changes.ID = name
+	changes.ID = validateID(name)
 	changes.Instances = instances
-	uri := fmt.Sprintf("%s%s", MARATHON_API_APPS, name)
+	uri := fmt.Sprintf("%s/%s", MARATHON_API_APPS, trimRootPath(name))
 	deployID := new(DeploymentID)
 	if err := client.apiPut(uri, &changes, deployID); err != nil {
 		return nil, err

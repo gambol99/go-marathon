@@ -102,12 +102,10 @@ func (client *Client) HasDeployment(id string) (bool, error) {
 //  version:    the version of the application
 // 	timeout:	the timeout to wait for the deployment to take, otherwise return an error
 func (client *Client) WaitOnDeployment(id string, timeout time.Duration) error {
-	found, err := client.HasDeployment(id)
-	if err != nil {
+	if found, err := client.HasDeployment(id); err != nil {
 		return err
-	}
-	if !found {
-		return ErrDoesNotExist
+	} else if !found {
+		return nil
 	}
 
 	client.debug("Waiting for deployment: %s to finish", id)
