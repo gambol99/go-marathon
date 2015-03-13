@@ -31,35 +31,35 @@ func GetFakeCluster() {
 
 func TestUrl(t *testing.T) {
 	GetFakeCluster()
-	AssertOnString(cluster.Url(), FAKE_MARATHON_URL, t)
+	assertOnString(cluster.Url(), FAKE_MARATHON_URL, t)
 }
 
 func TestSize(t *testing.T) {
 	GetFakeCluster()
-	AssertOnInteger(cluster.Size(), 2, t)
+	assertOnInteger(cluster.Size(), 2, t)
 }
 
 func TestActive(t *testing.T) {
 	GetFakeCluster()
-	AssertOnInteger(len(cluster.Active()), 2, t)
+	assertOnInteger(len(cluster.Active()), 2, t)
 }
 
 func TestNonActive(t *testing.T) {
 	GetFakeCluster()
-	AssertOnInteger(len(cluster.NonActive()), 0, t)
+	assertOnInteger(len(cluster.NonActive()), 0, t)
 }
 
 func TestGetMember(t *testing.T) {
 	GetFakeCluster()
 	member, err := cluster.GetMember()
-	AssertOnError(err, t)
-	AssertOnString(member, "http://127.0.0.1:3000", t)
+	assertOnError(err, t)
+	assertOnString(member, "http://127.0.0.1:3000", t)
 }
 
 func TestMarkdown(t *testing.T) {
 	GetFakeCluster()
-	AssertOnInteger(len(cluster.Active()), 2, t)
+	assertOnInteger(len(cluster.Active()), 2, t)
 	cluster.MarkDown()
 	time.Sleep(10 * time.Millisecond)
-	AssertOnInteger(len(cluster.Active()), 2, t)
+	assertOnInteger(len(cluster.Active()), 2, t)
 }

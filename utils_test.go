@@ -22,14 +22,14 @@ import (
 
 func TestValidateID(t *testing.T) {
 	path := "test/path"
-	AssertOnString(validateID(path), "/test/path", t)
+	assertOnString(validateID(path), "/test/path", t)
 	path = "/test/path"
-	AssertOnString(validateID(path), "/test/path", t)
+	assertOnString(validateID(path), "/test/path", t)
 }
 
 func TestTrimRootPath(t *testing.T) {
 	path := "/test/path"
-	AssertOnString(trimRootPath(path), "test/path", t)
+	assertOnString(trimRootPath(path), "test/path", t)
 	path = "test/path"
-	AssertOnString(trimRootPath(path), "test/path", t)
+	assertOnString(trimRootPath(path), "test/path", t)
 }

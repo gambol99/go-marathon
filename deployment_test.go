@@ -23,21 +23,21 @@ import (
 func TestDeployments(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
 	deployments, err := client.Deployments()
-	AssertOnError(err, t)
-	AssertOnNull(deployments, t)
-	AssertOnInteger(len(deployments), 1, t)
+	assertOnError(err, t)
+	assertOnNull(deployments, t)
+	assertOnInteger(len(deployments), 1, t)
 	deployment := deployments[0]
-	AssertOnNull(deployment, t)
-	AssertOnString(deployment.ID, "867ed450-f6a8-4d33-9b0e-e11c5513990b", t)
-	AssertOnNull(deployment.Steps, t)
-	AssertOnInteger(len(deployment.Steps), 1, t)
+	assertOnNull(deployment, t)
+	assertOnString(deployment.ID, "867ed450-f6a8-4d33-9b0e-e11c5513990b", t)
+	assertOnNull(deployment.Steps, t)
+	assertOnInteger(len(deployment.Steps), 1, t)
 }
 
 func TestDeleteDeployment(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
 	id, err := client.DeleteDeployment(FAKE_DEPLOYMENT_ID, false)
-	AssertOnError(err, t)
-	AssertOnNull(id, t)
-	AssertOnString(id.DeploymentID, "0b1467fc-d5cd-4bbc-bac2-2805351cee1e", t)
-	AssertOnString(id.Version, "2014-08-26T08:20:26.171Z", t)
+	assertOnError(err, t)
+	assertOnNull(id, t)
+	assertOnString(id.DeploymentID, "0b1467fc-d5cd-4bbc-bac2-2805351cee1e", t)
+	assertOnString(id.Version, "2014-08-26T08:20:26.171Z", t)
 }

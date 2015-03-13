@@ -23,8 +23,8 @@ import (
 func TestSubscriptions(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
 	sub, err := client.Subscriptions()
-	AssertOnError(err, t)
-	AssertOnNull(sub, t)
-	AssertOnNull(sub.CallbackURLs, t)
-	AssertOnInteger(len(sub.CallbackURLs), 1, t)
+	assertOnError(err, t)
+	assertOnNull(sub, t)
+	assertOnNull(sub.CallbackURLs, t)
+	assertOnInteger(len(sub.CallbackURLs), 1, t)
 }

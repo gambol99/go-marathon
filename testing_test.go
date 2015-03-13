@@ -91,41 +91,41 @@ func NewFakeMarathonEndpoint(t *testing.T) Marathon {
 	})
 	return testClient.client
 }
-func AssertOnNull(data interface{}, t *testing.T) {
+func assertOnNull(data interface{}, t *testing.T) {
 	if data == nil {
 		t.FailNow()
 	}
 }
 
-func AssertOnError(err error, t *testing.T) {
+func assertOnError(err error, t *testing.T) {
 	if err != nil {
 		t.Errorf("failed: was not expecting an error")
 		t.FailNow()
 	}
 }
 
-func AssertOnNoError(err error, t *testing.T) {
+func assertOnNoError(err error, t *testing.T) {
 	if err == nil {
 		t.Errorf("failed: error not nil, expected: a error")
 		t.FailNow()
 	}
 }
 
-func AssertOnBool(value, expected bool, t *testing.T) {
+func assertOnBool(value, expected bool, t *testing.T) {
 	if value != expected {
 		t.Errorf("failed: value: %t, expected: %t", value, expected)
 		t.FailNow()
 	}
 }
 
-func AssertOnString(value, expected string, t *testing.T) {
+func assertOnString(value, expected string, t *testing.T) {
 	if !strings.Contains(value, expected) {
 		t.Errorf("failed, value %s, expected: %s", value, expected)
 		t.FailNow()
 	}
 }
 
-func AssertOnInteger(value, expected int, t *testing.T) {
+func assertOnInteger(value, expected int, t *testing.T) {
 	if value != expected {
 		t.Errorf("failed, value %d, expected: %d", value, expected)
 		t.FailNow()

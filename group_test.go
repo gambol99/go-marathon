@@ -23,18 +23,18 @@ import (
 func TestGroups(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
 	groups, err := client.Groups()
-	AssertOnError(err, t)
-	AssertOnNull(groups, t)
-	AssertOnInteger(len(groups.Groups), 1, t)
+	assertOnError(err, t)
+	assertOnNull(groups, t)
+	assertOnInteger(len(groups.Groups), 1, t)
 	group := groups.Groups[0]
-	AssertOnString(group.ID, FAKE_GROUP_NAME, t)
+	assertOnString(group.ID, FAKE_GROUP_NAME, t)
 }
 
 func TestGroup(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
 	group, err := client.Group(FAKE_GROUP_NAME)
-	AssertOnError(err, t)
-	AssertOnNull(group, t)
-	AssertOnInteger(len(group.Apps), 1, t)
-	AssertOnString(group.ID, FAKE_GROUP_NAME, t)
+	assertOnError(err, t)
+	assertOnNull(group, t)
+	assertOnInteger(len(group.Apps), 1, t)
+	assertOnString(group.ID, FAKE_GROUP_NAME, t)
 }

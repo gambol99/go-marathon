@@ -23,11 +23,11 @@ import (
 func TestPing(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
 	found, err := client.Ping()
-	AssertOnError(err, t)
-	AssertOnBool(found, true, t)
+	assertOnError(err, t)
+	assertOnBool(found, true, t)
 }
 
 func TestGetMarathonURL(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
-	AssertOnString(client.GetMarathonURL(), FAKE_MARATHON_URL, t)
+	assertOnString(client.GetMarathonURL(), FAKE_MARATHON_URL, t)
 }
