@@ -101,6 +101,7 @@ func (application *Application) Storage(disk float32) *Application {
 // Check to see if all the application tasks are running, i.e. the instances is equal
 // to the number of running tasks
 func (application *Application) AllTaskRunning() bool {
+	fmt.Printf("instance: %d, running: %d\n", application.Instances, application.TasksRunning)
 	if application.Instances == 0 {
 		return true
 	}
@@ -380,10 +381,16 @@ func (client *Client) WaitOnApplication(name string, timeout time.Duration) erro
 	// step: this is very naive approach - the problem with using deployment id's is
 	// one) from > 0.8.0 you can be handed a deployment Id on creation, but it may or may not exist in /v2/deployments
 	// two) there is NO WAY of checking if a deployment Id was successful (i.e. no history). So i poll /deployments
-	// as it's not there, was it sucessfull? has it not been scheduled yet? should i wait for a second to see if the
+	// as it's not there, was it successful? has it not been scheduled yet? should i wait for a second to see if the
 	// deployment starts? or have i missed it? ...
-	err := deadline(time.Duration(1)*time.Second, timeout, func(tokens chan bool) error {
-		for _ = range tokens {
+	err := deadline(timeout, func(stop_channel chan bool) error {
+		var flick AtomicSwitch
+		go func() {
+			<- stop_channel
+			close(stop_channel)
+			flick.SwitchOn()
+		}()
+		for !flick.IsSwitched() {
 			if found, err := client.HasApplication(name); err != nil {
 				continue
 			} else if found {
@@ -391,6 +398,7 @@ func (client *Client) WaitOnApplication(name string, timeout time.Duration) erro
 					return nil
 				}
 			}
+			time.Sleep(time.Duration(400) * time.Millisecond)
 		}
 		return nil
 	})

@@ -114,9 +114,14 @@ func (client *Client) WaitOnGroup(name string, timeout time.Duration) error {
 	if timeout <= 0 {
 		timeout = time.Duration(500) * time.Second
 	}
-	err := deadline(time.Duration(1)*time.Second, timeout, func(tokens chan bool) error {
-		for _ = range tokens {
-			fmt.Println("RECIEVED TOKEN TO RUN")
+	err := deadline(timeout, func(stop_channel chan bool) error {
+		var flick AtomicSwitch
+		go func() {
+			<- stop_channel
+			close(stop_channel)
+			flick.SwitchOn()
+		}()
+		for !flick.IsSwitched() {
 			if group, err := client.Group(name); err != nil {
 				continue
 			} else {
@@ -145,10 +150,10 @@ func (client *Client) WaitOnGroup(name string, timeout time.Duration) error {
 				}
 				// has anyone toggle the flag?
 				if all_running {
-					fmt.Println("ALL FINISHED")
 					return nil
 				}
 			}
+			time.Sleep(time.Duration(1) * time.Second)
 		}
 		return nil
 	})

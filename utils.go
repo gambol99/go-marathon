@@ -21,8 +21,23 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"sync/atomic"
 	"time"
 )
+
+type AtomicSwitch int64
+
+func (p *AtomicSwitch) IsSwitched() bool {
+	return atomic.LoadInt64((*int64)(p)) != 0
+}
+
+func (p *AtomicSwitch) SwitchOn() {
+	atomic.StoreInt64((*int64)(p), 1)
+}
+
+func (p *AtomicSwitch) SwitchedOff() {
+	atomic.StoreInt64((*int64)(p), 0)
+}
 
 func validateID(id string) string {
 	if !strings.HasPrefix(id, "/") {
@@ -38,25 +53,21 @@ func trimRootPath(id string) string {
 	return id
 }
 
-func deadline(attempt time.Duration, timeout time.Duration, work func(chan bool) error) error {
+func deadline(timeout time.Duration, work func(chan bool) error) error {
 	result := make(chan error)
 	timer := time.After(timeout)
-	ticker := time.NewTicker(attempt)
-	buckets := make(chan bool, 20)
+	stop_channel := make(chan bool)
 
 	// allow the method to attempt
 	go func() {
-		result <- work(buckets)
+		result <- work(stop_channel)
 	}()
 	for {
 		select {
-		case <-ticker.C:
-			buckets <- true
 		case err := <-result:
 			return err
 		case <-timer:
-			result = nil
-			close(buckets)
+			stop_channel <- true
 			return ErrTimeoutError
 		}
 	}

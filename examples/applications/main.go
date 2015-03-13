@@ -21,6 +21,7 @@ import (
 	"time"
 
 	marathon "github.com/gambol99/go-marathon"
+
 	"github.com/golang/glog"
 )
 
