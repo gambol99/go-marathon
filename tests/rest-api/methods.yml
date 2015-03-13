@@ -539,6 +539,133 @@
         "id": "/test",
         "version": "2014-08-28T01:09:46.212Z"
     }
+- uri: /v2/groups/qa/product/1
+  method: GET
+  content: |
+    {
+      "id": "/qa/product/1",
+      "groups": [
+        {
+          "id": "frontend",
+          "apps": [
+            {
+              "cmd": "",
+              "container": {
+                "type": "DOCKER",
+                "docker": {
+                  "image": "quay.io/gambol99/apache-php:latest",
+                  "network": "BRIDGE",
+                  "portMappings": [
+                    {
+                      "containerPort": 80,
+                      "hostPort": 0,
+                      "protocol": "tcp"
+                    },
+                    {
+                      "containerPort": 443,
+                      "hostPort": 0,
+                      "protocol": "tcp"
+                    }
+                  ]
+                }
+              },
+              "healthChecks": [
+                {
+                  "protocol": "HTTP",
+                  "path": "/hostname.php",
+                  "gracePeriodSeconds": 3,
+                  "intervalSeconds": 10,
+                  "portIndex": 0,
+                  "timeoutSeconds": 10,
+                  "maxConsecutiveFailures": 3
+                }
+              ],
+              "id": "apache",
+              "mem": 64,
+              "args": [],
+              "env": {
+                "ENVIRONMENT": "qa",
+                "SERVICE_80_NAME": "apache_http-qa-1",
+                "SERVICE_443_NAME": "apache_https-qa-1",
+                "NAME": "frontend",
+                "BACKEND_MYSQL_MASTER": "mysql-qa-1;3306",
+                "BACKEND_CACHE": "redis-qa-1;6379"
+              },
+              "dependencies": [
+                "/qa/product/1/database",
+                "/qa/product/1/caching"
+              ]
+            },{
+              "id": "database",
+              "container": {
+                "type": "DOCKER",
+                "docker": {
+                  "image": "tutum/mysql",
+                  "network": "BRIDGE",
+                  "portMappings": [
+                    { "containerPort": 3306, "hostPort": 0, "protocol": "tcp" }
+                  ]
+                }
+              },
+              "healthChecks": [
+                {
+                  "portIndex": 0,
+                  "protocol": "TCP",
+                  "gracePeriodSeconds": 10,
+                  "intervalSeconds": 10,
+                  "timeoutSeconds": 5,
+                  "maxConsecutiveFailures": 2
+                }
+              ],
+              "id": "mysql",
+              "mem": 1024,
+              "cmd": "",
+              "env": {
+                "ENVIRONMENT": "qa",
+                "SERVICE_NAME": "dbmaster",
+                "SERVICE_3306_NAME": "mysql-qa-1",
+                "MYSQL_PASS": "mysql",
+                "REPLICATION_MASTER": "true",
+                "REPLICATION_USER": "replication",
+                "REPLICATION_PASS": "8d67as9f7sjhsdfsd"
+              }
+            },{
+              "container": {
+                "type": "DOCKER",
+                "docker": {
+                  "image": "redis",
+                  "network": "BRIDGE",
+                  "portMappings": [
+                    {
+                      "containerPort": 6379,
+                      "hostPort": 0,
+                      "protocol": "tcp"
+                    }
+                  ]
+                }
+              },
+              "healthChecks": [
+                {
+                  "portIndex": 0,
+                  "protocol": "TCP",
+                  "gracePeriodSeconds": 10,
+                  "intervalSeconds": 10,
+                  "timeoutSeconds": 5,
+                  "maxConsecutiveFailures": 2
+                }
+              ],
+              "id": "caching",
+              "cmd": "",
+              "mem": 128,
+              "env": {
+                "ENVIRONMENT": "qa",
+                "SERVICE_6379_NAME": "redis-qa-1"
+              }
+            }
+          ]
+        }
+      ]
+    }
 - uri: /v2/groups/:groupId
   method: PUT
   content: |

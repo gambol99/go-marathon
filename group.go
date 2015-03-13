@@ -109,7 +109,8 @@ func (client *Client) CreateGroup(group *Group, wait_on_running bool) error {
 }
 
 // Waits for all the applications in a group to be deployed
-// 		group:	the identifier for the group
+// 		group:		the identifier for the group
+//		timeout: 	a duration of time to wait before considering it failed (all tasks in all apps running defined as deployed)
 func (client *Client) WaitOnGroup(name string, timeout time.Duration) error {
 	if timeout <= 0 {
 		timeout = time.Duration(500) * time.Second

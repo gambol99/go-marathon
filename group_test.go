@@ -37,4 +37,21 @@ func TestGroup(t *testing.T) {
 	assertOnNull(group, t)
 	assertOnInteger(len(group.Apps), 1, t)
 	assertOnString(group.ID, FAKE_GROUP_NAME, t)
+	group, err = client.Group(FAKE_GROUP_NAME_1)
+	assertOnError(err, t)
+	assertOnNull(group, t)
+	assertOnString(group.ID, FAKE_GROUP_NAME_1, t)
+	assertOnNull(group.Groups, t)
+	assertOnInteger(len(group.Groups), 1, t)
+	frontend := group.Groups[0]
+	assertOnString(frontend.ID, "frontend", t)
+	assertOnInteger(len(frontend.Apps), 3, t)
+	for _, app := range frontend.Apps {
+		assertOnNull(app.Container, t)
+		assertOnNull(app.Container.Docker, t)
+		assertOnString(app.Container.Docker.Network, "BRIDGE", t)
+		if len(app.Container.Docker.PortMappings) <= 0 {
+			t.Fail()
+		}
+	}
 }

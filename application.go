@@ -359,6 +359,7 @@ func (client *Client) ApplicationDeployments(name string) ([]*DeploymentID, erro
 
 // Creates a new application in Marathon
 // 		application: 		the structure holding the application configuration
+//		wait_on_running:	waits on the application deploying, i.e. the instances arre all running (note health checks are excluded)
 func (client *Client) CreateApplication(application *Application, wait_on_running bool) error {
 	result := new(Application)
 	client.debug("Creating an application: %s", application)
@@ -374,6 +375,7 @@ func (client *Client) CreateApplication(application *Application, wait_on_runnin
 
 // Wait for an application to be deployed
 //		name:		the id of the application
+//		timeout:	a duration of time to wait for an application to deploy
 func (client *Client) WaitOnApplication(name string, timeout time.Duration) error {
 	if timeout <= 0 {
 		timeout = time.Duration(300) * time.Second
