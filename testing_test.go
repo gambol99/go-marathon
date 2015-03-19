@@ -85,7 +85,6 @@ func NewFakeMarathonEndpoint(t *testing.T) Marathon {
 
 		config := NewDefaultConfig()
 		config.URL = FAKE_MARATHON_URL
-		config.Debug = false
 		if testClient.client, err = NewClient(config); err != nil {
 			t.Fatalf("Failed to create the fake client, %s, error: %s", FAKE_MARATHON_URL, err)
 		}

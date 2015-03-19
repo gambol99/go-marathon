@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"time"
+	"os"
 
 	marathon "github.com/gambol99/go-marathon"
 
@@ -47,7 +48,7 @@ func main() {
 	flag.Parse()
 	config := marathon.NewDefaultConfig()
 	config.URL = marathon_url
-	config.Debug = true
+	config.LogOutput = os.Stdout
 	config.EventsPort = marathon_port
 	config.EventsInterface = marathon_interface
 	glog.Infof("Creating a client Marathon: %s", marathon_url)

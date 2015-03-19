@@ -26,6 +26,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"log"
 )
 
 const (
@@ -160,6 +161,8 @@ type Client struct {
 	events_http *http.Server
 	/* the http client */
 	http *http.Client
+	/* the output for the logger */
+	logger *log.Logger
 	/* the marathon cluster */
 	cluster Cluster
 	/* a map of service you wish to listen to */
@@ -175,9 +178,14 @@ func NewClient(config Config) (Marathon, error) {
 	if cluster, err := NewMarathonCluster(config.URL); err != nil {
 		return nil, err
 	} else {
-		/* step: create the service marathon client */
+		// step: create the service marathon client
 		service := new(Client)
 		service.config = config
+		// step: create a logger from the output
+		if config.LogOutput == nil {
+			config.LogOutput = ioutil.Discard
+		}
+		service.logger = log.New(config.LogOutput, "[debug]: ", 0)
 		service.listeners = make(map[EventsChannel]int, 0)
 		service.cluster = cluster
 		service.http = &http.Client{
@@ -186,6 +194,8 @@ func NewClient(config Config) (Marathon, error) {
 		return service, nil
 	}
 }
+
+
 
 func (client *Client) GetMarathonURL() string {
 	return client.cluster.Url()
@@ -272,19 +282,19 @@ func (client *Client) apiDelete(uri string, post, result interface{}) error {
 }
 
 func (client *Client) apiCall(method, uri, body string, result interface{}) (int, string, error) {
-	client.debug("apiCall() method: %s, uri: %s, body: %s", method, uri, body)
+	client.log("apiCall() method: %s, uri: %s, body: %s", method, uri, body)
 	if status, content, _, err := client.httpCall(method, uri, body); err != nil {
 		return 0, "", err
 	} else {
-		client.debug("apiCall() status: %d, content: %s\n", status, content)
+		client.log("apiCall() status: %d, content: %s\n", status, content)
 		if status >= 200 && status <= 299 {
 			if result != nil {
 				if err := client.unMarshallDataToJson(strings.NewReader(content), result); err != nil {
-					client.debug("apiCal(): failed to unmarshall the response from marathon, error: %s", err)
+					client.log("apiCall(): failed to unmarshall the response from marathon, error: %s", err)
 					return status, content, ErrInvalidResponse
 				}
 			}
-			client.debug("apiCall() result: %V", result)
+			client.log("apiCall() result: %V", result)
 			return status, content, nil
 		}
 		switch status {
@@ -314,7 +324,7 @@ func (client *Client) httpCall(method, uri, body string) (int, string, *http.Res
 		return 0, "", nil, err
 	} else {
 		url := fmt.Sprintf("%s/%s", marathon, uri)
-		client.debug("httpCall(): %s, uri: %s, url: %s", method, uri, url)
+		client.log("httpCall(): %s, uri: %s, url: %s", method, uri, url)
 
 		if request, err := http.NewRequest(method, url, strings.NewReader(body)); err != nil {
 			return 0, "", nil, err
@@ -329,7 +339,7 @@ func (client *Client) httpCall(method, uri, body string) (int, string, *http.Res
 				return client.httpCall(method, uri, body)
 			} else {
 				/* step: lets read in any content */
-				client.debug("httpCall: %s, uri: %s, url: %s\n", method, uri, url)
+				client.log("httpCall: %s, uri: %s, url: %s\n", method, uri, url)
 				if response.ContentLength != 0 {
 					/* step: read in the content from the request */
 					response_content, err := ioutil.ReadAll(response.Body)
@@ -344,4 +354,8 @@ func (client *Client) httpCall(method, uri, body string) (int, string, *http.Res
 		}
 	}
 	return 0, "", nil, errors.New("Unable to make call to marathon")
+}
+
+func (client *Client) log(message string, args ...interface {}) {
+	client.logger.Printf(message+"\n", args...)
 }

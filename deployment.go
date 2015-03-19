@@ -108,7 +108,7 @@ func (client *Client) WaitOnDeployment(id string, timeout time.Duration) error {
 		return nil
 	}
 
-	client.debug("Waiting for deployment: %s to finish", id)
+	client.log("WaitOnDeployment() Waiting for deployment: %s to finish", id)
 	now_time := time.Now()
 	stop_time := now_time.Add(timeout)
 	if timeout <= 0 {
@@ -122,7 +122,7 @@ func (client *Client) WaitOnDeployment(id string, timeout time.Duration) error {
 		}
 		found, err := client.HasDeployment(id)
 		if err != nil {
-			client.debug("Failed to get the deployments list, error: %s", err)
+			client.log("WaitOnDeployment() Failed to get the deployments list, error: %s", err)
 		}
 		if !found {
 			return nil
