@@ -101,7 +101,6 @@ func (application *Application) Storage(disk float32) *Application {
 // Check to see if all the application tasks are running, i.e. the instances is equal
 // to the number of running tasks
 func (application *Application) AllTaskRunning() bool {
-	fmt.Printf("instance: %d, running: %d\n", application.Instances, application.TasksRunning)
 	if application.Instances == 0 {
 		return true
 	}
@@ -291,11 +290,11 @@ func (client *Client) ApplicationVersions(name string) (*ApplicationVersions, er
 // 		name: 		the id used to identify the application
 //		version: 	the version (normally a timestamp) you wish to change to
 func (client *Client) SetApplicationVersion(name string, version *ApplicationVersion) (*DeploymentID, error) {
-	client.debug("Changing the application: %s to version: %s", name, version)
+	client.log("SetApplicationVersion() setting the application: %s to version: %s", name, version)
 	uri := fmt.Sprintf("%s/%s", MARATHON_API_APPS, trimRootPath(name))
 	deploymentId := new(DeploymentID)
 	if err := client.apiPut(uri, version, deploymentId); err != nil {
-		client.debug("Failed to change the application to version: %s, error: %s", version.Version, err)
+		client.log("SetApplicationVersion() Failed to change the application to version: %s, error: %s", version.Version, err)
 		return nil, err
 	}
 	return deploymentId, nil
@@ -361,7 +360,7 @@ func (client *Client) ApplicationDeployments(name string) ([]*DeploymentID, erro
 // 		application: 		the structure holding the application configuration
 func (client *Client) CreateApplication(application *Application, wait_on_running bool) error {
 	result := new(Application)
-	client.debug("Creating an application: %s", application)
+	client.log("Creating an application: %s", application)
 	if err := client.apiPost(MARATHON_API_APPS, &application, result); err != nil {
 		return err
 	}
@@ -398,7 +397,7 @@ func (client *Client) WaitOnApplication(name string, timeout time.Duration) erro
 					return nil
 				}
 			}
-			time.Sleep(time.Duration(400) * time.Millisecond)
+			time.Sleep(time.Duration(500) * time.Millisecond)
 		}
 		return nil
 	})
@@ -408,7 +407,7 @@ func (client *Client) WaitOnApplication(name string, timeout time.Duration) erro
 // Checks to see if the application exists in marathon
 // 		name: 		the id used to identify the application
 func (client *Client) HasApplication(name string) (bool, error) {
-	client.debug("Checking if application: %s exists in marathon", name)
+	client.log("HasApplication() Checking if application: %s exists in marathon", name)
 	if name == "" {
 		return false, ErrInvalidArgument
 	} else {
@@ -417,7 +416,7 @@ func (client *Client) HasApplication(name string) (bool, error) {
 		} else {
 			for _, id := range applications {
 				if name == id {
-					client.debug("The application: %s presently exist in maration", name)
+					client.log("HasApplication() The application: %s presently exist in maration", name)
 					return true, nil
 				}
 			}
@@ -430,7 +429,7 @@ func (client *Client) HasApplication(name string) (bool, error) {
 // 		name: 		the id used to identify the application
 func (client *Client) DeleteApplication(name string) (*DeploymentID, error) {
 	/* step: check of the application already exists */
-	client.debug("Deleting the application: %s", name)
+	client.log("DeleteApplication() Deleting the application: %s", name)
 	deployID := new(DeploymentID)
 	if err := client.apiDelete(fmt.Sprintf("%s/%s", MARATHON_API_APPS, trimRootPath(name)), nil, deployID); err != nil {
 		return nil, err
@@ -442,7 +441,7 @@ func (client *Client) DeleteApplication(name string) (*DeploymentID, error) {
 // Performs a rolling restart of marathon application
 // 		name: 		the id used to identify the application
 func (client *Client) RestartApplication(name string, force bool) (*DeploymentID, error) {
-	client.debug("Restarting the application: %s, force: %s", name, force)
+	client.log("RestartApplication() Restarting the application: %s, force: %s", name, force)
 	deployment := new(DeploymentID)
 	var options struct {
 		Force bool `json:"force"`
@@ -458,7 +457,7 @@ func (client *Client) RestartApplication(name string, force bool) (*DeploymentID
 // 		name: 		the id used to identify the application
 // 		instances:	the number of instances you wish to change to
 func (client *Client) ScaleApplicationInstances(name string, instances int) (*DeploymentID, error) {
-	client.debug("ScaleApplication: application: %s, instance: %d", name, instances)
+	client.log("ScaleApplicationInstances(): application: %s, instance: %d", name, instances)
 	changes := new(Application)
 	changes.ID = validateID(name)
 	changes.Instances = instances

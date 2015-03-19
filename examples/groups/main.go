@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"os"
 
 	marathon "github.com/gambol99/go-marathon"
 	"github.com/golang/glog"
@@ -39,7 +40,7 @@ func main() {
 	flag.Parse()
 	config := marathon.NewDefaultConfig()
 	config.URL = marathon_url
-	config.Debug = false
+	config.LogOutput = os.Stdout
 	client, err := marathon.NewClient(config)
 	if err != nil {
 		glog.Fatalf("Failed to create a client for marathon, error: %s", err)

@@ -16,6 +16,11 @@ limitations under the License.
 
 package marathon
 
+import (
+	"io"
+	"io/ioutil"
+)
+
 type Config struct {
 	/* the url for marathon */
 	URL string
@@ -23,8 +28,8 @@ type Config struct {
 	EventsPort int
 	/* the interface we should be listening on for events */
 	EventsInterface string
-	/* switch on debugging */
-	Debug bool
+	/* the output for logging */
+	LogOutput io.Writer
 	/* the timeout for requests */
 	RequestTimeout int
 }
@@ -34,6 +39,6 @@ func NewDefaultConfig() Config {
 		URL:             "http://127.0.0.1:8080",
 		EventsPort:      10001,
 		EventsInterface: "eth0",
-		Debug:           false,
+		LogOutput:		 ioutil.Discard,
 		RequestTimeout:  5}
 }

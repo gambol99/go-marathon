@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"os"
 	"time"
 
 	marathon "github.com/gambol99/go-marathon"
@@ -45,7 +46,7 @@ func main() {
 	flag.Parse()
 	config := marathon.NewDefaultConfig()
 	config.URL = marathon_url
-	config.Debug = false
+	config.LogOutput = os.Stdout
 	client, err := marathon.NewClient(config)
 	Assert(err)
 	applications, err := client.Applications()

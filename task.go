@@ -82,7 +82,7 @@ func (client *Client) KillApplicationTasks(id, hostname string, scale bool) (*Ta
 	options.Host = hostname
 	options.Scale = scale
 	tasks := new(Tasks)
-	client.debug("Killing application tasks for: %s, hostname: %s, scale: %t", id, hostname, scale)
+	client.log("KillApplicationTasks() Killing application tasks for: %s, hostname: %s, scale: %t", id, hostname, scale)
 	if err := client.apiDelete(fmt.Sprintf("%s/%s/tasks", MARATHON_API_APPS, trimRootPath(id)), &options, tasks); err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func (client *Client) TaskEndpoints(name string, port int, health_check bool) ([
 						health of the task hasn't yet been performed, hence we assume it as DOWN
 					*/
 					if task.HasHealthCheckResults() == false {
-						client.debug("The task: %s for application: %s hasn't been checked yet, skipping", task, application)
+						client.log("TaskEndpoints() The task: %s for application: %s hasn't been checked yet, skipping", task, application)
 						continue
 					}
 
@@ -133,7 +133,7 @@ func (client *Client) TaskEndpoints(name string, port int, health_check bool) ([
 					skip_endpoint := false
 					for _, health := range task.HealthCheckResult {
 						if health.Alive == false {
-							client.debug("The task: %s for application: %s failed health checks", task, application)
+							client.log("TaskEndpoints() The task: %s for application: %s failed health checks", task, application)
 							skip_endpoint = true
 						}
 					}
