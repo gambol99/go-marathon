@@ -31,7 +31,7 @@ There is also a examples directory in the source, which show hints and snippets 
     marathon_url := http://10.241.1.71:8080
   	config := marathon.NewDefaultConfig()
   	config.URL = marathon_url
-  	config.Debug = true
+  	config.LogOutput = os.Stdout
   	if client, err := marathon.NewClient(config); err != nil {
   		glog.Fatalf("Failed to create a client for marathon, error: %s", err)
   	} else {
