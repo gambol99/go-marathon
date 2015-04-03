@@ -330,6 +330,7 @@ func (client *Client) httpCall(method, uri, body string) (int, string, *http.Res
 			return 0, "", nil, err
 		} else {
 			request.Header.Add("Content-Type", "application/json")
+			request.Header.Add("Accept", "application/json")
 			var content string
 			/* step: perform the request */
 			if response, err := client.http.Do(request); err != nil {
