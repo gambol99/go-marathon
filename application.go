@@ -338,6 +338,10 @@ func (client *Client) ApplicationOK(name string) (bool, error) {
 		for _, task := range application.Tasks {
 			if task.HealthCheckResult != nil {
 				for _, check := range task.HealthCheckResult {
+					//When a task is flapping in Marathon, this is sometimes nil
+					if check == nil {
+						return false, nil
+					}
 					if !check.Alive {
 						return false, nil
 					}
@@ -387,7 +391,7 @@ func (client *Client) WaitOnApplication(name string, timeout time.Duration) erro
 	err := deadline(timeout, func(stop_channel chan bool) error {
 		var flick AtomicSwitch
 		go func() {
-			<- stop_channel
+			<-stop_channel
 			close(stop_channel)
 			flick.SwitchOn()
 		}()
