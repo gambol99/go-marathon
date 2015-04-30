@@ -14,6 +14,9 @@ VERSION=$(shell awk '/const Version/ { print $$4 }' version.go | sed 's/"//g')
 build:
 	go build
 
+authors:
+	git log --format='%aN <%aE>' | sort -u > AUTHORS
+
 test:
 	go get gopkg.in/yaml.v2
 	go test -v
