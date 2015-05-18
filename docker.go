@@ -23,12 +23,16 @@ type Container struct {
 	Docker  *Docker   `json:"docker,omitempty"`
 	Volumes []*Volume `json:"volumes,omitempty"`
 }
-
 type PortMapping struct {
 	ContainerPort int    `json:"containerPort,omitempty"`
 	HostPort      int    `json:"hostPort"`
 	ServicePort   int    `json:"servicePort,omitempty"`
 	Protocol      string `json:"protocol"`
+}
+
+type Parameters struct {
+	Key   string `json:"key,omitempty"`
+	Value string `json:"value,omitempty"`
 }
 
 type Volume struct {
@@ -41,6 +45,7 @@ type Docker struct {
 	Image        string         `json:"image,omitempty"`
 	Network      string         `json:"network,omitempty"`
 	PortMappings []*PortMapping `json:"portMappings,omitempty"`
+	Parameters   []*Parameters  `json:"parameters,omitempty"`
 }
 
 func (container *Container) Volume(host_path, container_path, mode string) *Container {
@@ -62,6 +67,7 @@ func NewDockerContainer() *Container {
 		Image:        "",
 		Network:      "BRIDGE",
 		PortMappings: make([]*PortMapping, 0),
+		Parameters:   make([]*Parameters, 0),
 	}
 	container.Volumes = make([]*Volume, 0)
 	return container
@@ -96,6 +102,17 @@ func (docker *Docker) ExposePort(container_port, host_port, service_port int, pr
 		HostPort:      host_port,
 		ServicePort:   service_port,
 		Protocol:      protocol})
+	return docker
+}
+
+func (docker *Docker) AddParameter(key string, value string) *Docker {
+	if docker.Parameters == nil {
+		docker.Parameters = make([]*Parameters, 0)
+	}
+	docker.Parameters = append(docker.Parameters, &Parameters{
+		Key:   key,
+		Value: value})
+
 	return docker
 }
 
