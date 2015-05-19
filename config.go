@@ -39,6 +39,6 @@ func NewDefaultConfig() Config {
 		URL:             "http://127.0.0.1:8080",
 		EventsPort:      10001,
 		EventsInterface: "eth0",
-		LogOutput:		 ioutil.Discard,
+		LogOutput:       ioutil.Discard,
 		RequestTimeout:  5}
 }
