@@ -18,8 +18,8 @@ package main
 
 import (
 	"flag"
-	"time"
 	"os"
+	"time"
 
 	marathon "github.com/gambol99/go-marathon"
 

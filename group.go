@@ -118,7 +118,7 @@ func (client *Client) WaitOnGroup(name string, timeout time.Duration) error {
 	err := deadline(timeout, func(stop_channel chan bool) error {
 		var flick AtomicSwitch
 		go func() {
-			<- stop_channel
+			<-stop_channel
 			close(stop_channel)
 			flick.SwitchOn()
 		}()

@@ -22,11 +22,11 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
-	"log"
 )
 
 const (
@@ -195,8 +195,6 @@ func NewClient(config Config) (Marathon, error) {
 	}
 }
 
-
-
 func (client *Client) GetMarathonURL() string {
 	return client.cluster.Url()
 }
@@ -357,6 +355,6 @@ func (client *Client) httpCall(method, uri, body string) (int, string, *http.Res
 	return 0, "", nil, errors.New("Unable to make call to marathon")
 }
 
-func (client *Client) log(message string, args ...interface {}) {
+func (client *Client) log(message string, args ...interface{}) {
 	client.logger.Printf(message+"\n", args...)
 }
