@@ -105,7 +105,7 @@ func (docker *Docker) ExposePort(container_port, host_port, service_port int, pr
 	return docker
 }
 
-func (docker *Docker) AddParameter(key string, value string) *Docker {
+func (docker *Docker) Parameter(key string, value string) *Docker {
 	if docker.Parameters == nil {
 		docker.Parameters = make([]*Parameters, 0)
 	}
