@@ -78,6 +78,8 @@ type Marathon interface {
 	TaskEndpoints(name string, port int, health_check bool) ([]string, error)
 	/* kill all the tasks for any application */
 	KillApplicationTasks(application_id, hostname string, scale bool) (*Tasks, error)
+	/* kill a single task */
+	KillTask(application_id, task_id string, scale bool) (*Task, error)
 
 	/* --- GROUPS --- */
 
