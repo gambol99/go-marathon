@@ -19,6 +19,7 @@ package marathon
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"time"
 )
 
@@ -241,17 +242,17 @@ func (application *Application) CheckTCP(port, interval int) (*Application, erro
 }
 
 // Retrieve an array of all the applications which are running in marathon
-func (client *Client) Applications() (*Applications, error) {
+func (client *Client) Applications(v url.Values) (*Applications, error) {
 	applications := new(Applications)
-	if err := client.apiGet(MARATHON_API_APPS, nil, applications); err != nil {
+	if err := client.apiGet(MARATHON_API_APPS+"?"+v.Encode(), nil, applications); err != nil {
 		return nil, err
 	}
 	return applications, nil
 }
 
 // Retrieve an array of the application names currently running in marathon
-func (client *Client) ListApplications() ([]string, error) {
-	if applications, err := client.Applications(); err != nil {
+func (client *Client) ListApplications(v url.Values) ([]string, error) {
+	if applications, err := client.Applications(v); err != nil {
 		return nil, err
 	} else {
 		list := make([]string, 0)
@@ -419,7 +420,7 @@ func (client *Client) HasApplication(name string) (bool, error) {
 	if name == "" {
 		return false, ErrInvalidArgument
 	}
-	if applications, err := client.ListApplications(); err != nil {
+	if applications, err := client.ListApplications(nil); err != nil {
 		return false, err
 	} else {
 		for _, id := range applications {
