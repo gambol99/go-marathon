@@ -4,13 +4,13 @@
 #### **Go-Marathon**
 -----
 
-Go-marathon is a API library for working with [Marathon](https://mesosphere.github.io/marathon/). It currently supports 
+Go-marathon is a API library for working with [Marathon](https://mesosphere.github.io/marathon/). It currently supports
 
   > - Application and group deployment
   > - Helper filters for pulling the status, configuration and tasks
   > - Multiple Endpoint support for HA deployments
   > - Marathon Subscriptions and Event callbacks
- 
+
  Note: the library still under active development; requires >= Go 1.3
 
 #### **Code Examples**
@@ -45,13 +45,13 @@ marathon_url := http://10.241.1.71:8080
 ```Go
 marathon := "http://10.241.1.71:8080,10.241.1.72:8080,10.241.1.73:8080"
 ```
-	
+
 The first one specified will be used, if that goes offline the member is marked as *"unavailable"* and a background process will continue to ping the member until it's back online.
 
 **Listing the applications**
 
 ```Go
-if applications, err := client.Applications(); err != nil 
+if applications, err := client.Applications(); err != nil
 	glog.Errorf("Failed to list applications")
 } else {
 	glog.Infof("Found %d application running", len(applications.Apps))
@@ -68,21 +68,21 @@ if applications, err := client.Applications(); err != nil
 			glog.Infof("Application: %s, healthy: %t", details.ID, health)
 		}
 	}
-```	
+```
 
  **Creating a new application**
 
 ```Go
 glog.Infof("Deploying a new application")
 application := marathon.NewDockerApplication()
-application.Name("/product/name/frontend)
+application.Name("/product/name/frontend")
 application.CPU(0.1).Memory(64).Storage(0.0).Count(2)
 application.Arg("/usr/sbin/apache2ctl").Arg("-D").Arg("FOREGROUND")
 application.AddEnv("NAME", "frontend_http")
 application.AddEnv("SERVICE_80_NAME", "test_http")
 // add the docker container
 application.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80).Expose(443)
-application.CheckHTTP("/health", 10)
+application.CheckHTTP("/health", 10, 5)
 
 if err := client.CreateApplication(application, true); err != nil {
 	glog.Errorf("Failed to create application: %s, error: %s", application, err)
@@ -93,7 +93,7 @@ if err := client.CreateApplication(application, true); err != nil {
 
 **Scale Application**
 
-Change the number of instance of the application to 4 
+Change the number of instance of the application to 4
 
 ```Go
 glog.Infof("Scale to 4 instances")
