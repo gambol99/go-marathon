@@ -89,6 +89,22 @@ func (client *Client) KillApplicationTasks(id, hostname string, scale bool) (*Ta
 	return tasks, nil
 }
 
+// Kill the task associated with a given ID
+// 	task_id:		the id for the task
+// 	scale:		Scale the app down
+func (client *Client) KillTask(appId, taskId string, scale bool) (*Task, error) {
+	var options struct {
+		Scale bool  `json:bool`
+	}
+	options.Scale = scale
+	task := new(Task)
+	client.log("KillTasks Killing task `%s` for: %s, scale: %t", taskId, appId, scale)
+	if err := client.apiDelete(fmt.Sprintf("%s/%s/tasks/%s", MARATHON_API_APPS, trimRootPath(appId), taskId), &options, task); err != nil {
+		return nil, err
+	}
+	return task, nil 
+}
+
 // Get the endpoints i.e. HOST_IP:DYNAMIC_PORT for a specific application service
 // I.e. a container running apache, might have ports 80/443 (translated to X dynamic ports), but i want
 // port 80 only and i only want those whom have passed the health check
