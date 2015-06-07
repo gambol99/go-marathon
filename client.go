@@ -327,6 +327,9 @@ func (client *Client) httpCall(method, uri, body string) (int, string, *http.Res
 		if request, err := http.NewRequest(method, url, strings.NewReader(body)); err != nil {
 			return 0, "", nil, err
 		} else {
+			if client.config.HttpBasicAuthUser != "" {
+				request.SetBasicAuth(client.config.HttpBasicAuthUser, client.config.HttpBasicPassword)
+			}
 			request.Header.Add("Content-Type", "application/json")
 			request.Header.Add("Accept", "application/json")
 			var content string
