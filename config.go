@@ -32,13 +32,19 @@ type Config struct {
 	LogOutput io.Writer
 	/* the timeout for requests */
 	RequestTimeout int
+	/* http basic auth */
+	HttpBasicAuthUser string
+	/* http basic password */
+	HttpBasicPassword string
 }
 
 func NewDefaultConfig() Config {
 	return Config{
-		URL:             "http://127.0.0.1:8080",
-		EventsPort:      10001,
-		EventsInterface: "eth0",
-		LogOutput:       ioutil.Discard,
-		RequestTimeout:  5}
+		URL:               "http://127.0.0.1:8080",
+		EventsPort:        10001,
+		EventsInterface:   "eth0",
+		LogOutput:         ioutil.Discard,
+		HttpBasicAuthUser: "",
+		HttpBasicPassword: "",
+		RequestTimeout:    5}
 }
