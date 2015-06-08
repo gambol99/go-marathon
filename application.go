@@ -204,14 +204,15 @@ func (application *Application) CheckHTTP(uri string, port, interval int) (*Appl
 	/* step: get the port index */
 	if port_index, err := application.Container.Docker.ServicePortIndex(port); err != nil {
 		return nil, err
+	} else {
+		health := NewDefaultHealthCheck()
+		health.Path = uri
+		health.IntervalSeconds = interval
+		health.PortIndex = port_index
+		/* step: add to the checks */
+		application.HealthChecks = append(application.HealthChecks, health)
+		return application, nil
 	}
-	health := NewDefaultHealthCheck()
-	health.Path = uri
-	health.IntervalSeconds = interval
-	health.PortIndex = port_index
-	/* step: add to the checks */
-	application.HealthChecks = append(application.HealthChecks, health)
-	return application, nil
 }
 
 // Add a TCP check to an application; note the port mapping must already exist, or an
@@ -228,14 +229,15 @@ func (application *Application) CheckTCP(port, interval int) (*Application, erro
 	/* step: get the port index */
 	if port_index, err := application.Container.Docker.ServicePortIndex(port); err != nil {
 		return nil, err
+	} else {
+		health := NewDefaultHealthCheck()
+		health.Protocol = "TCP"
+		health.IntervalSeconds = interval
+		health.PortIndex = port_index
+		/* step: add to the checks */
+		application.HealthChecks = append(application.HealthChecks, health)
+		return application, nil
 	}
-	health := NewDefaultHealthCheck()
-	health.Protocol = "TCP"
-	health.IntervalSeconds = interval
-	health.PortIndex = port_index
-	/* step: add to the checks */
-	application.HealthChecks = append(application.HealthChecks, health)
-	return application, nil
 }
 
 // Retrieve an array of all the applications which are running in marathon
@@ -251,12 +253,13 @@ func (client *Client) Applications() (*Applications, error) {
 func (client *Client) ListApplications() ([]string, error) {
 	if applications, err := client.Applications(); err != nil {
 		return nil, err
+	} else {
+		list := make([]string, 0)
+		for _, application := range applications.Apps {
+			list = append(list, application.ID)
+		}
+		return list, nil
 	}
-	list := make([]string, 0)
-	for _, application := range applications.Apps {
-		list = append(list, application.ID)
-	}
-	return list, nil
 }
 
 // Checks to see if the application version exists in Marathon
@@ -266,11 +269,12 @@ func (client *Client) HasApplicationVersion(name, version string) (bool, error) 
 	id := trimRootPath(name)
 	if versions, err := client.ApplicationVersions(id); err != nil {
 		return false, err
+	} else {
+		if contains(versions.Versions, version) {
+			return true, nil
+		}
+		return false, nil
 	}
-	if contains(versions.Versions, version) {
-		return true, nil
-	}
-	return false, nil
 }
 
 // A list of versions which has been deployed with marathon for a specific application
@@ -321,30 +325,31 @@ func (client *Client) ApplicationOK(name string) (bool, error) {
 	/* step: get the application */
 	if application, err := client.Application(name); err != nil {
 		return false, err
-	}
-	/* step: if the application has not health checks, just return true */
-	if application.HealthChecks == nil || len(application.HealthChecks) <= 0 {
-		return true, nil
-	}
-	/* step: does the application have any tasks */
-	if application.Tasks == nil || len(application.Tasks) <= 0 {
-		return true, nil
-	}
-	/* step: iterate the application checks and look for false */
-	for _, task := range application.Tasks {
-		if task.HealthCheckResult != nil {
-			for _, check := range task.HealthCheckResult {
-				//When a task is flapping in Marathon, this is sometimes nil
-				if check == nil {
-					return false, nil
-				}
-				if !check.Alive {
-					return false, nil
+	} else {
+		/* step: if the application has not health checks, just return true */
+		if application.HealthChecks == nil || len(application.HealthChecks) <= 0 {
+			return true, nil
+		}
+		/* step: does the application have any tasks */
+		if application.Tasks == nil || len(application.Tasks) <= 0 {
+			return true, nil
+		}
+		/* step: iterate the application checks and look for false */
+		for _, task := range application.Tasks {
+			if task.HealthCheckResult != nil {
+				for _, check := range task.HealthCheckResult {
+					//When a task is flapping in Marathon, this is sometimes nil
+					if check == nil {
+						return false, nil
+					}
+					if !check.Alive {
+						return false, nil
+					}
 				}
 			}
 		}
+		return true, nil
 	}
-	return true, nil
 }
 
 // Retrieve an array of Deployment IDs for an application
@@ -352,8 +357,9 @@ func (client *Client) ApplicationOK(name string) (bool, error) {
 func (client *Client) ApplicationDeployments(name string) ([]*DeploymentID, error) {
 	if application, err := client.Application(name); err != nil {
 		return nil, err
+	} else {
+		return application.Deployments(), nil
 	}
-	return application.Deployments(), nil
 }
 
 // Creates a new application in Marathon
@@ -415,14 +421,15 @@ func (client *Client) HasApplication(name string) (bool, error) {
 	}
 	if applications, err := client.ListApplications(); err != nil {
 		return false, err
-	}
-	for _, id := range applications {
-		if name == id {
-			client.log("HasApplication() The application: %s presently exist in maration", name)
-			return true, nil
+	} else {
+		for _, id := range applications {
+			if name == id {
+				client.log("HasApplication() The application: %s presently exist in maration", name)
+				return true, nil
+			}
 		}
-	}
 	return false, nil
+	}
 }
 
 // Deletes an application from marathon
