@@ -428,7 +428,7 @@ func (client *Client) HasApplication(name string) (bool, error) {
 				return true, nil
 			}
 		}
-	return false, nil
+		return false, nil
 	}
 }
 
