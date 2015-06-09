@@ -46,6 +46,7 @@ type Docker struct {
 	Network      string         `json:"network,omitempty"`
 	PortMappings []*PortMapping `json:"portMappings,omitempty"`
 	Parameters   []*Parameters  `json:"parameters,omitempty"`
+	Privileged   bool           `json:"privileged,omitempty"`
 }
 
 func (container *Container) Volume(host_path, container_path, mode string) *Container {
