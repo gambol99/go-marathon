@@ -478,3 +478,22 @@ func (client *Client) ScaleApplicationInstances(name string, instances int) (*De
 		return deployID, nil
 	}
 }
+
+// Updates a new application in Marathon
+// 		application: 		the structure holding the application configuration
+//		wait_on_running:	waits on the application deploying, i.e. the instances arre all running (note health checks are excluded)
+func (client *Client) UpdateApplication(application *Application, wait_on_running bool) error {
+	result := new(Application)
+	client.log("Updating application: %s", application)
+
+	uri := fmt.Sprintf("%s/%s", MARATHON_API_APPS, trimRootPath(application.ID))
+
+	if err := client.apiPut(uri, &application, result); err != nil {
+		return err
+	}
+	// step: are we waiting for the application to start?
+	if wait_on_running {
+		return client.WaitOnApplication(application.ID, 0)
+	}
+	return nil
+}

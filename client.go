@@ -55,6 +55,8 @@ type Marathon interface {
 	CreateApplication(application *Application, wait_on_running bool) error
 	/* delete an application */
 	DeleteApplication(name string) (*DeploymentID, error)
+	/* update an application in marathon */
+	UpdateApplication(application *Application, wait_on_running bool) error
 	/* a list of deployments on a application */
 	ApplicationDeployments(name string) ([]*DeploymentID, error)
 	/* scale a application */
