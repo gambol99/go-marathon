@@ -42,19 +42,19 @@ type Application struct {
 	Args                  []string            `json:"args,omitempty"`
 	Constraints           [][]string          `json:"constraints,omitempty"`
 	Container             *Container          `json:"container,omitempty"`
-	CPUs                  float32             `json:"cpus,omitempty"`
-	Disk                  float32             `json:"disk,omitempty"`
+	CPUs                  float64             `json:"cpus,omitempty"`
+	Disk                  float64             `json:"disk,omitempty"`
 	Env                   map[string]string   `json:"env,omitempty"`
 	Executor              string              `json:"executor,omitempty"`
 	HealthChecks          []*HealthCheck      `json:"healthChecks,omitempty"`
 	Instances             int                 `json:"instances,omitemptys"`
-	Mem                   float32             `json:"mem,omitempty"`
+	Mem                   float64             `json:"mem,omitempty"`
 	Tasks                 []*Task             `json:"tasks,omitempty"`
 	Ports                 []int               `json:"ports"`
 	RequirePorts          bool                `json:"requirePorts,omitempty"`
-	BackoffSeconds        float32             `json:"backoffSeconds,omitempty"`
-	BackoffFactor         float32             `json:"backoffFactor,omitempty"`
-	MaxLaunchDelaySeconds float32             `json:"maxLaunchDelaySeconds,omitempty"`
+	BackoffSeconds        float64             `json:"backoffSeconds,omitempty"`
+	BackoffFactor         float64             `json:"backoffFactor,omitempty"`
+	MaxLaunchDelaySeconds float64             `json:"maxLaunchDelaySeconds,omitempty"`
 	DeploymentID          []map[string]string `json:"deployments,omitempty"`
 	Dependencies          []string            `json:"dependencies,omitempty"`
 	TasksRunning          int                 `json:"tasksRunning,omitempty"`
@@ -88,7 +88,7 @@ func (application *Application) Name(id string) *Application {
 
 // The amount of CPU shares per instance which is assigned to the application
 //		cpu:	the CPU shared (check Docker docs) per instance
-func (application *Application) CPU(cpu float32) *Application {
+func (application *Application) CPU(cpu float64) *Application {
 	application.CPUs = cpu
 	return application
 }
@@ -96,7 +96,7 @@ func (application *Application) CPU(cpu float32) *Application {
 // The amount of disk space the application is assigned, which for docker
 // application I don't believe is relevant
 //		disk:	the disk space in MB
-func (application *Application) Storage(disk float32) *Application {
+func (application *Application) Storage(disk float64) *Application {
 	application.Disk = disk
 	return application
 }
@@ -131,7 +131,7 @@ func (application *Application) DependsOn(name string) *Application {
 
 // The amount of memory the application can consume per instance
 //		memory:	the amount of MB to assign
-func (application *Application) Memory(memory float32) *Application {
+func (application *Application) Memory(memory float64) *Application {
 	application.Mem = memory
 	return application
 }
