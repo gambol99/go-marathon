@@ -17,6 +17,7 @@ limitations under the License.
 package marathon
 
 type HealthCheck struct {
+	Command                string `json:"command,omitempty"`
 	Protocol               string `json:"protocol,omitempty"`
 	Path                   string `json:"path,omitempty"`
 	GracePeriodSeconds     int    `json:"gracePeriodSeconds,omitempty"`
