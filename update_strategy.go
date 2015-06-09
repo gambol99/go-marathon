@@ -17,6 +17,6 @@ limitations under the License.
 package marathon
 
 type UpgradeStrategy struct {
-	MinimumHealthCapacity float32 `json:"minimumHealthCapacity,omitempty"`
-	MaximumOverCapicity   float32 `json:"maximumOverCapacity,omitempty"`
+	MinimumHealthCapacity float64 `json:"minimumHealthCapacity,omitempty"`
+	MaximumOverCapicity   float64 `json:"maximumOverCapacity,omitempty"`
 }
