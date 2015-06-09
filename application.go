@@ -116,7 +116,7 @@ func (application *Application) AllTaskRunning() bool {
 	return false
 }
 
-// Adds a dependency for this application. Note, if you want to wait for a application
+// Adds a dependency for this application. Note, if you want to wait for an application
 // dependency to actually be UP, i.e. not just deployed, you need a health check on the
 // dependant app.
 //		name:	the application id which this application depends on
@@ -143,7 +143,7 @@ func (application *Application) Count(count int) *Application {
 	return application
 }
 
-// Add a argument to the applications
+// Add an argument to the applications
 //		argument:	the argument you are adding
 func (application *Application) Arg(argument string) *Application {
 	if application.Args == nil {
@@ -153,7 +153,7 @@ func (application *Application) Arg(argument string) *Application {
 	return application
 }
 
-// Add a environment variable to the application
+// Add an environment variable to the application
 //		name:	the name of the variable
 //		value:	go figure, the value associated to the above
 func (application *Application) AddEnv(name, value string) *Application {
@@ -164,7 +164,7 @@ func (application *Application) AddEnv(name, value string) *Application {
 	return application
 }
 
-// More of a helper method, used to check if a application has healtchecks
+// More of a helper method, used to check if an application has healtchecks
 func (application *Application) HasHealthChecks() bool {
 	if application.HealthChecks != nil && len(application.HealthChecks) > 0 {
 		return true
@@ -191,7 +191,7 @@ func (application *Application) Deployments() []*DeploymentID {
 	return deployments
 }
 
-// Add a HTTP check to an application
+// Add an HTTP check to an application
 //		port: 		the port the check should be checking
 // 		interval:	the interval in seconds the check should be performed
 func (application *Application) CheckHTTP(uri string, port, interval int) (*Application, error) {
@@ -215,7 +215,7 @@ func (application *Application) CheckHTTP(uri string, port, interval int) (*Appl
 	}
 }
 
-// Add a TCP check to a application; note the port mapping must already exist, or an
+// Add a TCP check to an application; note the port mapping must already exist, or an
 // error will thrown
 //		port: 		the port the check should, err, check
 // 		interval:	the interval in seconds the check should be performed
@@ -245,9 +245,8 @@ func (client *Client) Applications() (*Applications, error) {
 	applications := new(Applications)
 	if err := client.apiGet(MARATHON_API_APPS, nil, applications); err != nil {
 		return nil, err
-	} else {
-		return applications, nil
 	}
+	return applications, nil
 }
 
 // Retrieve an array of the application names currently running in marathon
@@ -309,9 +308,8 @@ func (client *Client) Application(name string) (*Application, error) {
 	application := new(ApplicationWrap)
 	if err := client.apiGet(fmt.Sprintf("%s/%s", MARATHON_API_APPS, trimRootPath(name)), nil, application); err != nil {
 		return nil, err
-	} else {
-		return &application.Application, nil
 	}
+	return &application.Application, nil
 }
 
 // Validates that the application, or more appropriately it's tasks have passed all the health checks.
@@ -336,7 +334,6 @@ func (client *Client) ApplicationOK(name string) (bool, error) {
 		if application.Tasks == nil || len(application.Tasks) <= 0 {
 			return true, nil
 		}
-
 		/* step: iterate the application checks and look for false */
 		for _, task := range application.Tasks {
 			if task.HealthCheckResult != nil {
@@ -355,6 +352,8 @@ func (client *Client) ApplicationOK(name string) (bool, error) {
 	}
 }
 
+// Retrieve an array of Deployment IDs for an application
+//       name:       the id used to identify the application
 func (client *Client) ApplicationDeployments(name string) ([]*DeploymentID, error) {
 	if application, err := client.Application(name); err != nil {
 		return nil, err
@@ -419,18 +418,17 @@ func (client *Client) HasApplication(name string) (bool, error) {
 	client.log("HasApplication() Checking if application: %s exists in marathon", name)
 	if name == "" {
 		return false, ErrInvalidArgument
+	}
+	if applications, err := client.ListApplications(); err != nil {
+		return false, err
 	} else {
-		if applications, err := client.ListApplications(); err != nil {
-			return false, err
-		} else {
-			for _, id := range applications {
-				if name == id {
-					client.log("HasApplication() The application: %s presently exist in maration", name)
-					return true, nil
-				}
+		for _, id := range applications {
+			if name == id {
+				client.log("HasApplication() The application: %s presently exist in maration", name)
+				return true, nil
 			}
 		}
-		return false, nil
+	return false, nil
 	}
 }
 
@@ -442,9 +440,8 @@ func (client *Client) DeleteApplication(name string) (*DeploymentID, error) {
 	deployID := new(DeploymentID)
 	if err := client.apiDelete(fmt.Sprintf("%s/%s", MARATHON_API_APPS, trimRootPath(name)), nil, deployID); err != nil {
 		return nil, err
-	} else {
-		return deployID, nil
 	}
+	return deployID, nil
 }
 
 // Performs a rolling restart of marathon application
@@ -474,9 +471,8 @@ func (client *Client) ScaleApplicationInstances(name string, instances int) (*De
 	deployID := new(DeploymentID)
 	if err := client.apiPut(uri, &changes, deployID); err != nil {
 		return nil, err
-	} else {
-		return deployID, nil
 	}
+	return deployID, nil
 }
 
 // Updates a new application in Marathon
