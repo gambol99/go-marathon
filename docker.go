@@ -42,11 +42,12 @@ type Volume struct {
 }
 
 type Docker struct {
-	Image        string         `json:"image,omitempty"`
-	Network      string         `json:"network,omitempty"`
-	PortMappings []*PortMapping `json:"portMappings,omitempty"`
-	Parameters   []*Parameters  `json:"parameters,omitempty"`
-	Privileged   bool           `json:"privileged,omitempty"`
+	ForcePullImage bool           `json:"forcePullImage,omitempty"`
+	Image          string         `json:"image,omitempty"`
+	Network        string         `json:"network,omitempty"`
+	Parameters     []*Parameters  `json:"parameters,omitempty"`
+	PortMappings   []*PortMapping `json:"portMappings,omitempty"`
+	Privileged     bool           `json:"privileged,omitempty"`
 }
 
 func (container *Container) Volume(host_path, container_path, mode string) *Container {
