@@ -98,11 +98,22 @@ func (client *Client) KillTask(appId, taskId string, scale bool) (*Task, error) 
 	}
 	options.Scale = scale
 	task := new(Task)
-	client.log("KillTasks Killing task `%s` for: %s, scale: %t", taskId, appId, scale)
+	client.log("KillTask Killing task `%s` for: %s, scale: %t", taskId, appId, scale)
 	if err := client.apiDelete(fmt.Sprintf("%s/%s/tasks/%s", MARATHON_API_APPS, trimRootPath(appId), taskId), &options, task); err != nil {
 		return nil, err
 	}
 	return task, nil 
+}
+
+// Kill tasks associated with given array of ids
+// 	tasks: 	the array of task ids
+func (client *Client) KillTasks(tasks []string) error {
+	var post struct {
+		TaskIDs []string `json:"ids"`
+	}
+	post.TaskIDs = tasks
+	client.log("KillTasks Killing %d tasks", len(tasks))
+	return client.apiPost(fmt.Sprintf("%s/delete", MARATHON_API_TASKS), &post, nil)
 }
 
 // Get the endpoints i.e. HOST_IP:DYNAMIC_PORT for a specific application service
