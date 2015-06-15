@@ -19,6 +19,7 @@ package marathon
 import (
 	"fmt"
 	"net/url"
+	"strconv"
 )
 
 type Tasks struct {
@@ -103,13 +104,15 @@ func (client *Client) KillTask(appId, taskId string, scale bool) (*Task, error) 
 	if err := client.apiDelete(fmt.Sprintf("%s/%s/tasks/%s", MARATHON_API_APPS, trimRootPath(appId), taskId), &options, task); err != nil {
 		return nil, err
 	}
-	return task, nil 
+	return task, nil
 }
 
 // Kill tasks associated with given array of ids
 // 	tasks: 	the array of task ids
-// 	v: 		API options; this function uses "scale bool" (Scale the app down)
-func (client *Client) KillTasks(tasks []string, v url.Values) error {
+// 	scale: 	Scale the app down
+func (client *Client) KillTasks(tasks []string, scale bool) error {
+	v := url.Values{}
+	v.Add("scale", strconv.FormatBool(scale))
 	var post struct {
 		TaskIDs []string `json:"ids"`
 	}

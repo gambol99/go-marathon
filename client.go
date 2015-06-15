@@ -24,7 +24,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -84,7 +83,7 @@ type Marathon interface {
 	/* kill a single task */
 	KillTask(application_id, task_id string, scale bool) (*Task, error)
 	/* kill the given array of tasks */
-	KillTasks(task_ids []string, values url.Values) error
+	KillTasks(task_ids []string, scale bool) error
 
 	/* --- GROUPS --- */
 
