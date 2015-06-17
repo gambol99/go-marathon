@@ -18,6 +18,8 @@ package marathon
 
 import (
 	"fmt"
+	"net/url"
+	"strconv"
 )
 
 type Tasks struct {
@@ -98,11 +100,25 @@ func (client *Client) KillTask(appId, taskId string, scale bool) (*Task, error) 
 	}
 	options.Scale = scale
 	task := new(Task)
-	client.log("KillTasks Killing task `%s` for: %s, scale: %t", taskId, appId, scale)
+	client.log("KillTask Killing task `%s` for: %s, scale: %t", taskId, appId, scale)
 	if err := client.apiDelete(fmt.Sprintf("%s/%s/tasks/%s", MARATHON_API_APPS, trimRootPath(appId), taskId), &options, task); err != nil {
 		return nil, err
 	}
-	return task, nil 
+	return task, nil
+}
+
+// Kill tasks associated with given array of ids
+// 	tasks: 	the array of task ids
+// 	scale: 	Scale the app down
+func (client *Client) KillTasks(tasks []string, scale bool) error {
+	v := url.Values{}
+	v.Add("scale", strconv.FormatBool(scale))
+	var post struct {
+		TaskIDs []string `json:"ids"`
+	}
+	post.TaskIDs = tasks
+	client.log("KillTasks Killing %d tasks", len(tasks))
+	return client.apiPost(fmt.Sprintf("%s/delete?%s", MARATHON_API_TASKS, v.Encode()), &post, nil)
 }
 
 // Get the endpoints i.e. HOST_IP:DYNAMIC_PORT for a specific application service
