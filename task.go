@@ -73,6 +73,19 @@ func (client *Client) Tasks(id string) (*Tasks, error) {
 	}
 }
 
+// Retrieve an array of task ids currently running in marathon
+func (client *Client) ListTasks() ([]string, error) {
+	if tasks, err := client.AllTasks(); err != nil {
+		return nil, err
+	} else {
+		list := make([]string, 0)
+		for _, task := range tasks.Tasks {
+			list = append(list, task.ID)
+		}
+		return list, nil
+	}
+}
+
 // Kill all tasks relating to an application
 //		application_id:		the id for the application
 //      host:				kill only those tasks on a specific host (optional)
