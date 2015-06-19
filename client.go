@@ -81,7 +81,7 @@ type Marathon interface {
 	/* kill all the tasks for any application */
 	KillApplicationTasks(application_id, hostname string, scale bool) (*Tasks, error)
 	/* kill a single task */
-	KillTask(application_id, task_id string, scale bool) (*Task, error)
+	KillTask(task_id string, scale bool) (*Task, error)
 	/* kill the given array of tasks */
 	KillTasks(task_ids []string, scale bool) error
 
