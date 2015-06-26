@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 type Tasks struct {
@@ -94,14 +95,15 @@ func (client *Client) KillApplicationTasks(id, hostname string, scale bool) (*Ta
 // Kill the task associated with a given ID
 // 	task_id:		the id for the task
 // 	scale:		Scale the app down
-func (client *Client) KillTask(appId, taskId string, scale bool) (*Task, error) {
+func (client *Client) KillTask(taskId string, scale bool) (*Task, error) {
 	var options struct {
 		Scale bool  `json:bool`
 	}
 	options.Scale = scale
 	task := new(Task)
-	client.log("KillTask Killing task `%s` for: %s, scale: %t", taskId, appId, scale)
-	if err := client.apiDelete(fmt.Sprintf("%s/%s/tasks/%s", MARATHON_API_APPS, trimRootPath(appId), taskId), &options, task); err != nil {
+	appName := taskId[0:strings.LastIndex(taskId, ".")]
+	client.log("KillTask Killing task `%s` for: %s, scale: %t", taskId, appName, scale)
+	if err := client.apiDelete(fmt.Sprintf("%s/%s/tasks/%s", MARATHON_API_APPS, appName, taskId), &options, task); err != nil {
 		return nil, err
 	}
 	return task, nil
