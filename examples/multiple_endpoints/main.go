@@ -48,7 +48,7 @@ func main() {
 		glog.Fatalf("Failed to create a client for marathon, error: %s", err)
 	}
 	for {
-		if application, err := client.Applications(); err != nil {
+		if application, err := client.Applications(nil); err != nil {
 			glog.Errorf("Failed to retrieve a list of applications, error: %s", err)
 		} else {
 			glog.Infof("Retrieved a list of applications, %v", application)

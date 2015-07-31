@@ -212,9 +212,8 @@ func (client *Client) GetMarathonURL() string {
 func (client *Client) Ping() (bool, error) {
 	if err := client.apiGet(MARATHON_API_PING, nil, nil); err != nil {
 		return false, err
-	} else {
-		return true, nil
 	}
+	return true, nil
 }
 
 func (client *Client) marshallJSON(data interface{}) (string, error) {

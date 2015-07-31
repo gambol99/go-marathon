@@ -49,7 +49,7 @@ func main() {
 	config.LogOutput = os.Stdout
 	client, err := marathon.NewClient(config)
 	Assert(err)
-	applications, err := client.Applications()
+	applications, err := client.Applications(nil)
 	Assert(err)
 
 	glog.Infof("Found %d application running", len(applications.Apps))
