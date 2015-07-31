@@ -24,6 +24,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -42,7 +43,7 @@ type Marathon interface {
 	/* check it see if a application exists */
 	HasApplication(name string) (bool, error)
 	/* get a listing of the application ids */
-	ListApplications() ([]string, error)
+	ListApplications(url.Values) ([]string, error)
 	/* a list of application versions */
 	ApplicationVersions(name string) (*ApplicationVersions, error)
 	/* check a application version exists */
@@ -64,7 +65,7 @@ type Marathon interface {
 	/* restart an application */
 	RestartApplication(name string, force bool) (*DeploymentID, error)
 	/* get a list of applications from marathon */
-	Applications() (*Applications, error)
+	Applications(url.Values) (*Applications, error)
 	/* get a specific application */
 	Application(name string) (*Application, error)
 	/* wait of application */

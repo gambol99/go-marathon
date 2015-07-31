@@ -22,7 +22,7 @@ import (
 
 func TestApplications(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
-	applications, err := client.Applications()
+	applications, err := client.Applications(nil)
 	assertOnError(err, t)
 	assertOnNull(applications, t)
 	assertOnInteger(len(applications.Apps), 2, t)
@@ -30,7 +30,7 @@ func TestApplications(t *testing.T) {
 
 func TestListApplications(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
-	applications, err := client.ListApplications()
+	applications, err := client.ListApplications(nil)
 	assertOnError(err, t)
 	assertOnNull(applications, t)
 	assertOnInteger(len(applications), 2, t)
