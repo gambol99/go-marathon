@@ -17,14 +17,14 @@ limitations under the License.
 package marathon
 
 type HealthCheck struct {
-	Command                string `json:"command,omitempty"`
-	Protocol               string `json:"protocol,omitempty"`
-	Path                   string `json:"path,omitempty"`
-	GracePeriodSeconds     int    `json:"gracePeriodSeconds,omitempty"`
-	IntervalSeconds        int    `json:"intervalSeconds,omitempty"`
-	PortIndex              int    `json:"portIndex,omitempty"`
-	MaxConsecutiveFailures int    `json:"maxConsecutiveFailures,omitempty"`
-	TimeoutSeconds         int    `json:"timeoutSeconds,omitempty"`
+	Command                *Command `json:"command,omitempty"`
+	Protocol               string   `json:"protocol,omitempty"`
+	Path                   string   `json:"path,omitempty"`
+	GracePeriodSeconds     int      `json:"gracePeriodSeconds,omitempty"`
+	IntervalSeconds        int      `json:"intervalSeconds,omitempty"`
+	PortIndex              int      `json:"portIndex,omitempty"`
+	MaxConsecutiveFailures int      `json:"maxConsecutiveFailures,omitempty"`
+	TimeoutSeconds         int      `json:"timeoutSeconds,omitempty"`
 }
 
 func NewDefaultHealthCheck() *HealthCheck {
@@ -46,4 +46,8 @@ type HealthCheckResult struct {
 	LastFailure         string `json:"lastFailure"`
 	LastSuccess         string `json:"lastSuccess"`
 	TaskID              string `json:"taskId"`
+}
+
+type Command struct {
+	Value string `json:"value"`
 }
