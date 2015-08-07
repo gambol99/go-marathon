@@ -65,6 +65,7 @@ type Application struct {
 	Uris                  []string            `json:"uris,omitempty"`
 	Version               string              `json:"version,omitempty"`
 	Labels                map[string]string   `json:"labels,omitempty"`
+	AcceptedResourceRoles []string            `json:"acceptedResourceRoles,omitempty"`
 }
 
 type ApplicationVersions struct {
