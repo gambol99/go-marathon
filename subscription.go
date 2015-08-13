@@ -251,6 +251,8 @@ func (client *Client) GetEvent(name string) (*Event, error) {
 			event.Event = new(EventDeploymentStepSuccess)
 		case "deployment_step_failure":
 			event.Event = new(EventDeploymentStepFailure)
+		case "app_terminated_event":
+			event.Event = new(EventAppTerminated)
 		}
 		return event, nil
 	} else {
