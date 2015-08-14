@@ -385,7 +385,7 @@ func (client *Client) CreateApplication(application *Application, wait_on_runnin
 //		timeout:	a duration of time to wait for an application to deploy
 func (client *Client) WaitOnApplication(name string, timeout time.Duration) error {
 	if timeout <= 0 {
-		timeout = time.Duration(300) * time.Second
+		timeout = client.config.DefaultDeploymentTimeout
 	}
 	// step: this is very naive approach - the problem with using deployment id's is
 	// one) from > 0.8.0 you can be handed a deployment Id on creation, but it may or may not exist in /v2/deployments

@@ -19,6 +19,7 @@ package marathon
 import (
 	"io"
 	"io/ioutil"
+	"time"
 )
 
 type Config struct {
@@ -32,6 +33,8 @@ type Config struct {
 	LogOutput io.Writer
 	/* the timeout for requests */
 	RequestTimeout int
+	/* the default timeout for deployments */
+	DefaultDeploymentTimeout time.Duration
 	/* http basic auth */
 	HttpBasicAuthUser string
 	/* http basic password */
@@ -40,11 +43,12 @@ type Config struct {
 
 func NewDefaultConfig() Config {
 	return Config{
-		URL:               "http://127.0.0.1:8080",
-		EventsPort:        10001,
-		EventsInterface:   "eth0",
-		LogOutput:         ioutil.Discard,
-		HttpBasicAuthUser: "",
-		HttpBasicPassword: "",
-		RequestTimeout:    5}
+		URL:                      "http://127.0.0.1:8080",
+		EventsPort:               10001,
+		EventsInterface:          "eth0",
+		LogOutput:                ioutil.Discard,
+		HttpBasicAuthUser:        "",
+		HttpBasicPassword:        "",
+		DefaultDeploymentTimeout: time.Duration(300) * time.Second,
+		RequestTimeout:           5}
 }
