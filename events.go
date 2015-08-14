@@ -39,10 +39,11 @@ const (
 	EVENT_DEPLOYMENT_INFO
 	EVENT_DEPLOYMENT_STEP_SUCCESS
 	EVENT_DEPLOYMENT_STEP_FAILED
+	EVENT_APP_TERMINATED
 )
 
 const (
-	EVENTS_APPLICATIONS  = EVENT_STATUS_UPDATE | EVENT_CHANGED_HEALTH_CHECK | EVENT_FAILED_HEALTH_CHECK
+	EVENTS_APPLICATIONS  = EVENT_STATUS_UPDATE | EVENT_CHANGED_HEALTH_CHECK | EVENT_FAILED_HEALTH_CHECK | EVENT_APP_TERMINATED
 	EVENTS_SUBSCRIPTIONS = EVENT_SUBSCRIPTION | EVENT_UNSUBSCRIBED
 )
 
@@ -68,6 +69,7 @@ func init() {
 		"deployment_info":             EVENT_DEPLOYMENT_INFO,
 		"deployment_step_success":     EVENT_DEPLOYMENT_STEP_SUCCESS,
 		"deployment_step_failure":     EVENT_DEPLOYMENT_STEP_FAILED,
+		"app_terminated_event":        EVENT_APP_TERMINATED,
 	}
 }
 
@@ -109,6 +111,12 @@ type EventStatusUpdate struct {
 	Host       string `json:"host"`
 	Ports      []int  `json:"ports,omitempty"`
 	Version    string `json:"version,omitempty"`
+}
+
+type EventAppTerminated struct {
+	EventType string `json:"eventType"`
+	Timestamp string `json:"timestamp,omitempty"`
+	AppID     string `json:"appId"`
 }
 
 /* --- Framework Message --- */
