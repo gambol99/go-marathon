@@ -48,7 +48,7 @@ type Application struct {
 	Env                   map[string]string   `json:"env,omitempty"`
 	Executor              string              `json:"executor,omitempty"`
 	HealthChecks          []*HealthCheck      `json:"healthChecks,omitempty"`
-	Instances             int                 `json:"instances,omitemptys"`
+	Instances             int                 `json:"instances,omitempty"`
 	Mem                   float64             `json:"mem,omitempty"`
 	Tasks                 []*Task             `json:"tasks,omitempty"`
 	Ports                 []int               `json:"ports"`
@@ -66,6 +66,7 @@ type Application struct {
 	Version               string              `json:"version,omitempty"`
 	Labels                map[string]string   `json:"labels,omitempty"`
 	AcceptedResourceRoles []string            `json:"acceptedResourceRoles,omitempty"`
+	LastTaskFailure       *LastTaskFailure    `json:"lastTaskFailure,omitempty"`
 }
 
 type ApplicationVersions struct {
