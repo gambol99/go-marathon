@@ -19,7 +19,7 @@ type LastTaskFailure struct {
 	AppId     string `json:"appId,omitempty"`
 	Host      string `json:"host,omitempty"`
 	Message   string `json:"message,omitempty"`
-	State     string `json:"string,omitempty"`
+	State     string `json:"state,omitempty"`
 	TaskId    string `json:"taskId,omitempty"`
 	Timestamp string `json:"timestamp,omitempty"`
 	Version   string `json:"version,omitempty"`
