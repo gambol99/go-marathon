@@ -18,5 +18,5 @@ package marathon
 
 type UpgradeStrategy struct {
 	MinimumHealthCapacity float64 `json:"minimumHealthCapacity,omitempty"`
-	MaximumOverCapicity   float64 `json:"maximumOverCapacity,omitempty"`
+	MaximumOverCapacity   float64 `json:"maximumOverCapacity,omitempty"`
 }
