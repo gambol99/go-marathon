@@ -10,6 +10,4 @@ go:
   - 1.4
 install:
   - go get
-  - go build
-  - go get gopkg.in/yaml.v2
-  - go test -v
+  - make test
