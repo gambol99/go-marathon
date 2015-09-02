@@ -20,6 +20,17 @@ import (
 	"testing"
 )
 
+func TestCreateApplication(t *testing.T) {
+	client := NewFakeMarathonEndpoint(t)
+	application := NewDockerApplication()
+	application.ID = "/fake_app"
+	app, err := client.CreateApplication(application, false)
+	assertOnError(err, t)
+	assertOnNull(app, t)
+	assertOnString(application.ID, "/fake_app", t)
+	assertOnString(app.DeploymentID[0]["id"], "f44fd4fc-4330-4600-a68b-99c7bd33014a", t)
+}
+
 func TestApplications(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
 	applications, err := client.Applications(nil)

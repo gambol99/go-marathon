@@ -21,54 +21,61 @@
   method: POST
   content: |
     {
-    "args": null,
-    "backoffFactor": 1.15,
-    "backoffSeconds": 1,
-    "cmd": "env && python3 -m http.server $PORT0",
-    "constraints": [
-        [
-            "hostname",
-            "UNIQUE"
-        ]
-    ],
-    "container": {
-        "docker": {
-            "image": "python:3"
-        },
-        "type": "DOCKER",
-        "volumes": []
-    },
-    "cpus": 0.25,
-    "dependencies": [],
-    "disk": 0.0,
-    "env": {},
-    "executor": "",
-    "healthChecks": [
-        {
-            "command": null,
-            "gracePeriodSeconds": 3,
-            "intervalSeconds": 10,
-            "maxConsecutiveFailures": 3,
-            "path": "/",
-            "portIndex": 0,
-            "protocol": "HTTP",
-            "timeoutSeconds": 5
-        }
-    ],
-    "id": "/my-app",
-    "instances": 2,
-    "mem": 50.0,
-    "ports": [
-        0
-    ],
-    "requirePorts": false,
-    "storeUrls": [],
-    "upgradeStrategy": {
-        "minimumHealthCapacity": 0.5
-    },
-    "uris": [],
-    "user": null,
-    "version": "2014-08-18T22:36:41.451Z"
+      "args": null,
+      "backoffFactor": 1.15,
+      "backoffSeconds": 1,
+      "maxLaunchDelaySeconds": 3600,
+      "cmd": "env && python3 -m http.server $PORT0",
+      "constraints": [
+          [
+              "hostname",
+              "UNIQUE"
+          ]
+      ],
+      "container": {
+          "docker": {
+              "image": "python:3"
+          },
+          "type": "DOCKER",
+          "volumes": []
+      },
+      "cpus": 0.25,
+      "dependencies": [],
+      "deployments": [
+          {
+              "id": "f44fd4fc-4330-4600-a68b-99c7bd33014a"
+          }
+      ],
+      "disk": 0.0,
+      "env": {},
+      "executor": "",
+      "healthChecks": [
+          {
+              "command": null,
+              "gracePeriodSeconds": 3,
+              "intervalSeconds": 10,
+              "maxConsecutiveFailures": 3,
+              "path": "/",
+              "portIndex": 0,
+              "protocol": "HTTP",
+              "timeoutSeconds": 5
+          }
+      ],
+      "id": "/fake_app",
+      "instances": 2,
+      "mem": 50.0,
+      "ports": [
+          0
+      ],
+      "requirePorts": false,
+      "storeUrls": [],
+      "upgradeStrategy": {
+          "minimumHealthCapacity": 0.5,
+          "maximumOverCapacity": 0.5
+      },
+      "uris": [],
+      "user": null,
+      "version": "2014-08-18T22:36:41.451Z"
     }
 - uri: /v2/apps
   method: GET
