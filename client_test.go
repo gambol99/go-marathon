@@ -18,16 +18,18 @@ package marathon
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPing(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
 	found, err := client.Ping()
-	assertOnError(err, t)
-	assertOnBool(found, true, t)
+	assert.Nil(t, err)
+	assert.True(t, found)
 }
 
 func TestGetMarathonURL(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
-	assertOnString(client.GetMarathonURL(), FAKE_MARATHON_URL, t)
+	assert.Equal(t, client.GetMarathonURL(), FAKE_MARATHON_URL)
 }

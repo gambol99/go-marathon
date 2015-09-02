@@ -18,36 +18,41 @@ package marathon
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAllTasks(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
 	tasks, err := client.AllTasks()
-	assertOnError(err, t)
-	assertOnNull(tasks, t)
-	assertOnInteger(len(tasks.Tasks), 2, t)
+	assert.Nil(t, err)
+	assert.NotNil(t, tasks)
+	assert.Equal(t, len(tasks.Tasks), 2)
 }
 
 func TestTaskEndpoints(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
-	endpoints, err := client.TaskEndpoints(FAKE_APP_NAME_BROKEN, 80, true)
-	assertOnNoError(err, t)
-	endpoints, err = client.TaskEndpoints(FAKE_APP_NAME_BROKEN, 8080, true)
-	assertOnError(err, t)
-	assertOnNull(endpoints, t)
-	assertOnInteger(len(endpoints), 1, t)
-	assertOnString(endpoints[0], "10.141.141.10:31045", t)
+
+	endpoints, err := client.TaskEndpoints(FAKE_APP_NAME_BROKEN, 8080, true)
+	assert.Nil(t, err)
+	assert.NotNil(t, endpoints)
+	assert.Equal(t, len(endpoints), 1, t)
+	assert.Equal(t, endpoints[0], "10.141.141.10:31045", t)
+
 	endpoints, err = client.TaskEndpoints(FAKE_APP_NAME_BROKEN, 8080, false)
-	assertOnError(err, t)
-	assertOnNull(endpoints, t)
-	assertOnInteger(len(endpoints), 2, t)
-	assertOnString(endpoints[0], "10.141.141.10:31045", t)
-	assertOnString(endpoints[1], "10.141.141.10:31234", t)
+	assert.Nil(t, err)
+	assert.NotNil(t, endpoints)
+	assert.Equal(t, len(endpoints), 2, t)
+	assert.Equal(t, endpoints[0], "10.141.141.10:31045", t)
+	assert.Equal(t, endpoints[1], "10.141.141.10:31234", t)
+
+	endpoints, err = client.TaskEndpoints(FAKE_APP_NAME_BROKEN, 80, true)
+	assert.NotNil(t, err)
 }
 
 func TestKillApplicationTasks(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
 	tasks, err := client.KillApplicationTasks(FAKE_APP_NAME, "", false)
-	assertOnError(err, t)
-	assertOnNull(tasks, t)
+	assert.Nil(t, err)
+	assert.NotNil(t, tasks)
 }

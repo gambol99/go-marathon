@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"sync"
 	"testing"
 
@@ -85,49 +84,10 @@ func NewFakeMarathonEndpoint(t *testing.T) Marathon {
 
 		config := NewDefaultConfig()
 		config.URL = FAKE_MARATHON_URL
+		//config.LogOutput = os.Stdout
 		if testClient.client, err = NewClient(config); err != nil {
 			t.Fatalf("Failed to create the fake client, %s, error: %s", FAKE_MARATHON_URL, err)
 		}
 	})
 	return testClient.client
-}
-func assertOnNull(data interface{}, t *testing.T) {
-	if data == nil {
-		t.FailNow()
-	}
-}
-
-func assertOnError(err error, t *testing.T) {
-	if err != nil {
-		t.Errorf("failed: was not expecting an error")
-		t.FailNow()
-	}
-}
-
-func assertOnNoError(err error, t *testing.T) {
-	if err == nil {
-		t.Errorf("failed: error not nil, expected: a error")
-		t.FailNow()
-	}
-}
-
-func assertOnBool(value, expected bool, t *testing.T) {
-	if value != expected {
-		t.Errorf("failed: value: %t, expected: %t", value, expected)
-		t.FailNow()
-	}
-}
-
-func assertOnString(value, expected string, t *testing.T) {
-	if !strings.Contains(value, expected) {
-		t.Errorf("failed, value %s, expected: %s", value, expected)
-		t.FailNow()
-	}
-}
-
-func assertOnInteger(value, expected int, t *testing.T) {
-	if value != expected {
-		t.Errorf("failed, value %d, expected: %d", value, expected)
-		t.FailNow()
-	}
 }
