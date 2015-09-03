@@ -18,27 +18,29 @@ package marathon
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestInfo(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
 	info, err := client.Info()
-	assertOnError(err, t)
-	assertOnString(info.FrameworkId, "20140730-222531-1863654316-5050-10422-0000", t)
-	assertOnString(info.Leader, "127.0.0.1:8080", t)
-	assertOnString(info.Version, "0.7.0-SNAPSHOT", t)
+	assert.Nil(t, err)
+	assert.Equal(t, info.FrameworkId, "20140730-222531-1863654316-5050-10422-0000")
+	assert.Equal(t, info.Leader, "127.0.0.1:8080")
+	assert.Equal(t, info.Version, "0.7.0-SNAPSHOT")
 }
 
 func TestLeader(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
 	leader, err := client.Leader()
-	assertOnError(err, t)
-	assertOnString(leader, "127.0.0.1:8080", t)
+	assert.Nil(t, err)
+	assert.Equal(t, leader, "127.0.0.1:8080")
 }
 
 func TestAbdicateLeader(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
 	message, err := client.AbdicateLeader()
-	assertOnError(err, t)
-	assertOnString(message, "Leadership abdicted", t)
+	assert.Nil(t, err)
+	assert.Equal(t, message, "Leadership abdicted")
 }

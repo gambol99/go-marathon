@@ -18,13 +18,15 @@ package marathon
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSubscriptions(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
 	sub, err := client.Subscriptions()
-	assertOnError(err, t)
-	assertOnNull(sub, t)
-	assertOnNull(sub.CallbackURLs, t)
-	assertOnInteger(len(sub.CallbackURLs), 1, t)
+	assert.Nil(t, err)
+	assert.NotNil(t, sub)
+	assert.NotNil(t, sub.CallbackURLs)
+	assert.Equal(t, len(sub.CallbackURLs), 1)
 }

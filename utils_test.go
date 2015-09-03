@@ -18,18 +18,20 @@ package marathon
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestValidateID(t *testing.T) {
 	path := "test/path"
-	assertOnString(validateID(path), "/test/path", t)
+	assert.Equal(t, validateID(path), "/test/path")
 	path = "/test/path"
-	assertOnString(validateID(path), "/test/path", t)
+	assert.Equal(t, validateID(path), "/test/path")
 }
 
 func TestTrimRootPath(t *testing.T) {
 	path := "/test/path"
-	assertOnString(trimRootPath(path), "test/path", t)
+	assert.Equal(t, trimRootPath(path), "test/path")
 	path = "test/path"
-	assertOnString(trimRootPath(path), "test/path", t)
+	assert.Equal(t, trimRootPath(path), "test/path")
 }

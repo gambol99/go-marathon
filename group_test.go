@@ -18,38 +18,43 @@ package marathon
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGroups(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
 	groups, err := client.Groups()
-	assertOnError(err, t)
-	assertOnNull(groups, t)
-	assertOnInteger(len(groups.Groups), 1, t)
+	assert.Nil(t, err)
+	assert.NotNil(t, groups)
+	assert.Equal(t, len(groups.Groups), 1)
 	group := groups.Groups[0]
-	assertOnString(group.ID, FAKE_GROUP_NAME, t)
+	assert.Equal(t, group.ID, FAKE_GROUP_NAME)
 }
 
 func TestGroup(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
 	group, err := client.Group(FAKE_GROUP_NAME)
-	assertOnError(err, t)
-	assertOnNull(group, t)
-	assertOnInteger(len(group.Apps), 1, t)
-	assertOnString(group.ID, FAKE_GROUP_NAME, t)
+	assert.Nil(t, err)
+	assert.NotNil(t, group)
+	assert.Equal(t, len(group.Apps), 1)
+	assert.Equal(t, group.ID, FAKE_GROUP_NAME)
+
 	group, err = client.Group(FAKE_GROUP_NAME_1)
-	assertOnError(err, t)
-	assertOnNull(group, t)
-	assertOnString(group.ID, FAKE_GROUP_NAME_1, t)
-	assertOnNull(group.Groups, t)
-	assertOnInteger(len(group.Groups), 1, t)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, group)
+	assert.Equal(t, group.ID, FAKE_GROUP_NAME_1)
+	assert.NotNil(t, group.Groups)
+	assert.Equal(t, len(group.Groups), 1)
+
 	frontend := group.Groups[0]
-	assertOnString(frontend.ID, "frontend", t)
-	assertOnInteger(len(frontend.Apps), 3, t)
+	assert.Equal(t, frontend.ID, "frontend")
+	assert.Equal(t, len(frontend.Apps), 3)
 	for _, app := range frontend.Apps {
-		assertOnNull(app.Container, t)
-		assertOnNull(app.Container.Docker, t)
-		assertOnString(app.Container.Docker.Network, "BRIDGE", t)
+		assert.NotNil(t, app.Container)
+		assert.NotNil(t, app.Container.Docker)
+		assert.Equal(t, app.Container.Docker.Network, "BRIDGE")
 		if len(app.Container.Docker.PortMappings) <= 0 {
 			t.Fail()
 		}
