@@ -84,7 +84,8 @@ func main() {
 	application.AddEnv("SERVICE_80_NAME", "test_http")
 	application.RequirePorts = true
 	application.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80).Expose(443)
-	Assert(client.CreateApplication(application, true))
+	err, _ = client.CreateApplication(application, true)
+	Assert(err)
 
 	glog.Infof("Scaling the application to 4 instances")
 	deployId, err := client.ScaleApplicationInstances(application.ID, 4)
@@ -99,7 +100,8 @@ func main() {
 	glog.Infof("Successfully deleted the application")
 
 	glog.Infof("Starting the application again")
-	Assert(client.CreateApplication(application, true))
+	err, _ = client.CreateApplication(application, true)
+	Assert(err)
 	glog.Infof("Created the application: %s", application.ID)
 
 	glog.Infof("Delete all the tasks")

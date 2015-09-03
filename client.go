@@ -53,11 +53,11 @@ type Marathon interface {
 	/* check if an application is ok */
 	ApplicationOK(name string) (bool, error)
 	/* create an application in marathon */
-	CreateApplication(application *Application, wait_on_running bool) error
+	CreateApplication(application *Application, wait_on_running bool) (*Application, error)
 	/* delete an application */
 	DeleteApplication(name string) (*DeploymentID, error)
 	/* update an application in marathon */
-	UpdateApplication(application *Application, wait_on_running bool) error
+	UpdateApplication(application *Application, wait_on_running bool) (*Application, error)
 	/* a list of deployments on a application */
 	ApplicationDeployments(name string) ([]*DeploymentID, error)
 	/* scale a application */

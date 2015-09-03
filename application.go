@@ -368,17 +368,17 @@ func (client *Client) ApplicationDeployments(name string) ([]*DeploymentID, erro
 // Creates a new application in Marathon
 // 		application: 		the structure holding the application configuration
 //		wait_on_running:	waits on the application deploying, i.e. the instances arre all running (note health checks are excluded)
-func (client *Client) CreateApplication(application *Application, wait_on_running bool) error {
+func (client *Client) CreateApplication(application *Application, wait_on_running bool) (*Application, error) {
 	result := new(Application)
 	client.log("Creating an application: %s", application)
 	if err := client.apiPost(MARATHON_API_APPS, &application, result); err != nil {
-		return err
+		return nil, err
 	}
 	// step: are we waiting for the application to start?
 	if wait_on_running {
-		return client.WaitOnApplication(application.ID, 0)
+		return nil, client.WaitOnApplication(application.ID, 0)
 	}
-	return nil
+	return result, nil
 }
 
 // Wait for an application to be deployed
@@ -481,18 +481,18 @@ func (client *Client) ScaleApplicationInstances(name string, instances int) (*De
 // Updates a new application in Marathon
 // 		application: 		the structure holding the application configuration
 //		wait_on_running:	waits on the application deploying, i.e. the instances arre all running (note health checks are excluded)
-func (client *Client) UpdateApplication(application *Application, wait_on_running bool) error {
+func (client *Client) UpdateApplication(application *Application, wait_on_running bool) (*Application, error) {
 	result := new(Application)
 	client.log("Updating application: %s", application)
 
 	uri := fmt.Sprintf("%s/%s", MARATHON_API_APPS, trimRootPath(application.ID))
 
 	if err := client.apiPut(uri, &application, result); err != nil {
-		return err
+		return nil, err
 	}
 	// step: are we waiting for the application to start?
 	if wait_on_running {
-		return client.WaitOnApplication(application.ID, 0)
+		return nil, client.WaitOnApplication(application.ID, 0)
 	}
-	return nil
+	return result, nil
 }
