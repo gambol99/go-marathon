@@ -84,7 +84,7 @@ application.AddEnv("SERVICE_80_NAME", "test_http")
 application.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80).Expose(443)
 application.CheckHTTP("/health", 10, 5)
 
-if err := client.CreateApplication(application, true); err != nil {
+if _, err := client.CreateApplication(application, true); err != nil {
 	glog.Errorf("Failed to create application: %s, error: %s", application, err)
 } else {
 	glog.Infof("Created the application: %s", application)
