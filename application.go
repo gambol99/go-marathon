@@ -465,12 +465,18 @@ func (client *Client) RestartApplication(name string, force bool) (*DeploymentID
 // Change the number of instance an application is running
 // 		name: 		the id used to identify the application
 // 		instances:	the number of instances you wish to change to
-func (client *Client) ScaleApplicationInstances(name string, instances int) (*DeploymentID, error) {
+//    force: used to force the scale operation in case of blocked deployment
+func (client *Client) ScaleApplicationInstances(name string, instances int, force bool) (*DeploymentID, error) {
 	client.log("ScaleApplicationInstances(): application: %s, instance: %d", name, instances)
 	changes := new(Application)
 	changes.ID = validateID(name)
 	changes.Instances = instances
-	uri := fmt.Sprintf("%s/%s", MARATHON_API_APPS, trimRootPath(name))
+	var uri string
+	if force {
+		uri = fmt.Sprintf("%s/%s?force=true", MARATHON_API_APPS, trimRootPath(name))
+	} else {
+		uri = fmt.Sprintf("%s/%s?force=false", MARATHON_API_APPS, trimRootPath(name))
+	}
 	deployID := new(DeploymentID)
 	if err := client.apiPut(uri, &changes, deployID); err != nil {
 		return nil, err
