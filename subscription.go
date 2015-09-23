@@ -256,6 +256,6 @@ func (client *Client) GetEvent(name string) (*Event, error) {
 		}
 		return event, nil
 	} else {
-		return nil, errors.New(fmt.Sprintf("The event type: %d was not found or supported", name))
+		return nil, errors.New(fmt.Sprintf("The event type: %s was not found or supported", name))
 	}
 }
