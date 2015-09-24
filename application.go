@@ -471,12 +471,7 @@ func (client *Client) ScaleApplicationInstances(name string, instances int, forc
 	changes := new(Application)
 	changes.ID = validateID(name)
 	changes.Instances = instances
-	var uri string
-	if force {
-		uri = fmt.Sprintf("%s/%s?force=true", MARATHON_API_APPS, trimRootPath(name))
-	} else {
-		uri = fmt.Sprintf("%s/%s?force=false", MARATHON_API_APPS, trimRootPath(name))
-	}
+	uri := fmt.Sprintf("%s/%s?force=%t", MARATHON_API_APPS, trimRootPath(name), force)
 	deployID := new(DeploymentID)
 	if err := client.apiPut(uri, &changes, deployID); err != nil {
 		return nil, err
