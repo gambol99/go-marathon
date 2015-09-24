@@ -61,7 +61,7 @@ type Marathon interface {
 	/* a list of deployments on a application */
 	ApplicationDeployments(name string) ([]*DeploymentID, error)
 	/* scale a application */
-	ScaleApplicationInstances(name string, instances int) (*DeploymentID, error)
+	ScaleApplicationInstances(name string, instances int, force bool) (*DeploymentID, error)
 	/* restart an application */
 	RestartApplication(name string, force bool) (*DeploymentID, error)
 	/* get a list of applications from marathon */
