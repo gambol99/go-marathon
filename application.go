@@ -64,6 +64,7 @@ type Application struct {
 	UpgradeStrategy       *UpgradeStrategy    `json:"upgradeStrategy,omitempty"`
 	Uris                  []string            `json:"uris,omitempty"`
 	Version               string              `json:"version,omitempty"`
+	VersionInfo           *VersionInfo        `json:"versionInfo,omitempty"`
 	Labels                map[string]string   `json:"labels,omitempty"`
 	AcceptedResourceRoles []string            `json:"acceptedResourceRoles,omitempty"`
 	LastTaskFailure       *LastTaskFailure    `json:"lastTaskFailure,omitempty"`
@@ -75,6 +76,11 @@ type ApplicationVersions struct {
 
 type ApplicationVersion struct {
 	Version string `json:"version"`
+}
+
+type VersionInfo struct {
+	LastScalingAt      string `json:"lastScalingAt,omitempty"`
+	LastConfigChangeAt string `json:"lastConfigChangeAt,omitempty"`
 }
 
 func NewDockerApplication() *Application {
