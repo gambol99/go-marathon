@@ -88,7 +88,7 @@ func main() {
 	Assert(err)
 
 	glog.Infof("Scaling the application to 4 instances")
-	deployId, err := client.ScaleApplicationInstances(application.ID, 4)
+	deployId, err := client.ScaleApplicationInstances(application.ID, 4, false)
 	Assert(err)
 	client.WaitOnApplication(application.ID, 0)
 	glog.Infof("Successfully scaled the application, deployId: %s", deployId.DeploymentID)
