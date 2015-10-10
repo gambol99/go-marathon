@@ -38,7 +38,7 @@ type ApplicationWrap struct {
 }
 
 type Application struct {
-	ID                    string              `json:"id",omitempty`
+	ID                    string              `json:"id,omitempty"`
 	Cmd                   string              `json:"cmd,omitempty"`
 	Args                  []string            `json:"args,omitempty"`
 	Constraints           [][]string          `json:"constraints,omitempty"`
