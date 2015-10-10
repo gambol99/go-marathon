@@ -55,35 +55,38 @@ func (task *Task) HasHealthCheckResults() bool {
 // Retrieve all the tasks currently running
 func (client *Client) AllTasks() (*Tasks, error) {
 	tasks := new(Tasks)
-	if err := client.apiGet(MARATHON_API_TASKS, nil, tasks); err != nil {
+	err := client.apiGet(MARATHON_API_TASKS, nil, tasks)
+	if err != nil {
 		return nil, err
-	} else {
-		return tasks, nil
 	}
+
+	return tasks, nil
 }
 
 // Retrieve a list of tasks for an application
 //		application_id:		the id for the application
 func (client *Client) Tasks(id string) (*Tasks, error) {
 	tasks := new(Tasks)
-	if err := client.apiGet(fmt.Sprintf("%s/%s/tasks", MARATHON_API_APPS, trimRootPath(id)), nil, tasks); err != nil {
+	err := client.apiGet(fmt.Sprintf("%s/%s/tasks", MARATHON_API_APPS, trimRootPath(id)), nil, tasks)
+	if err != nil {
 		return nil, err
-	} else {
-		return tasks, nil
 	}
+
+	return tasks, nil
 }
 
 // Retrieve an array of task ids currently running in marathon
 func (client *Client) ListTasks() ([]string, error) {
-	if tasks, err := client.AllTasks(); err != nil {
+	tasks, err := client.AllTasks()
+	if err != nil {
 		return nil, err
-	} else {
-		list := make([]string, 0)
-		for _, task := range tasks.Tasks {
-			list = append(list, task.ID)
-		}
-		return list, nil
 	}
+	list := make([]string, 0)
+	for _, task := range tasks.Tasks {
+		list = append(list, task.ID)
+	}
+
+	return list, nil
 }
 
 // Kill all tasks relating to an application
@@ -102,6 +105,7 @@ func (client *Client) KillApplicationTasks(id, hostname string, scale bool) (*Ta
 	if err := client.apiDelete(fmt.Sprintf("%s/%s/tasks", MARATHON_API_APPS, trimRootPath(id)), &options, tasks); err != nil {
 		return nil, err
 	}
+
 	return tasks, nil
 }
 
@@ -119,6 +123,7 @@ func (client *Client) KillTask(taskId string, scale bool) (*Task, error) {
 	if err := client.apiDelete(fmt.Sprintf("%s/%s/tasks/%s", MARATHON_API_APPS, appName, taskId), &options, task); err != nil {
 		return nil, err
 	}
+
 	return task, nil
 }
 
@@ -133,6 +138,7 @@ func (client *Client) KillTasks(tasks []string, scale bool) error {
 	}
 	post.TaskIDs = tasks
 	client.log("KillTasks Killing %d tasks", len(tasks))
+
 	return client.apiPost(fmt.Sprintf("%s/delete?%s", MARATHON_API_TASKS, v.Encode()), &post, nil)
 }
 
@@ -150,49 +156,52 @@ func (client *Client) KillTasks(tasks []string, scale bool) error {
 //		health: 	whether to check the health or not
 func (client *Client) TaskEndpoints(name string, port int, health_check bool) ([]string, error) {
 	/* step: get the application details */
-	if application, err := client.Application(name); err != nil {
+	application, err := client.Application(name)
+	if err != nil {
 		return nil, err
-	} else {
-		/* step: we need to get the port index of the service we are interested in */
-		if port_index, err := application.Container.Docker.ServicePortIndex(port); err != nil {
-			return nil, err
-		} else {
-			list := make([]string, 0)
-			/* step: do we have any tasks? */
-			if application.Tasks == nil || len(application.Tasks) <= 0 {
-				return list, nil
-			}
-
-			/* step: iterate the tasks and extract the dynamic ports */
-			for _, task := range application.Tasks {
-				/* step: if we are checking health the 'service' has a health check? */
-				if health_check && application.HasHealthChecks() {
-					/*
-						check: does the task have a health check result, if NOT, it's because the
-						health of the task hasn't yet been performed, hence we assume it as DOWN
-					*/
-					if task.HasHealthCheckResults() == false {
-						client.log("TaskEndpoints() The task: %s for application: %s hasn't been checked yet, skipping", task, application)
-						continue
-					}
-
-					/* step: check the health results then */
-					skip_endpoint := false
-					for _, health := range task.HealthCheckResult {
-						if health.Alive == false {
-							client.log("TaskEndpoints() The task: %s for application: %s failed health checks", task, application)
-							skip_endpoint = true
-						}
-					}
-
-					if skip_endpoint == true {
-						continue
-					}
-				}
-				/* else we can just add it */
-				list = append(list, fmt.Sprintf("%s:%d", task.Host, task.Ports[port_index]))
-			}
-			return list, nil
-		}
 	}
+
+	/* step: we need to get the port index of the service we are interested in */
+	port_index, err := application.Container.Docker.ServicePortIndex(port)
+	if err != nil {
+		return nil, err
+	}
+
+	list := make([]string, 0)
+	/* step: do we have any tasks? */
+	if application.Tasks == nil || len(application.Tasks) <= 0 {
+		return list, nil
+	}
+
+	/* step: iterate the tasks and extract the dynamic ports */
+	for _, task := range application.Tasks {
+		/* step: if we are checking health the 'service' has a health check? */
+		if health_check && application.HasHealthChecks() {
+			/*
+				check: does the task have a health check result, if NOT, it's because the
+				health of the task hasn't yet been performed, hence we assume it as DOWN
+			*/
+			if task.HasHealthCheckResults() == false {
+				client.log("TaskEndpoints() The task: %s for application: %s hasn't been checked yet, skipping", task, application)
+				continue
+			}
+
+			/* step: check the health results then */
+			skip_endpoint := false
+			for _, health := range task.HealthCheckResult {
+				if health.Alive == false {
+					client.log("TaskEndpoints() The task: %s for application: %s failed health checks", task, application)
+					skip_endpoint = true
+				}
+			}
+
+			if skip_endpoint == true {
+				continue
+			}
+		}
+		/* else we can just add it */
+		list = append(list, fmt.Sprintf("%s:%d", task.Host, task.Ports[port_index]))
+	}
+
+	return list, nil
 }

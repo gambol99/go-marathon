@@ -64,11 +64,12 @@ type DeploymentPlan struct {
 // Retrieve a list of current deployments
 func (client *Client) Deployments() ([]*Deployment, error) {
 	var deployments []*Deployment
-	if err := client.apiGet(MARATHON_API_DEPLOYMENTS, nil, &deployments); err != nil {
+	err := client.apiGet(MARATHON_API_DEPLOYMENTS, nil, &deployments)
+	if err != nil {
 		return nil, err
-	} else {
-		return deployments, nil
 	}
+
+	return deployments, nil
 }
 
 // Delete a current deployment from marathon
@@ -76,11 +77,12 @@ func (client *Client) Deployments() ([]*Deployment, error) {
 // 	force:	whether or not to force the deletion
 func (client *Client) DeleteDeployment(id string, force bool) (*DeploymentID, error) {
 	deployment := new(DeploymentID)
-	if err := client.apiDelete(fmt.Sprintf("%s/%s", MARATHON_API_DEPLOYMENTS, id), nil, deployment); err != nil {
+	err := client.apiDelete(fmt.Sprintf("%s/%s", MARATHON_API_DEPLOYMENTS, id), nil, deployment)
+	if err != nil {
 		return nil, err
-	} else {
-		return deployment, nil
 	}
+
+	return deployment, nil
 }
 
 // Check to see if a deployment exists

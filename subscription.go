@@ -34,11 +34,12 @@ type Subscriptions struct {
 // Retrieve a list of registered subscriptions
 func (client *Client) Subscriptions() (*Subscriptions, error) {
 	subscriptions := new(Subscriptions)
-	if err := client.apiGet(MARATHON_API_SUBSCRIPTION, nil, subscriptions); err != nil {
+	err := client.apiGet(MARATHON_API_SUBSCRIPTION, nil, subscriptions)
+	if err != nil {
 		return nil, err
-	} else {
-		return subscriptions, nil
 	}
+
+	return subscriptions, nil
 }
 
 // Add your self as a listener to events from Marathon
@@ -82,39 +83,40 @@ func (client *Client) SubscriptionURL() string {
 // Register ourselves with Marathon to receive events from it's callback facility
 func (client *Client) RegisterSubscription() error {
 	if client.events_http == nil {
-		if ip_address, err := getInterfaceAddress(client.config.EventsInterface); err != nil {
+		ip_address, err := getInterfaceAddress(client.config.EventsInterface)
+		if err != nil {
 			return errors.New(fmt.Sprintf("Unable to get the ip address from the interface: %s, error: %s",
 				client.config.EventsInterface, err))
-		} else {
-			// step: set the ip address
-			client.ipaddress = ip_address
-			binding := fmt.Sprintf("%s:%d", ip_address, client.config.EventsPort)
-			// step: register the handler
-			http.HandleFunc(DEFAULT_EVENTS_URL, client.HandleMarathonEvent)
-			// step: create the http server
-			client.events_http = &http.Server{
-				Addr:           binding,
-				Handler:        nil,
-				ReadTimeout:    10 * time.Second,
-				WriteTimeout:   10 * time.Second,
-				MaxHeaderBytes: 1 << 20,
-			}
-			client.log("RegisterSubscription() Attempting to listen on binding: %s", binding)
-
-			// @todo need to add a timeout value here
-			listener, err := net.Listen("tcp", binding)
-			if err != nil {
-				return nil
-			}
-
-			client.log("RegisterSubscription() Starting to listen on http events service")
-			go func() {
-				for {
-					client.events_http.Serve(listener)
-					client.log("RegisterSubscription() Exitted the http events service")
-				}
-			}()
 		}
+
+		// step: set the ip address
+		client.ipaddress = ip_address
+		binding := fmt.Sprintf("%s:%d", ip_address, client.config.EventsPort)
+		// step: register the handler
+		http.HandleFunc(DEFAULT_EVENTS_URL, client.HandleMarathonEvent)
+		// step: create the http server
+		client.events_http = &http.Server{
+			Addr:           binding,
+			Handler:        nil,
+			ReadTimeout:    10 * time.Second,
+			WriteTimeout:   10 * time.Second,
+			MaxHeaderBytes: 1 << 20,
+		}
+		client.log("RegisterSubscription() Attempting to listen on binding: %s", binding)
+
+		// @todo need to add a timeout value here
+		listener, err := net.Listen("tcp", binding)
+		if err != nil {
+			return nil
+		}
+
+		client.log("RegisterSubscription() Starting to listen on http events service")
+		go func() {
+			for {
+				client.events_http.Serve(listener)
+				client.log("RegisterSubscription() Exitted the http events service")
+			}
+		}()
 	}
 
 	// step: get the callback url
@@ -122,18 +124,20 @@ func (client *Client) RegisterSubscription() error {
 
 	// step: check if the callback is registered
 	client.log("RegisterSubscription() Checking if we already have a subscription for callback %s", callback)
-	if found, err := client.HasSubscription(callback); err != nil {
+	found, err := client.HasSubscription(callback)
+	if err != nil {
 		return err
-	} else if !found {
+	}
+	if !found {
 		client.log("RegisterSubscription() Registering a subscription with Marathon: callback: %s", callback)
 		// step: we need to register our self
 		uri := fmt.Sprintf("%s?callbackUrl=%s", MARATHON_API_SUBSCRIPTION, callback)
 		if err := client.apiPost(uri, "", nil); err != nil {
 			return err
 		}
-	} else {
-		client.log("RegisterSubscription() A subscription already exists for this callback: %s", callback)
 	}
+	client.log("RegisterSubscription() A subscription already exists for this callback: %s", callback)
+
 	return nil
 }
 
@@ -148,15 +152,17 @@ func (client *Client) UnSubscribe() error {
 func (client *Client) HasSubscription(callback string) (bool, error) {
 	client.log("HasSubscription() Checking for subscription: %s", callback)
 	/* step: generate our events callback */
-	if subscriptions, err := client.Subscriptions(); err != nil {
+	subscriptions, err := client.Subscriptions()
+	if err != nil {
 		return false, err
-	} else {
-		for _, subscription := range subscriptions.CallbackURLs {
-			if callback == subscription {
-				return true, nil
-			}
+	}
+
+	for _, subscription := range subscriptions.CallbackURLs {
+		if callback == subscription {
+			return true, nil
 		}
 	}
+
 	return false, nil
 }
 

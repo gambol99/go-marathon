@@ -70,18 +70,21 @@ func (client *Client) Leader() (string, error) {
 	var leader struct {
 		Leader string `json:"leader"`
 	}
-	if err := client.apiGet(MARATHON_API_LEADER, nil, &leader); err != nil {
+	err := client.apiGet(MARATHON_API_LEADER, nil, &leader)
+	if err != nil {
 		return "", err
-	} else {
-		return leader.Leader, nil
 	}
+
+	return leader.Leader, nil
 }
+
 
 func (client *Client) AbdicateLeader() (string, error) {
 	message := new(Message)
-	if err := client.apiDelete(MARATHON_API_LEADER, nil, message); err != nil {
+	err := client.apiDelete(MARATHON_API_LEADER, nil, message)
+	if err != nil {
 		return "", err
-	} else {
-		return message.Message, err
 	}
+
+	return message.Message, err
 }

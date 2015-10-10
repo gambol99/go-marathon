@@ -89,11 +89,12 @@ func (client *Client) HasGroup(name string) (bool, error) {
 	status, _, err := client.apiCall(HTTP_GET, uri, "", nil)
 	if err == nil {
 		return true, nil
-	} else if status == 404 {
-		return false, nil
-	} else {
-		return false, err
 	}
+	if status == 404 {
+		return false, nil
+	}
+
+	return false, err
 }
 
 // Create a new group in marathon
