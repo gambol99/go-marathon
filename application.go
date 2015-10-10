@@ -314,8 +314,7 @@ func (client *Client) SetApplicationVersion(name string, version *ApplicationVer
 	client.log("SetApplicationVersion() setting the application: %s to version: %s", name, version)
 	uri := fmt.Sprintf("%s/%s", MARATHON_API_APPS, trimRootPath(name))
 	deploymentId := new(DeploymentID)
-	err := client.apiPut(uri, version, deploymentId)
-	if err != nil {
+	if err := client.apiPut(uri, version, deploymentId); err != nil {
 		client.log("SetApplicationVersion() Failed to change the application to version: %s, error: %s", version.Version, err)
 		return nil, err
 	}
