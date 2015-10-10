@@ -71,6 +71,7 @@ func (cluster *MarathonCluster) ClusterState() []string {
 		list = append(list, fmt.Sprintf("%s", member))
 		member = member.next
 	}
+
 	return list
 }
 
@@ -88,42 +89,45 @@ func (member Member) String() string {
 	if member.status == MEMBER_UNAVAILABLE {
 		status = "DOWN"
 	}
+
 	return fmt.Sprintf("member: %s:%s", member.hostname, status)
 }
 
 func NewMarathonCluster(marathon_url string) (Cluster, error) {
 	cluster := new(MarathonCluster)
 	/* step: parse the marathon url */
-	if marathon, err := url.Parse(marathon_url); err != nil {
+	marathon, err := url.Parse(marathon_url)
+	if err != nil {
 		return nil, ErrInvalidEndpoint
-	} else {
-		/* step: check the protocol */
-		if marathon.Scheme != "http" && marathon.Scheme != "https" {
-			return nil, ErrInvalidEndpoint
-		}
-		cluster.protocol = marathon.Scheme
-		cluster.url = marathon_url
-
-		/* step: create a link list of the hosts */
-		var previous *Member = nil
-		for index, host := range strings.SplitN(marathon.Host, ",", -1) {
-			/* step: create a new cluster member */
-			member := new(Member)
-			member.hostname = host
-			cluster.size += 1
-			/* step: if the first member */
-			if index == 0 {
-				cluster.members = member
-				cluster.active = member
-				previous = member
-			} else {
-				previous.next = member
-				previous = member
-			}
-		}
-		/* step: close the link list */
-		previous.next = cluster.active
 	}
+
+	/* step: check the protocol */
+	if marathon.Scheme != "http" && marathon.Scheme != "https" {
+		return nil, ErrInvalidEndpoint
+	}
+	cluster.protocol = marathon.Scheme
+	cluster.url = marathon_url
+
+	/* step: create a link list of the hosts */
+	var previous *Member = nil
+	for index, host := range strings.SplitN(marathon.Host, ",", -1) {
+		/* step: create a new cluster member */
+		member := new(Member)
+		member.hostname = host
+		cluster.size += 1
+		/* step: if the first member */
+		if index == 0 {
+			cluster.members = member
+			cluster.active = member
+			previous = member
+		} else {
+			previous.next = member
+			previous = member
+		}
+	}
+	/* step: close the link list */
+	previous.next = cluster.active
+
 	return cluster, nil
 }
 
@@ -142,6 +146,7 @@ func (cluster *MarathonCluster) Active() []string {
 			list = append(list, member.hostname)
 		}
 	}
+
 	return list
 }
 
@@ -156,6 +161,7 @@ func (cluster *MarathonCluster) NonActive() []string {
 			list = append(list, member.hostname)
 		}
 	}
+
 	return list
 }
 
@@ -174,6 +180,7 @@ func (cluster *MarathonCluster) GetMember() (string, error) {
 			return "", errors.New("No cluster memebers available at the moment")
 		}
 	}
+
 	/* we reached the end and there were no members available */
 	return "", errors.New("No cluster memebers available at the moment")
 }

@@ -60,6 +60,8 @@ type Application struct {
 	Dependencies          []string            `json:"dependencies,omitempty"`
 	TasksRunning          int                 `json:"tasksRunning,omitempty"`
 	TasksStaged           int                 `json:"tasksStaged,omitempty"`
+	TasksHealthy          int                 `json:"tasksHealthy,omitempty"`
+	TasksUnhealthy        int                 `json:"tasksUnhealthy,omitempty"`
 	User                  string              `json:"user,omitempty"`
 	UpgradeStrategy       *UpgradeStrategy    `json:"upgradeStrategy,omitempty"`
 	Uris                  []string            `json:"uris,omitempty"`
@@ -134,14 +136,15 @@ func (application *Application) DependsOn(name string) *Application {
 		application.Dependencies = make([]string, 0)
 	}
 	application.Dependencies = append(application.Dependencies, name)
-	return application
 
+	return application
 }
 
 // The amount of memory the application can consume per instance
 //		memory:	the amount of MB to assign
 func (application *Application) Memory(memory float64) *Application {
 	application.Mem = memory
+
 	return application
 }
 
@@ -149,6 +152,7 @@ func (application *Application) Memory(memory float64) *Application {
 //		count:	the number of instances to run
 func (application *Application) Count(count int) *Application {
 	application.Instances = count
+
 	return application
 }
 
@@ -159,6 +163,7 @@ func (application *Application) Arg(argument string) *Application {
 		application.Args = make([]string, 0)
 	}
 	application.Args = append(application.Args, argument)
+
 	return application
 }
 
@@ -170,6 +175,7 @@ func (application *Application) AddEnv(name, value string) *Application {
 		application.Env = make(map[string]string, 0)
 	}
 	application.Env[name] = value
+
 	return application
 }
 
@@ -197,6 +203,7 @@ func (application *Application) Deployments() []*DeploymentID {
 			deployments = append(deployments, deployment)
 		}
 	}
+
 	return deployments
 }
 
@@ -211,17 +218,18 @@ func (application *Application) CheckHTTP(uri string, port, interval int) (*Appl
 		return nil, ErrNoApplicationContainer
 	}
 	/* step: get the port index */
-	if port_index, err := application.Container.Docker.ServicePortIndex(port); err != nil {
+	port_index, err := application.Container.Docker.ServicePortIndex(port)
+	if err != nil {
 		return nil, err
-	} else {
-		health := NewDefaultHealthCheck()
-		health.Path = uri
-		health.IntervalSeconds = interval
-		health.PortIndex = port_index
-		/* step: add to the checks */
-		application.HealthChecks = append(application.HealthChecks, health)
-		return application, nil
 	}
+	health := NewDefaultHealthCheck()
+	health.Path = uri
+	health.IntervalSeconds = interval
+	health.PortIndex = port_index
+	/* step: add to the checks */
+	application.HealthChecks = append(application.HealthChecks, health)
+
+	return application, nil
 }
 
 // Add a TCP check to an application; note the port mapping must already exist, or an
@@ -236,39 +244,43 @@ func (application *Application) CheckTCP(port, interval int) (*Application, erro
 		return nil, ErrNoApplicationContainer
 	}
 	/* step: get the port index */
-	if port_index, err := application.Container.Docker.ServicePortIndex(port); err != nil {
+	port_index, err := application.Container.Docker.ServicePortIndex(port)
+	if err != nil {
 		return nil, err
-	} else {
-		health := NewDefaultHealthCheck()
-		health.Protocol = "TCP"
-		health.IntervalSeconds = interval
-		health.PortIndex = port_index
-		/* step: add to the checks */
-		application.HealthChecks = append(application.HealthChecks, health)
-		return application, nil
 	}
+	health := NewDefaultHealthCheck()
+	health.Protocol = "TCP"
+	health.IntervalSeconds = interval
+	health.PortIndex = port_index
+	/* step: add to the checks */
+	application.HealthChecks = append(application.HealthChecks, health)
+
+	return application, nil
 }
 
 // Retrieve an array of all the applications which are running in marathon
 func (client *Client) Applications(v url.Values) (*Applications, error) {
 	applications := new(Applications)
-	if err := client.apiGet(MARATHON_API_APPS+"?"+v.Encode(), nil, applications); err != nil {
+	err := client.apiGet(MARATHON_API_APPS+"?"+v.Encode(), nil, applications)
+	if err != nil {
 		return nil, err
 	}
+
 	return applications, nil
 }
 
 // Retrieve an array of the application names currently running in marathon
 func (client *Client) ListApplications(v url.Values) ([]string, error) {
-	if applications, err := client.Applications(v); err != nil {
+	applications, err := client.Applications(v)
+	if err != nil {
 		return nil, err
-	} else {
-		list := make([]string, 0)
-		for _, application := range applications.Apps {
-			list = append(list, application.ID)
-		}
-		return list, nil
 	}
+	list := make([]string, 0)
+	for _, application := range applications.Apps {
+		list = append(list, application.ID)
+	}
+
+	return list, nil
 }
 
 // Checks to see if the application version exists in Marathon
@@ -276,14 +288,12 @@ func (client *Client) ListApplications(v url.Values) ([]string, error) {
 //		version: 	the version (normally a timestamp) your looking for
 func (client *Client) HasApplicationVersion(name, version string) (bool, error) {
 	id := trimRootPath(name)
-	if versions, err := client.ApplicationVersions(id); err != nil {
+	versions, err := client.ApplicationVersions(id)
+	if err != nil {
 		return false, err
-	} else {
-		if contains(versions.Versions, version) {
-			return true, nil
-		}
-		return false, nil
 	}
+
+	return contains(versions.Versions, version), nil
 }
 
 // A list of versions which has been deployed with marathon for a specific application
@@ -308,6 +318,7 @@ func (client *Client) SetApplicationVersion(name string, version *ApplicationVer
 		client.log("SetApplicationVersion() Failed to change the application to version: %s, error: %s", version.Version, err)
 		return nil, err
 	}
+
 	return deploymentId, nil
 }
 
@@ -318,6 +329,7 @@ func (client *Client) Application(name string) (*Application, error) {
 	if err := client.apiGet(fmt.Sprintf("%s/%s", MARATHON_API_APPS, trimRootPath(name)), nil, application); err != nil {
 		return nil, err
 	}
+
 	return &application.Application, nil
 }
 
@@ -331,44 +343,48 @@ func (client *Client) ApplicationOK(name string) (bool, error) {
 	} else if !found {
 		return false, ErrDoesNotExist
 	}
+
 	/* step: get the application */
-	if application, err := client.Application(name); err != nil {
+	application, err := client.Application(name)
+	if err != nil {
 		return false, err
-	} else {
-		/* step: if the application has not health checks, just return true */
-		if application.HealthChecks == nil || len(application.HealthChecks) <= 0 {
-			return true, nil
-		}
-		/* step: does the application have any tasks */
-		if application.Tasks == nil || len(application.Tasks) <= 0 {
-			return true, nil
-		}
-		/* step: iterate the application checks and look for false */
-		for _, task := range application.Tasks {
-			if task.HealthCheckResult != nil {
-				for _, check := range task.HealthCheckResult {
-					//When a task is flapping in Marathon, this is sometimes nil
-					if check == nil {
-						return false, nil
-					}
-					if !check.Alive {
-						return false, nil
-					}
+	}
+
+	/* step: if the application has not health checks, just return true */
+	if application.HealthChecks == nil || len(application.HealthChecks) <= 0 {
+		return true, nil
+	}
+	/* step: does the application have any tasks */
+	if application.Tasks == nil || len(application.Tasks) <= 0 {
+		return true, nil
+	}
+	/* step: iterate the application checks and look for false */
+	for _, task := range application.Tasks {
+		if task.HealthCheckResult != nil {
+			for _, check := range task.HealthCheckResult {
+				//When a task is flapping in Marathon, this is sometimes nil
+				if check == nil {
+					return false, nil
+				}
+				if !check.Alive {
+					return false, nil
 				}
 			}
 		}
-		return true, nil
 	}
+
+	return true, nil
 }
 
 // Retrieve an array of Deployment IDs for an application
 //       name:       the id used to identify the application
 func (client *Client) ApplicationDeployments(name string) ([]*DeploymentID, error) {
-	if application, err := client.Application(name); err != nil {
+	application, err := client.Application(name)
+	if err != nil {
 		return nil, err
-	} else {
-		return application.Deployments(), nil
 	}
+
+	return application.Deployments(), nil
 }
 
 // Creates a new application in Marathon
@@ -384,6 +400,7 @@ func (client *Client) CreateApplication(application *Application, wait_on_runnin
 	if wait_on_running {
 		return nil, client.WaitOnApplication(application.ID, 0)
 	}
+
 	return result, nil
 }
 
@@ -428,17 +445,18 @@ func (client *Client) HasApplication(name string) (bool, error) {
 	if name == "" {
 		return false, ErrInvalidArgument
 	}
-	if applications, err := client.ListApplications(nil); err != nil {
+	applications, err := client.ListApplications(nil)
+	if err != nil {
 		return false, err
-	} else {
-		for _, id := range applications {
-			if name == id {
-				client.log("HasApplication() The application: %s presently exist in maration", name)
-				return true, nil
-			}
-		}
-		return false, nil
 	}
+	for _, id := range applications {
+		if name == id {
+			client.log("HasApplication() The application: %s presently exist in maration", name)
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 // Deletes an application from marathon
@@ -450,6 +468,7 @@ func (client *Client) DeleteApplication(name string) (*DeploymentID, error) {
 	if err := client.apiDelete(fmt.Sprintf("%s/%s", MARATHON_API_APPS, trimRootPath(name)), nil, deployID); err != nil {
 		return nil, err
 	}
+
 	return deployID, nil
 }
 
@@ -465,6 +484,7 @@ func (client *Client) RestartApplication(name string, force bool) (*DeploymentID
 	if err := client.apiGet(fmt.Sprintf("%s/%s/restart", MARATHON_API_APPS, trimRootPath(name)), &options, deployment); err != nil {
 		return nil, err
 	}
+
 	return deployment, nil
 }
 
@@ -482,6 +502,7 @@ func (client *Client) ScaleApplicationInstances(name string, instances int, forc
 	if err := client.apiPut(uri, &changes, deployID); err != nil {
 		return nil, err
 	}
+
 	return deployID, nil
 }
 

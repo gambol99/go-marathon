@@ -184,24 +184,25 @@ type Message struct {
 
 func NewClient(config Config) (Marathon, error) {
 	/* step: we parse the url and build a cluster */
-	if cluster, err := NewMarathonCluster(config.URL); err != nil {
+	cluster, err := NewMarathonCluster(config.URL)
+	if err != nil {
 		return nil, err
-	} else {
-		// step: create the service marathon client
-		service := new(Client)
-		service.config = config
-		// step: create a logger from the output
-		if config.LogOutput == nil {
-			config.LogOutput = ioutil.Discard
-		}
-		service.logger = log.New(config.LogOutput, "[debug]: ", 0)
-		service.listeners = make(map[EventsChannel]int, 0)
-		service.cluster = cluster
-		service.http = &http.Client{
-			Timeout: (time.Duration(config.RequestTimeout) * time.Second),
-		}
-		return service, nil
 	}
+	// step: create the service marathon client
+	service := new(Client)
+	service.config = config
+	// step: create a logger from the output
+	if config.LogOutput == nil {
+		config.LogOutput = ioutil.Discard
+	}
+	service.logger = log.New(config.LogOutput, "[debug]: ", 0)
+	service.listeners = make(map[EventsChannel]int, 0)
+	service.cluster = cluster
+	service.http = &http.Client{
+		Timeout: (time.Duration(config.RequestTimeout) * time.Second),
+	}
+
+	return service, nil
 }
 
 func (client *Client) GetMarathonURL() string {
@@ -217,11 +218,12 @@ func (client *Client) Ping() (bool, error) {
 }
 
 func (client *Client) marshallJSON(data interface{}) (string, error) {
-	if response, err := json.Marshal(data); err != nil {
+	response, err := json.Marshal(data)
+	if err != nil {
 		return "", err
-	} else {
-		return string(response), err
 	}
+
+	return string(response), err
 }
 
 func (client *Client) unMarshallDataToJson(stream io.Reader, result interface{}) error {
@@ -229,6 +231,7 @@ func (client *Client) unMarshallDataToJson(stream io.Reader, result interface{})
 	if err := decoder.Decode(result); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -237,6 +240,7 @@ func (client *Client) unmarshallJsonArray(stream io.Reader, results []interface{
 	if err := decoder.Decode(results); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -248,43 +252,48 @@ func (client *Client) apiPostData(data interface{}) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return content, nil
 }
 
 func (client *Client) apiGet(uri string, post, result interface{}) error {
-	if content, err := client.apiPostData(post); err != nil {
+	content, err := client.apiPostData(post)
+	if err != nil {
 		return err
-	} else {
-		_, _, error := client.apiCall(HTTP_GET, uri, content, result)
-		return error
 	}
+	_, _, error := client.apiCall(HTTP_GET, uri, content, result)
+
+	return error
 }
 
 func (client *Client) apiPut(uri string, post, result interface{}) error {
-	if content, err := client.apiPostData(post); err != nil {
+	content, err := client.apiPostData(post)
+	if err != nil {
 		return err
-	} else {
-		_, _, error := client.apiCall(HTTP_PUT, uri, content, result)
-		return error
 	}
+	_, _, error := client.apiCall(HTTP_PUT, uri, content, result)
+
+	return error
 }
 
 func (client *Client) apiPost(uri string, post, result interface{}) error {
-	if content, err := client.apiPostData(post); err != nil {
+	content, err := client.apiPostData(post)
+	if err != nil {
 		return err
-	} else {
-		_, _, error := client.apiCall(HTTP_POST, uri, content, result)
-		return error
 	}
+	_, _, error := client.apiCall(HTTP_POST, uri, content, result)
+
+	return error
 }
 
 func (client *Client) apiDelete(uri string, post, result interface{}) error {
-	if content, err := client.apiPostData(post); err != nil {
+	content, err := client.apiPostData(post)
+	if err != nil {
 		return err
-	} else {
-		_, _, error := client.apiCall(HTTP_DELETE, uri, content, result)
-		return error
 	}
+	_, _, error := client.apiCall(HTTP_DELETE, uri, content, result)
+
+	return error
 }
 
 func (client *Client) apiCall(method, uri, body string, result interface{}) (int, string, error) {
@@ -363,6 +372,7 @@ func (client *Client) httpCall(method, uri, body string) (int, string, *http.Res
 			}
 		}
 	}
+
 	return 0, "", nil, errors.New("Unable to make call to marathon")
 }
 
