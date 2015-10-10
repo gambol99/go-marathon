@@ -61,17 +61,16 @@ func (client *Client) Info() (*Info, error) {
 	info := new(Info)
 	if err := client.apiGet(MARATHON_API_INFO, nil, info); err != nil {
 		return nil, err
-	} else {
-		return info, nil
 	}
+
+	return info, nil
 }
 
 func (client *Client) Leader() (string, error) {
 	var leader struct {
 		Leader string `json:"leader"`
 	}
-	err := client.apiGet(MARATHON_API_LEADER, nil, &leader)
-	if err != nil {
+	if err := client.apiGet(MARATHON_API_LEADER, nil, &leader); err != nil {
 		return "", err
 	}
 
@@ -81,10 +80,9 @@ func (client *Client) Leader() (string, error) {
 
 func (client *Client) AbdicateLeader() (string, error) {
 	message := new(Message)
-	err := client.apiDelete(MARATHON_API_LEADER, nil, message)
-	if err != nil {
+	if err := client.apiDelete(MARATHON_API_LEADER, nil, message); err != nil {
 		return "", err
 	}
 
-	return message.Message, err
+	return message.Message, nil
 }
