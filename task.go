@@ -55,8 +55,7 @@ func (task *Task) HasHealthCheckResults() bool {
 // Retrieve all the tasks currently running
 func (client *Client) AllTasks() (*Tasks, error) {
 	tasks := new(Tasks)
-	err := client.apiGet(MARATHON_API_TASKS, nil, tasks)
-	if err != nil {
+	if err := client.apiGet(MARATHON_API_TASKS, nil, tasks); err != nil {
 		return nil, err
 	}
 
@@ -67,8 +66,7 @@ func (client *Client) AllTasks() (*Tasks, error) {
 //		application_id:		the id for the application
 func (client *Client) Tasks(id string) (*Tasks, error) {
 	tasks := new(Tasks)
-	err := client.apiGet(fmt.Sprintf("%s/%s/tasks", MARATHON_API_APPS, trimRootPath(id)), nil, tasks)
-	if err != nil {
+	if err := client.apiGet(fmt.Sprintf("%s/%s/tasks", MARATHON_API_APPS, trimRootPath(id)), nil, tasks); err != nil {
 		return nil, err
 	}
 
