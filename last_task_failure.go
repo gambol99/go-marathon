@@ -15,6 +15,7 @@ limitations under the License.
 
 package marathon
 
+// LastTaskFailure provides details on the last error experienced by an application
 type LastTaskFailure struct {
 	AppId     string `json:"appId,omitempty"`
 	Host      string `json:"host,omitempty"`

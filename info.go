@@ -16,6 +16,7 @@ limitations under the License.
 
 package marathon
 
+// Info is the detailed stats returned from marathon info
 type Info struct {
 	EventSubscriber struct {
 		HttpEndpoints []string `json:"http_endpoints"`
@@ -25,7 +26,7 @@ type Info struct {
 	HttpConfig  struct {
 		AssetsPath interface{} `json:"assets_path"`
 		HttpPort   float64     `json:"http_port"`
-		HttpsPort  float64     `json:"https_port"`
+		HTTPSPort  float64     `json:"https_port"`
 	} `json:"http_config"`
 	Leader         string `json:"leader"`
 	MarathonConfig struct {
@@ -57,30 +58,35 @@ type Info struct {
 	} `json:"zookeeper_config"`
 }
 
-func (client *Client) Info() (*Info, error) {
+// Info retrieves the info stats from marathon
+func (r *marathonClient) Info() (*Info, error) {
 	info := new(Info)
-	if err := client.apiGet(MARATHON_API_INFO, nil, info); err != nil {
+	if err := r.apiGet(MARATHON_API_INFO, nil, info); err != nil {
 		return nil, err
 	}
 
 	return info, nil
 }
 
-func (client *Client) Leader() (string, error) {
+// Leader retrieves the current marathon leader node
+func (r *marathonClient) Leader() (string, error) {
 	var leader struct {
 		Leader string `json:"leader"`
 	}
-	if err := client.apiGet(MARATHON_API_LEADER, nil, &leader); err != nil {
+	if err := r.apiGet(MARATHON_API_LEADER, nil, &leader); err != nil {
 		return "", err
 	}
 
 	return leader.Leader, nil
 }
 
+// AbdicateLeader abdicates the marathon leadership
+func (r *marathonClient) AbdicateLeader() (string, error) {
+	var message struct {
+		Message string `json:"message"`
+	}
 
-func (client *Client) AbdicateLeader() (string, error) {
-	message := new(Message)
-	if err := client.apiDelete(MARATHON_API_LEADER, nil, message); err != nil {
+	if err := r.apiDelete(MARATHON_API_LEADER, nil, &message); err != nil {
 		return "", err
 	}
 

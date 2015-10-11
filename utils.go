@@ -25,18 +25,18 @@ import (
 	"time"
 )
 
-type AtomicSwitch int64
+type atomicSwitch int64
 
-func (p *AtomicSwitch) IsSwitched() bool {
-	return atomic.LoadInt64((*int64)(p)) != 0
+func (r *atomicSwitch) IsSwitched() bool {
+	return atomic.LoadInt64((*int64)(r)) != 0
 }
 
-func (p *AtomicSwitch) SwitchOn() {
-	atomic.StoreInt64((*int64)(p), 1)
+func (r *atomicSwitch) SwitchOn() {
+	atomic.StoreInt64((*int64)(r), 1)
 }
 
-func (p *AtomicSwitch) SwitchedOff() {
-	atomic.StoreInt64((*int64)(p), 0)
+func (r *atomicSwitch) SwitchedOff() {
+	atomic.StoreInt64((*int64)(r), 0)
 }
 
 func validateID(id string) string {
@@ -56,18 +56,18 @@ func trimRootPath(id string) string {
 func deadline(timeout time.Duration, work func(chan bool) error) error {
 	result := make(chan error)
 	timer := time.After(timeout)
-	stop_channel := make(chan bool)
+	stopChannel := make(chan bool, 1)
 
 	// allow the method to attempt
 	go func() {
-		result <- work(stop_channel)
+		result <- work(stopChannel)
 	}()
 	for {
 		select {
 		case err := <-result:
 			return err
 		case <-timer:
-			stop_channel <- true
+			stopChannel <- true
 			return ErrTimeoutError
 		}
 	}
@@ -79,13 +79,13 @@ func getInterfaceAddress(name string) (string, error) {
 		return "", err
 	}
 	for _, iface := range interfaces {
-		/* step: get only the interface we're interested in */
+		// step: get only the interface we're interested in
 		if iface.Name == name {
 			addrs, err := iface.Addrs()
 			if err != nil {
 				return "", err
 			}
-			/* step: return the first address */
+			// step: return the first address
 			if len(addrs) > 0 {
 				return strings.SplitN(addrs[0].String(), "/", 2)[0], nil
 			}

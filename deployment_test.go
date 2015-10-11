@@ -37,7 +37,7 @@ func TestDeployments(t *testing.T) {
 
 func TestDeleteDeployment(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
-	id, err := client.DeleteDeployment(FAKE_DEPLOYMENT_ID, false)
+	id, err := client.DeleteDeployment(fakeDeploymentID, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, t)
 	assert.Equal(t, id.DeploymentID, "0b1467fc-d5cd-4bbc-bac2-2805351cee1e")

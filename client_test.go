@@ -31,5 +31,5 @@ func TestPing(t *testing.T) {
 
 func TestGetMarathonURL(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
-	assert.Equal(t, client.GetMarathonURL(), FAKE_MARATHON_URL)
+	assert.Equal(t, client.GetMarathonURL(), fakeMarathonURL)
 }

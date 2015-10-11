@@ -16,6 +16,7 @@ limitations under the License.
 
 package marathon
 
+// HealthCheck is the definition for an application health check
 type HealthCheck struct {
 	Command                *Command `json:"command,omitempty"`
 	Protocol               string   `json:"protocol,omitempty"`
@@ -27,6 +28,7 @@ type HealthCheck struct {
 	TimeoutSeconds         int      `json:"timeoutSeconds,omitempty"`
 }
 
+// NewDefaultHealthCheck creates a default application health check
 func NewDefaultHealthCheck() *HealthCheck {
 	return &HealthCheck{
 		Protocol:               "HTTP",
@@ -39,6 +41,7 @@ func NewDefaultHealthCheck() *HealthCheck {
 	}
 }
 
+// HealthCheckResult is the health check result
 type HealthCheckResult struct {
 	Alive               bool   `json:"alive"`
 	ConsecutiveFailures int    `json:"consecutiveFailures"`
@@ -48,6 +51,7 @@ type HealthCheckResult struct {
 	TaskID              string `json:"taskId"`
 }
 
+// Command is the command health check type
 type Command struct {
 	Value string `json:"value"`
 }

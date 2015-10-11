@@ -27,14 +27,14 @@ import (
 )
 
 const (
-	FAKE_MARATHON_URL    = "http://127.0.0.1:3000,127.0.0.1:3000"
-	FAKE_GROUP_NAME      = "/test"
-	FAKE_GROUP_NAME_1    = "/qa/product/1"
-	FAKE_APP_NAME        = "/fake_app"
-	FAKE_APP_NAME_BROKEN = "/fake_app_broken"
-	FAKE_DEPLOYMENT_ID   = "867ed450-f6a8-4d33-9b0e-e11c5513990b"
-	FAKE_API_FILENAME    = "./tests/rest-api/methods.yml"
-	FAKE_API_PORT        = 3000
+	fakeMarathonURL   = "http://127.0.0.1:3000,127.0.0.1:3000,127.0.0.1:3000"
+	fakeGroupName     = "/test"
+	fakeGroupName1    = "/qa/product/1"
+	fakeAppName       = "/fake_app"
+	fakeAppNameBroken = "/fake_app_broken"
+	fakeDeploymentID  = "867ed450-f6a8-4d33-9b0e-e11c5513990b"
+	fakeAPIFilename   = "./tests/rest-api/methods.yml"
+	fakeAPIPort       = 3000
 )
 
 type RestMethod struct {
@@ -55,9 +55,9 @@ func NewFakeMarathonEndpoint(t *testing.T) Marathon {
 	testClient.Once.Do(func() {
 
 		// step: open and read in the methods yaml
-		contents, err := ioutil.ReadFile(FAKE_API_FILENAME)
+		contents, err := ioutil.ReadFile(fakeAPIFilename)
 		if err != nil {
-			t.Fatalf("unable to read in the methods yaml file: %s", FAKE_API_FILENAME)
+			t.Fatalf("unable to read in the methods yaml file: %s", fakeAPIFilename)
 		}
 		// step: unmarshal the yaml
 		var methods []*RestMethod
@@ -74,20 +74,25 @@ func NewFakeMarathonEndpoint(t *testing.T) Marathon {
 
 		http.HandleFunc("/", func(writer http.ResponseWriter, reader *http.Request) {
 			key := fmt.Sprintf("%s:%s", reader.Method, reader.RequestURI)
-			if content, found := uris[key]; found {
+			content, found := uris[key]
+			if found {
 				writer.Header().Add("Content-Type", "application/json")
 				writer.Write([]byte(*content))
 			}
+			if !found {
+				http.Error(writer, "not found", 404)
+			}
 		})
 
-		go http.ListenAndServe(fmt.Sprintf("127.0.0.1:%d", FAKE_API_PORT), nil)
+		go http.ListenAndServe(fmt.Sprintf("127.0.0.1:%d", fakeAPIPort), nil)
 
 		config := NewDefaultConfig()
-		config.URL = FAKE_MARATHON_URL
+		config.URL = fakeMarathonURL
 		//config.LogOutput = os.Stdout
 		if testClient.client, err = NewClient(config); err != nil {
-			t.Fatalf("Failed to create the fake client, %s, error: %s", FAKE_MARATHON_URL, err)
+			t.Fatalf("Failed to create the fake client, %s, error: %s", fakeMarathonURL, err)
 		}
 	})
+
 	return testClient.client
 }

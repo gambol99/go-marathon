@@ -21,6 +21,7 @@ import (
 	"time"
 )
 
+// Deployment is a marathon deployment definition
 type Deployment struct {
 	ID             string              `json:"id"`
 	Version        string              `json:"version"`
@@ -31,16 +32,19 @@ type Deployment struct {
 	CurrentActions []*DeploymentStep   `json:"currentActions"`
 }
 
+// DeploymentID is the identifier for a application deployment
 type DeploymentID struct {
 	DeploymentID string `json:"deploymentId"`
 	Version      string `json:"version"`
 }
 
+// DeploymentStep is a step in the application deployment plan
 type DeploymentStep struct {
 	Action string `json:"action"`
 	App    string `json:"app"`
 }
 
+// DeploymentPlan is a collection of steps for application deployment
 type DeploymentPlan struct {
 	ID       string `json:"id"`
 	Version  string `json:"version"`
@@ -61,10 +65,10 @@ type DeploymentPlan struct {
 	} `json:"target"`
 }
 
-// Retrieve a list of current deployments
-func (client *Client) Deployments() ([]*Deployment, error) {
+// Deployments retrieves a list of current deployments
+func (r *marathonClient) Deployments() ([]*Deployment, error) {
 	var deployments []*Deployment
-	err := client.apiGet(MARATHON_API_DEPLOYMENTS, nil, &deployments)
+	err := r.apiGet(MARATHON_API_DEPLOYMENTS, nil, &deployments)
 	if err != nil {
 		return nil, err
 	}
@@ -72,12 +76,12 @@ func (client *Client) Deployments() ([]*Deployment, error) {
 	return deployments, nil
 }
 
-// Delete a current deployment from marathon
+// DeleteDeployment delete a current deployment from marathon
 // 	id:		the deployment id you wish to delete
 // 	force:	whether or not to force the deletion
-func (client *Client) DeleteDeployment(id string, force bool) (*DeploymentID, error) {
+func (r *marathonClient) DeleteDeployment(id string, force bool) (*DeploymentID, error) {
 	deployment := new(DeploymentID)
-	err := client.apiDelete(fmt.Sprintf("%s/%s", MARATHON_API_DEPLOYMENTS, id), nil, deployment)
+	err := r.apiDelete(fmt.Sprintf("%s/%s", MARATHON_API_DEPLOYMENTS, id), nil, deployment)
 	if err != nil {
 		return nil, err
 	}
@@ -85,10 +89,10 @@ func (client *Client) DeleteDeployment(id string, force bool) (*DeploymentID, er
 	return deployment, nil
 }
 
-// Check to see if a deployment exists
+// HasDeployment checks to see if a deployment exists
 // 	id:		the deployment id you are looking for
-func (client *Client) HasDeployment(id string) (bool, error) {
-	deployments, err := client.Deployments()
+func (r *marathonClient) HasDeployment(id string) (bool, error) {
+	deployments, err := r.Deployments()
 	if err != nil {
 		return false, err
 	}
@@ -100,31 +104,30 @@ func (client *Client) HasDeployment(id string) (bool, error) {
 	return false, nil
 }
 
-// Wait of a deployment to finish
-//  version:    the version of the application
-// 	timeout:	the timeout to wait for the deployment to take, otherwise return an error
-func (client *Client) WaitOnDeployment(id string, timeout time.Duration) error {
-	if found, err := client.HasDeployment(id); err != nil {
+// WaitOnDeployment waits on a deployment to finish
+//  version:		the version of the application
+// 	timeout:		the timeout to wait for the deployment to take, otherwise return an error
+func (r *marathonClient) WaitOnDeployment(id string, timeout time.Duration) error {
+	if found, err := r.HasDeployment(id); err != nil {
 		return err
 	} else if !found {
 		return nil
 	}
 
-	client.log("WaitOnDeployment() Waiting for deployment: %s to finish", id)
-	now_time := time.Now()
-	stop_time := now_time.Add(timeout)
+	nowTime := time.Now()
+	stopTime := nowTime.Add(timeout)
 	if timeout <= 0 {
-		stop_time = now_time.Add(time.Duration(900) * time.Second)
+		stopTime = nowTime.Add(time.Duration(900) * time.Second)
 	}
 
 	// step: a somewhat naive implementation, but it will work
 	for {
-		if time.Now().After(stop_time) {
+		if time.Now().After(stopTime) {
 			return ErrTimeoutError
 		}
-		found, err := client.HasDeployment(id)
+		found, err := r.HasDeployment(id)
 		if err != nil {
-			client.log("WaitOnDeployment() Failed to get the deployments list, error: %s", err)
+			return err
 		}
 		if !found {
 			return nil

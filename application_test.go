@@ -42,6 +42,27 @@ func TestApplicationCount(t *testing.T) {
 	assert.Equal(t, 1, app.Instances)
 }
 
+func TestApplicationStorage(t *testing.T) {
+	app := NewDockerApplication()
+	assert.Equal(t, 0.0, app.Disk)
+	app.Storage(0.10)
+	assert.Equal(t, 0.10, app.Disk)
+}
+
+func TestApplicationName(t *testing.T) {
+	app := NewDockerApplication()
+	assert.Equal(t, "", app.ID)
+	app.Name(fakeAppName)
+	assert.Equal(t, fakeAppName, app.ID)
+}
+
+func TestApplicationCPU(t *testing.T) {
+	app := NewDockerApplication()
+	assert.Equal(t, 0.0, app.CPUs)
+	app.CPU(0.1)
+	assert.Equal(t, 0.1, app.CPUs)
+}
+
 func TestApplicationArgs(t *testing.T) {
 	app := NewDockerApplication()
 	assert.Equal(t, 0, len(app.Args))
@@ -132,13 +153,13 @@ func TestListApplications(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, applications)
 	assert.Equal(t, len(applications), 2)
-	assert.Equal(t, applications[0], FAKE_APP_NAME)
-	assert.Equal(t, applications[1], FAKE_APP_NAME_BROKEN)
+	assert.Equal(t, applications[0], fakeAppName)
+	assert.Equal(t, applications[1], fakeAppNameBroken)
 }
 
 func TestApplicationVersions(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
-	versions, err := client.ApplicationVersions(FAKE_APP_NAME)
+	versions, err := client.ApplicationVersions(fakeAppName)
 	assert.Nil(t, err)
 	assert.NotNil(t, versions)
 	assert.NotNil(t, versions.Versions)
@@ -149,46 +170,68 @@ func TestApplicationVersions(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestRestartApplication(t *testing.T) {
+	client := NewFakeMarathonEndpoint(t)
+	id, err := client.RestartApplication(fakeAppName, false)
+	assert.Nil(t, err)
+	assert.NotNil(t, id)
+	assert.Equal(t, "83b215a6-4e26-4e44-9333-5c385eda6438", id.DeploymentID)
+	assert.Equal(t, "2014-08-26T07:37:50.462Z", id.Version)
+	id, err = client.RestartApplication("/not/there", false)
+	assert.NotNil(t, err)
+	assert.Nil(t, id)
+}
+
 func TestSetApplicationVersion(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
-	deployment, err := client.SetApplicationVersion(FAKE_APP_NAME, &ApplicationVersion{Version: "2014-08-26T07:37:50.462Z"})
+	deployment, err := client.SetApplicationVersion(fakeAppName, &ApplicationVersion{Version: "2014-08-26T07:37:50.462Z"})
 	assert.Nil(t, err)
 	assert.NotNil(t, deployment)
 	assert.NotNil(t, deployment.Version)
 	assert.NotNil(t, deployment.DeploymentID)
 	assert.Equal(t, deployment.Version, "2014-08-26T07:37:50.462Z")
 	assert.Equal(t, deployment.DeploymentID, "83b215a6-4e26-4e44-9333-5c385eda6438")
-
 	_, err = client.SetApplicationVersion("/not/there", &ApplicationVersion{Version: "2014-04-04T06:25:31.399Z"})
 	assert.NotNil(t, err)
 }
 
 func TestHasApplicationVersion(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
-	found, err := client.HasApplicationVersion(FAKE_APP_NAME, "2014-04-04T06:25:31.399Z")
+	found, err := client.HasApplicationVersion(fakeAppName, "2014-04-04T06:25:31.399Z")
 	assert.Nil(t, err)
 	assert.True(t, found)
-	found, err = client.HasApplicationVersion(FAKE_APP_NAME, "###2015-04-04T06:25:31.399Z")
+	found, err = client.HasApplicationVersion(fakeAppName, "###2015-04-04T06:25:31.399Z")
 	assert.Nil(t, err)
 	assert.False(t, found)
 }
 
+func TestDeleteApplication(t *testing.T) {
+	client := NewFakeMarathonEndpoint(t)
+	id, err := client.DeleteApplication(fakeAppName)
+	assert.Nil(t, err)
+	assert.NotNil(t, id)
+	assert.Equal(t, "83b215a6-4e26-4e44-9333-5c385eda6438", id.DeploymentID)
+	assert.Equal(t, "2014-08-26T07:37:50.462Z", id.Version)
+	id, err = client.DeleteApplication("no_such_app")
+	assert.NotNil(t, err)
+}
+
 func TestApplicationOK(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
-	ok, err := client.ApplicationOK(FAKE_APP_NAME)
+	ok, err := client.ApplicationOK(fakeAppName)
 	assert.Nil(t, err)
 	assert.True(t, ok)
-	ok, err = client.ApplicationOK(FAKE_APP_NAME_BROKEN)
+	ok, err = client.ApplicationOK(fakeAppNameBroken)
 	assert.Nil(t, err)
 	assert.False(t, ok)
 }
 
 func TestListApplication(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
-	application, err := client.Application(FAKE_APP_NAME)
+	application, err := client.Application(fakeAppName)
 	assert.Nil(t, err)
 	assert.NotNil(t, application)
-	assert.Equal(t, application.ID, FAKE_APP_NAME)
+	assert.Equal(t, application.ID, fakeAppName)
 	assert.NotNil(t, application.HealthChecks)
 	assert.NotNil(t, application.Tasks)
 	assert.Equal(t, len(application.HealthChecks), 1)
@@ -197,7 +240,7 @@ func TestListApplication(t *testing.T) {
 
 func TestHasApplication(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
-	found, err := client.HasApplication(FAKE_APP_NAME)
+	found, err := client.HasApplication(fakeAppName)
 	assert.Nil(t, err)
 	assert.True(t, found)
 }

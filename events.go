@@ -18,6 +18,7 @@ package marathon
 
 import "fmt"
 
+// EventType is a wrapper for a marathon event
 type EventType struct {
 	EventType string `json:"eventType"`
 }
@@ -77,6 +78,7 @@ func init() {
 //  Events taken from: https://mesosphere.github.io/marathon/docs/event-bus.html
 //
 
+// Event is the definition for a event in marathon
 type Event struct {
 	ID    int
 	Name  string
@@ -87,6 +89,7 @@ func (event *Event) String() string {
 	return fmt.Sprintf("type: %s, event: %s", event.Name, event.Event)
 }
 
+// EventsChannel is a channel to receive events upon
 type EventsChannel chan *Event
 
 /* --- API Request --- */

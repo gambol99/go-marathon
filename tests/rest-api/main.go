@@ -83,6 +83,8 @@ func main() {
 			glog.V(4).Infof("Content: %s", *content)
 			writer.Header().Add("Content-Type", "application/json")
 			writer.Write([]byte(*content))
+		} else if !found {
+			http.Error(writer, "not found", 404)
 		}
 	})
 	glog.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", Options.port), nil))
