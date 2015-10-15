@@ -16,13 +16,19 @@ limitations under the License.
 
 package marathon
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
+// Container is the definition for a container type in marathon
 type Container struct {
 	Type    string    `json:"type,omitempty"`
 	Docker  *Docker   `json:"docker,omitempty"`
 	Volumes []*Volume `json:"volumes,omitempty"`
 }
+
+// PortMapping is the portmapping structure between container and mesos
 type PortMapping struct {
 	ContainerPort int    `json:"containerPort,omitempty"`
 	HostPort      int    `json:"hostPort"`
@@ -30,17 +36,20 @@ type PortMapping struct {
 	Protocol      string `json:"protocol"`
 }
 
+// Parameters is the parameters to pass to the docker client when creating the container
 type Parameters struct {
 	Key   string `json:"key,omitempty"`
 	Value string `json:"value,omitempty"`
 }
 
+// Volume is the docker volume details associated to the container
 type Volume struct {
 	ContainerPath string `json:"containerPath,omitempty"`
 	HostPath      string `json:"hostPath,omitempty"`
 	Mode          string `json:"mode,omitempty"`
 }
 
+// Docker is the docker definition from a marathon application
 type Docker struct {
 	ForcePullImage bool           `json:"forcePullImage,omitempty"`
 	Image          string         `json:"image,omitempty"`
@@ -50,18 +59,23 @@ type Docker struct {
 	Privileged     bool           `json:"privileged,omitempty"`
 }
 
-func (container *Container) Volume(host_path, container_path, mode string) *Container {
+// Volume attachs a volume to the container
+//		host_path:			the path on the docker host to map
+//		container_path:		the path inside the container to map the host volume
+//		mode:				the mode to map the container
+func (container *Container) Volume(hostPath, containerPath, mode string) *Container {
 	if container.Volumes == nil {
 		container.Volumes = make([]*Volume, 0)
 	}
 	container.Volumes = append(container.Volumes, &Volume{
-		ContainerPath: container_path,
-		HostPath:      host_path,
+		ContainerPath: containerPath,
+		HostPath:      hostPath,
 		Mode:          mode,
 	})
 	return container
 }
 
+// NewDockerContainer creates a default docker container for you
 func NewDockerContainer() *Container {
 	container := new(Container)
 	container.Type = "DOCKER"
@@ -75,38 +89,53 @@ func NewDockerContainer() *Container {
 	return container
 }
 
+// Container sets the image of the container
+//		image:			the image name you are using
 func (docker *Docker) Container(image string) *Docker {
 	docker.Image = image
 	return docker
 }
 
+// Bridged sets the networking mode to bridged
 func (docker *Docker) Bridged() *Docker {
 	docker.Network = "BRIDGE"
 	return docker
 }
 
+// Expose sets the container to expose the following port
+//		port:			the port the container is exposing
 func (docker *Docker) Expose(port int) *Docker {
 	docker.ExposePort(port, 0, 0, "tcp")
 	return docker
 }
 
+// ExposeUDP sets the container to expose the following UDP port
+//		port:			the port the container is exposing
 func (docker *Docker) ExposeUDP(port int) *Docker {
 	docker.ExposePort(port, 0, 0, "udp")
 	return docker
 }
 
-func (docker *Docker) ExposePort(container_port, host_port, service_port int, protocol string) *Docker {
+// ExposePort exposes an port in the container
+//		containerPort:			the container port which is being exposed
+//		hostPort:						the host port we should expose it on
+//		servicePort:				check the marathon documentation
+//		protocol:						the protocol to use TCP, UDP
+func (docker *Docker) ExposePort(containerPort, hostPort, servicePort int, protocol string) *Docker {
 	if docker.PortMappings == nil {
 		docker.PortMappings = make([]*PortMapping, 0)
 	}
 	docker.PortMappings = append(docker.PortMappings, &PortMapping{
-		ContainerPort: container_port,
-		HostPort:      host_port,
-		ServicePort:   service_port,
+		ContainerPort: containerPort,
+		HostPort:      hostPort,
+		ServicePort:   servicePort,
 		Protocol:      protocol})
 	return docker
 }
 
+// Parameter adds a parameter to the docker execution line when creating the container
+//		key:			the name of the option to add
+//		value:		the value of the option
 func (docker *Docker) Parameter(key string, value string) *Docker {
 	if docker.Parameters == nil {
 		docker.Parameters = make([]*Parameters, 0)
@@ -118,16 +147,20 @@ func (docker *Docker) Parameter(key string, value string) *Docker {
 	return docker
 }
 
+// ServicePortIndex finds the service port index of the exposed port
+//		port:			the port you are looking for
 func (docker *Docker) ServicePortIndex(port int) (int, error) {
 	if docker.PortMappings == nil || len(docker.PortMappings) <= 0 {
 		return 0, errors.New("The docker does not contain any port mappings to search")
 	}
-	/* step: iterate and find the port */
-	for index, container_port := range docker.PortMappings {
-		if container_port.ContainerPort == port {
+
+	// step: iterate and find the port
+	for index, containerPort := range docker.PortMappings {
+		if containerPort.ContainerPort == port {
 			return index, nil
 		}
 	}
-	/* step: we didn't find the port in the mappings */
-	return 0, errors.New("The container port required was not found in the container port mappings")
+
+	// step: we didn't find the port in the mappings
+	return 0, fmt.Errorf("The container port required was not found in the container port mappings")
 }

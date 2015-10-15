@@ -22,25 +22,27 @@ import (
 	"time"
 )
 
+// Config hold the setting and options for the client
 type Config struct {
-	/* the url for marathon */
+	// the url for marathon
 	URL string
-	/* event handler port */
+	// event handler port
 	EventsPort int
-	/* the interface we should be listening on for events */
+	// the interface we should be listening on for events
 	EventsInterface string
-	/* the output for logging */
+	// the output for logging
 	LogOutput io.Writer
-	/* the timeout for requests */
+	// the timeout for requests
 	RequestTimeout int
-	/* the default timeout for deployments */
+	// the default timeout for deployments
 	DefaultDeploymentTimeout time.Duration
-	/* http basic auth */
+	// http basic auth
 	HttpBasicAuthUser string
-	/* http basic password */
+	// http basic password
 	HttpBasicPassword string
 }
 
+// NewDefaultConfig create a default client config
 func NewDefaultConfig() Config {
 	return Config{
 		URL:                      "http://127.0.0.1:8080",

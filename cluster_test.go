@@ -23,45 +23,39 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var cluster Cluster
-
-func GetFakeCluster() {
-	if cluster == nil {
-		cluster, _ = NewMarathonCluster(FAKE_MARATHON_URL)
-	}
-}
-
 func TestUrl(t *testing.T) {
-	GetFakeCluster()
-	assert.Equal(t, cluster.Url(), FAKE_MARATHON_URL)
+	cluster, _ := newCluster(fakeMarathonURL)
+	assert.Equal(t, cluster.URL(), fakeMarathonURL)
 }
 
 func TestSize(t *testing.T) {
-	GetFakeCluster()
-	assert.Equal(t, cluster.Size(), 2)
+	cluster, _ := newCluster(fakeMarathonURL)
+	assert.Equal(t, cluster.Size(), 3)
 }
 
 func TestActive(t *testing.T) {
-	GetFakeCluster()
-	assert.Equal(t, len(cluster.Active()), 2)
+	cluster, _ := newCluster(fakeMarathonURL)
+	assert.Equal(t, len(cluster.Active()), 3)
 }
 
 func TestNonActive(t *testing.T) {
-	GetFakeCluster()
+	cluster, _ := newCluster(fakeMarathonURL)
 	assert.Equal(t, len(cluster.NonActive()), 0)
 }
 
 func TestGetMember(t *testing.T) {
-	GetFakeCluster()
+	cluster, _ := newCluster(fakeMarathonURL)
 	member, err := cluster.GetMember()
 	assert.Nil(t, err)
 	assert.Equal(t, member, "http://127.0.0.1:3000")
 }
 
 func TestMarkdown(t *testing.T) {
-	GetFakeCluster()
-	assert.Equal(t, len(cluster.Active()), 2)
+	cluster, _ := newCluster(fakeMarathonURL)
+	assert.Equal(t, len(cluster.Active()), 3)
 	cluster.MarkDown()
+	cluster.MarkDown()
+	assert.Equal(t, len(cluster.Active()), 1)
 	time.Sleep(10 * time.Millisecond)
-	assert.Equal(t, len(cluster.Active()), 2 )
+	assert.Equal(t, len(cluster.Active()), 3)
 }

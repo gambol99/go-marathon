@@ -27,200 +27,182 @@ import (
 )
 
 const (
-	MEMBER_AVAILABLE   = 0
-	MEMBER_UNAVAILABLE = 1
+	marathonNodeUp   = 0
+	marathonNodeDown = 1
 )
 
+// Cluster is the interface for the marathon cluster impl
 type Cluster interface {
-	Url() string
-	/* retrieve a member from the cluster */
+	URL() string
+	// retrieve a member from the cluster
 	GetMember() (string, error)
-	/* make the last member as down */
+	// make the last member as down
 	MarkDown()
-	/* the size of the cluster */
+	// the size of the cluster
 	Size() int
-	/* the members which are available */
+	// the members which are available
 	Active() []string
-	/* the members which are NOT available */
+	// the members which are NOT available
 	NonActive() []string
 }
 
-type MarathonCluster struct {
+type marathonCluster struct {
 	sync.RWMutex
-	/* the cluster url */
+	// the cluster url
 	url string
-	/* a link list of members */
-	members *Member
-	/* the number of members */
+	// a link list of members
+	members *marathonNode
+	//  the number of members
 	size int
-	/* the protocol */
+	// the protocol
 	protocol string
-	/* the current host */
-	active *Member
+	// the current host
+	active *marathonNode
 }
 
-func (cluster MarathonCluster) String() string {
+// String returns a string representation of the cluster
+func (r *marathonCluster) String() string {
 	return fmt.Sprintf("url: %s|%s, members: %s, size: %d, active: %s",
-		cluster.protocol, cluster.url, cluster.members, cluster.size, cluster.active)
+		r.protocol, r.url, r.members, r.size, r.active)
 }
 
-func (cluster *MarathonCluster) ClusterState() []string {
-	list := make([]string, 0)
-	member := cluster.members
-	for i := 0; i < cluster.size; i++ {
-		list = append(list, fmt.Sprintf("%s", member))
-		member = member.next
-	}
-
-	return list
-}
-
-type Member struct {
-	/* the name / ip address of the host */
+type marathonNode struct {
+	// the name / ip address of the host
 	hostname string
-	/* the status of the host */
+	// the status of the host
 	status int
-	/* the next member in the list */
-	next *Member
+	// the next member in the list
+	next *marathonNode
 }
 
-func (member Member) String() string {
+func (member marathonNode) String() string {
 	status := "UP"
-	if member.status == MEMBER_UNAVAILABLE {
+	if member.status == marathonNodeDown {
 		status = "DOWN"
 	}
 
 	return fmt.Sprintf("member: %s:%s", member.hostname, status)
 }
 
-func NewMarathonCluster(marathon_url string) (Cluster, error) {
-	cluster := new(MarathonCluster)
-	/* step: parse the marathon url */
-	marathon, err := url.Parse(marathon_url)
+func newCluster(marathonURL string) (Cluster, error) {
+	cluster := new(marathonCluster)
+	// step: parse the marathon url
+	marathon, err := url.Parse(marathonURL)
 	if err != nil {
 		return nil, ErrInvalidEndpoint
 	}
 
-	/* step: check the protocol */
+	// step: check the protocol
 	if marathon.Scheme != "http" && marathon.Scheme != "https" {
 		return nil, ErrInvalidEndpoint
 	}
 	cluster.protocol = marathon.Scheme
-	cluster.url = marathon_url
+	cluster.url = marathonURL
 
 	/* step: create a link list of the hosts */
-	var previous *Member = nil
+	var previous *marathonNode
 	for index, host := range strings.SplitN(marathon.Host, ",", -1) {
-		/* step: create a new cluster member */
-		member := new(Member)
-		member.hostname = host
-		cluster.size += 1
-		/* step: if the first member */
+		// step: create a new cluster member
+		node := new(marathonNode)
+		node.hostname = host
+		cluster.size++
+		// step: if the first member
 		if index == 0 {
-			cluster.members = member
-			cluster.active = member
-			previous = member
+			cluster.members = node
+			cluster.active = node
+			previous = node
 		} else {
-			previous.next = member
-			previous = member
+			previous.next = node
+			previous = node
 		}
 	}
-	/* step: close the link list */
+	// step: close the link list
 	previous.next = cluster.active
 
 	return cluster, nil
 }
 
-func (cluster *MarathonCluster) Url() string {
-	return cluster.url
+func (r *marathonCluster) URL() string {
+	return r.url
 }
 
-// Retrieve a list of active members
-func (cluster *MarathonCluster) Active() []string {
-	cluster.RLock()
-	defer cluster.RUnlock()
-	member := cluster.active
-	list := make([]string, 0)
-	for i := 0; i < cluster.size; i++ {
-		if member.status == MEMBER_AVAILABLE {
-			list = append(list, member.hostname)
-		}
-	}
-
-	return list
+func (r *marathonCluster) Active() []string {
+	return r.memberStatus(marathonNodeUp)
 }
 
-// Retrieve a list of endpoints which are non-active
-func (cluster *MarathonCluster) NonActive() []string {
-	cluster.RLock()
-	defer cluster.RUnlock()
-	member := cluster.active
-	list := make([]string, 0)
-	for i := 0; i < cluster.size; i++ {
-		if member.status == MEMBER_UNAVAILABLE {
+func (r *marathonCluster) NonActive() []string {
+	return r.memberStatus(marathonNodeDown)
+}
+
+func (r *marathonCluster) memberStatus(status int) []string {
+	var list []string
+
+	r.RLock()
+	defer r.RUnlock()
+	member := r.members
+
+	for i := 0; i < r.size; i++ {
+		if member.status == status {
 			list = append(list, member.hostname)
 		}
+		member = member.next
 	}
 
 	return list
 }
 
 // Retrieve the current member, i.e. the current endpoint in use
-func (cluster *MarathonCluster) GetMember() (string, error) {
-	cluster.Lock()
-	defer cluster.Unlock()
-	for i := 0; i < cluster.size; i++ {
-		if cluster.active.status == MEMBER_AVAILABLE {
-			return cluster.GetMarathonURL(cluster.active), nil
+func (r *marathonCluster) GetMember() (string, error) {
+	r.Lock()
+	defer r.Unlock()
+	for i := 0; i < r.size; i++ {
+		if r.active.status == marathonNodeUp {
+			return r.GetMarathonURL(r.active), nil
 		}
-		/* move to the next member */
-		if cluster.active.next != nil {
-			cluster.active = cluster.active.next
+		// move to the next member
+		if r.active.next != nil {
+			r.active = r.active.next
 		} else {
-			return "", errors.New("No cluster memebers available at the moment")
+			return "", errors.New("no cluster memebers available at the moment")
 		}
 	}
 
-	/* we reached the end and there were no members available */
-	return "", errors.New("No cluster memebers available at the moment")
+	// we reached the end and there were no members available
+	return "", ErrMarathonDown
 }
 
 // Retrieves the current marathon url
-func (cluster *MarathonCluster) GetMarathonURL(member *Member) string {
-	return fmt.Sprintf("%s://%s", cluster.protocol, member.hostname)
+func (r *marathonCluster) GetMarathonURL(node *marathonNode) string {
+	return fmt.Sprintf("%s://%s", r.protocol, node.hostname)
 }
 
-// Marks the current endpoint as down and waits for it to come back only
-func (cluster *MarathonCluster) MarkDown() {
-	cluster.Lock()
-	defer cluster.Unlock()
+// MarkDown downs node the current endpoint as down and waits for it to come back only
+func (r *marathonCluster) MarkDown() {
+	r.Lock()
+	defer r.Unlock()
 
-	/* step: mark the current host as down */
-	member := cluster.active
-	member.status = MEMBER_UNAVAILABLE
+	node := r.active
+	node.status = marathonNodeDown
 
-	/* step: create a go-routine to place the member back in */
+	// step: create a go-routine to place the member back in
 	go func() {
-		http_client := &http.Client{}
-
-		/* step: we wait a ping from the host to work */
 		for {
-			if response, err := http_client.Get(cluster.GetMarathonURL(member) + "/ping"); err == nil && response.StatusCode == 200 {
-				member.status = MEMBER_AVAILABLE
+			response, err := http.Get(r.GetMarathonURL(node) + "/ping")
+			if err == nil && response.StatusCode == 200 {
+				node.status = marathonNodeUp
 				return
-			} else {
-				time.Sleep(10 * time.Second)
 			}
+			<-time.After(time.Duration(5 * time.Second))
 		}
 	}()
 
-	/* step: move to the next member */
-	if cluster.active.next != nil {
-		cluster.active = cluster.active.next
+	// step: move to the next member
+	if r.active.next != nil {
+		r.active = r.active.next
 	}
 }
 
-// Retrieve the size of the cluster
-func (cluster *MarathonCluster) Size() int {
-	return cluster.size
+// Six retrieve the size of the cluster
+func (r *marathonCluster) Size() int {
+	return r.size
 }

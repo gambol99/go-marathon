@@ -29,22 +29,22 @@ func TestGroups(t *testing.T) {
 	assert.NotNil(t, groups)
 	assert.Equal(t, len(groups.Groups), 1)
 	group := groups.Groups[0]
-	assert.Equal(t, group.ID, FAKE_GROUP_NAME)
+	assert.Equal(t, group.ID, fakeGroupName)
 }
 
 func TestGroup(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
-	group, err := client.Group(FAKE_GROUP_NAME)
+	group, err := client.Group(fakeGroupName)
 	assert.Nil(t, err)
 	assert.NotNil(t, group)
 	assert.Equal(t, len(group.Apps), 1)
-	assert.Equal(t, group.ID, FAKE_GROUP_NAME)
+	assert.Equal(t, group.ID, fakeGroupName)
 
-	group, err = client.Group(FAKE_GROUP_NAME_1)
+	group, err = client.Group(fakeGroupName1)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, group)
-	assert.Equal(t, group.ID, FAKE_GROUP_NAME_1)
+	assert.Equal(t, group.ID, fakeGroupName1)
 	assert.NotNil(t, group.Groups)
 	assert.Equal(t, len(group.Groups), 1)
 

@@ -33,26 +33,26 @@ func TestAllTasks(t *testing.T) {
 func TestTaskEndpoints(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
 
-	endpoints, err := client.TaskEndpoints(FAKE_APP_NAME_BROKEN, 8080, true)
+	endpoints, err := client.TaskEndpoints(fakeAppNameBroken, 8080, true)
 	assert.Nil(t, err)
 	assert.NotNil(t, endpoints)
 	assert.Equal(t, len(endpoints), 1, t)
 	assert.Equal(t, endpoints[0], "10.141.141.10:31045", t)
 
-	endpoints, err = client.TaskEndpoints(FAKE_APP_NAME_BROKEN, 8080, false)
+	endpoints, err = client.TaskEndpoints(fakeAppNameBroken, 8080, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, endpoints)
 	assert.Equal(t, len(endpoints), 2, t)
 	assert.Equal(t, endpoints[0], "10.141.141.10:31045", t)
 	assert.Equal(t, endpoints[1], "10.141.141.10:31234", t)
 
-	endpoints, err = client.TaskEndpoints(FAKE_APP_NAME_BROKEN, 80, true)
+	endpoints, err = client.TaskEndpoints(fakeAppNameBroken, 80, true)
 	assert.NotNil(t, err)
 }
 
 func TestKillApplicationTasks(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
-	tasks, err := client.KillApplicationTasks(FAKE_APP_NAME, "", false)
+	tasks, err := client.KillApplicationTasks(fakeAppName, "", false)
 	assert.Nil(t, err)
 	assert.NotNil(t, tasks)
 }
