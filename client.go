@@ -53,7 +53,7 @@ type Marathon interface {
 	// delete an application
 	DeleteApplication(name string) (*DeploymentID, error)
 	// update an application in marathon
-	UpdateApplication(application *Application, waitOnRunning bool) (*Application, error)
+	UpdateApplication(application *Application, waitOnRunning bool) (*DeploymentID, error)
 	// a list of deployments on a application
 	ApplicationDeployments(name string) ([]*DeploymentID, error)
 	// scale a application

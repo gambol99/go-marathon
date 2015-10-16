@@ -139,6 +139,16 @@ func TestCreateApplication(t *testing.T) {
 	assert.Equal(t, app.DeploymentID[0]["id"], "f44fd4fc-4330-4600-a68b-99c7bd33014a")
 }
 
+func TestUpdateApplication(t *testing.T) {
+	client := NewFakeMarathonEndpoint(t)
+	application := NewDockerApplication()
+	application.ID = "/fake_app"
+	id, err := client.UpdateApplication(application, false)
+	assert.Nil(t, err)
+	assert.Equal(t, id.DeploymentID, "83b215a6-4e26-4e44-9333-5c385eda6438")
+	assert.Equal(t, id.Version, "2014-08-26T07:37:50.462Z")
+}
+
 func TestApplications(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
 	applications, err := client.Applications(nil)
