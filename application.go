@@ -392,8 +392,8 @@ func (r *marathonClient) ApplicationDeployments(name string) ([]*DeploymentID, e
 }
 
 // CreateApplication creates a new application in Marathon
-// 		application: 		the structure holding the application configuration
-//		wait_on_running:	waits on the application deploying, i.e. the instances arre all running (note health checks are excluded)
+// 		application:		the structure holding the application configuration
+//		waitOnRunning:		waits on the application deploying, i.e. the instances are all running (note: health checks are excluded)
 func (r *marathonClient) CreateApplication(application *Application, waitOnRunning bool) (*Application, error) {
 	result := new(Application)
 	if err := r.apiPost(MARATHON_API_APPS, &application, result); err != nil {
@@ -401,7 +401,7 @@ func (r *marathonClient) CreateApplication(application *Application, waitOnRunni
 	}
 	// step: are we waiting for the application to start?
 	if waitOnRunning {
-		return nil, r.WaitOnApplication(application.ID, 0)
+		return result, r.WaitOnApplication(application.ID, 0)
 	}
 
 	return result, nil
