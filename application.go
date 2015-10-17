@@ -506,11 +506,11 @@ func (r *marathonClient) ScaleApplicationInstances(name string, instances int, f
 	return deployID, nil
 }
 
-// UpdateApplication updates a new application in Marathon
-// 		application: 		the structure holding the application configuration
-//		wait_on_running:	waits on the application deploying, i.e. the instances arre all running (note health checks are excluded)
-func (r *marathonClient) UpdateApplication(application *Application, waitOnRunning bool) (*Application, error) {
-	result := new(Application)
+// UpdateApplication updates an application in Marathon
+// 		application:		the structure holding the application configuration
+//		waitOnrunning:		waits on the application deploying, i.e. the instances are all running (note health checks are excluded)
+func (r *marathonClient) UpdateApplication(application *Application, waitOnRunning bool) (*DeploymentID, error) {
+	result := new(DeploymentID)
 	glog.V(DEBUG_LEVEL).Infof("updating application: %s, waitOnRunning: %t", application, waitOnRunning)
 
 	uri := fmt.Sprintf("%s/%s", MARATHON_API_APPS, trimRootPath(application.ID))
@@ -520,7 +520,7 @@ func (r *marathonClient) UpdateApplication(application *Application, waitOnRunni
 	}
 	// step: are we waiting for the application to start?
 	if waitOnRunning {
-		return nil, r.WaitOnApplication(application.ID, 0)
+		return result, r.WaitOnApplication(application.ID, 0)
 	}
 	return result, nil
 }
