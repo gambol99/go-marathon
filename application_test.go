@@ -132,7 +132,7 @@ func TestCreateApplication(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
 	application := NewDockerApplication()
 	application.ID = "/fake_app"
-	app, err := client.CreateApplication(application, false)
+	app, err := client.CreateApplication(application)
 	assert.Nil(t, err)
 	assert.NotNil(t, app)
 	assert.Equal(t, application.ID, "/fake_app")
@@ -143,7 +143,7 @@ func TestUpdateApplication(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
 	application := NewDockerApplication()
 	application.ID = "/fake_app"
-	id, err := client.UpdateApplication(application, false)
+	id, err := client.UpdateApplication(application)
 	assert.Nil(t, err)
 	assert.Equal(t, id.DeploymentID, "83b215a6-4e26-4e44-9333-5c385eda6438")
 	assert.Equal(t, id.Version, "2014-08-26T07:37:50.462Z")

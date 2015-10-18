@@ -395,15 +395,10 @@ func (r *marathonClient) ApplicationDeployments(name string) ([]*DeploymentID, e
 
 // CreateApplication creates a new application in Marathon
 // 		application:		the structure holding the application configuration
-//		waitOnRunning:		waits on the application deploying, i.e. the instances are all running (note: health checks are excluded)
-func (r *marathonClient) CreateApplication(application *Application, waitOnRunning bool) (*Application, error) {
+func (r *marathonClient) CreateApplication(application *Application) (*Application, error) {
 	result := new(Application)
 	if err := r.apiPost(MARATHON_API_APPS, &application, result); err != nil {
 		return nil, err
-	}
-	// step: are we waiting for the application to start?
-	if waitOnRunning {
-		return result, r.WaitOnApplication(application.ID, 0)
 	}
 
 	return result, nil
@@ -413,9 +408,6 @@ func (r *marathonClient) CreateApplication(application *Application, waitOnRunni
 //		name:		the id of the application
 //		timeout:	a duration of time to wait for an application to deploy
 func (r *marathonClient) WaitOnApplication(name string, timeout time.Duration) error {
-	if timeout <= 0 {
-		timeout = r.config.DefaultDeploymentTimeout
-	}
 	// step: this is very naive approach - the problem with using deployment id's is
 	// one) from > 0.8.0 you can be handed a deployment Id on creation, but it may or may not exist in /v2/deployments
 	// two) there is NO WAY of checking if a deployment Id was successful (i.e. no history). So i poll /deployments
@@ -510,19 +502,15 @@ func (r *marathonClient) ScaleApplicationInstances(name string, instances int, f
 
 // UpdateApplication updates an application in Marathon
 // 		application:		the structure holding the application configuration
-//		waitOnrunning:		waits on the application deploying, i.e. the instances are all running (note health checks are excluded)
-func (r *marathonClient) UpdateApplication(application *Application, waitOnRunning bool) (*DeploymentID, error) {
+func (r *marathonClient) UpdateApplication(application *Application) (*DeploymentID, error) {
 	result := new(DeploymentID)
-	glog.V(DEBUG_LEVEL).Infof("updating application: %s, waitOnRunning: %t", application, waitOnRunning)
+	glog.V(DEBUG_LEVEL).Infof("updating application: %s", application)
 
 	uri := fmt.Sprintf("%s/%s", MARATHON_API_APPS, trimRootPath(application.ID))
 
 	if err := r.apiPut(uri, &application, result); err != nil {
 		return nil, err
 	}
-	// step: are we waiting for the application to start?
-	if waitOnRunning {
-		return result, r.WaitOnApplication(application.ID, 0)
-	}
+
 	return result, nil
 }

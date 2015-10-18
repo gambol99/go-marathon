@@ -19,7 +19,6 @@ package marathon
 import (
 	"io"
 	"io/ioutil"
-	"time"
 )
 
 // Config hold the setting and options for the client
@@ -34,8 +33,6 @@ type Config struct {
 	LogOutput io.Writer
 	// the timeout for requests
 	RequestTimeout int
-	// the default timeout for deployments
-	DefaultDeploymentTimeout time.Duration
 	// http basic auth
 	HttpBasicAuthUser string
 	// http basic password
@@ -45,12 +42,11 @@ type Config struct {
 // NewDefaultConfig create a default client config
 func NewDefaultConfig() Config {
 	return Config{
-		URL:                      "http://127.0.0.1:8080",
-		EventsPort:               10001,
-		EventsInterface:          "eth0",
-		LogOutput:                ioutil.Discard,
-		HttpBasicAuthUser:        "",
-		HttpBasicPassword:        "",
-		DefaultDeploymentTimeout: time.Duration(300) * time.Second,
-		RequestTimeout:           5}
+		URL:               "http://127.0.0.1:8080",
+		EventsPort:        10001,
+		EventsInterface:   "eth0",
+		LogOutput:         ioutil.Discard,
+		HttpBasicAuthUser: "",
+		HttpBasicPassword: "",
+		RequestTimeout:    5}
 }
