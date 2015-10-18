@@ -354,14 +354,16 @@ func (r *marathonClient) ApplicationOK(name string) (bool, error) {
 		return false, err
 	}
 
+	// step: check if all the tasks are running?
+	if !application.AllTaskRunning() {
+		return false, nil
+	}
+
 	// step: if the application has not health checks, just return true
 	if application.HealthChecks == nil || len(application.HealthChecks) <= 0 {
 		return true, nil
 	}
-	// step: does the application have any tasks
-	if application.Tasks == nil || len(application.Tasks) <= 0 {
-		return true, nil
-	}
+
 	// step: iterate the application checks and look for false
 	for _, task := range application.Tasks {
 		if task.HealthCheckResult != nil {
