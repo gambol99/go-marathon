@@ -49,11 +49,11 @@ type Marathon interface {
 	// check if an application is ok
 	ApplicationOK(name string) (bool, error)
 	// create an application in marathon
-	CreateApplication(application *Application, waitOnRunning bool) (*Application, error)
+	CreateApplication(application *Application) (*Application, error)
 	// delete an application
 	DeleteApplication(name string) (*DeploymentID, error)
 	// update an application in marathon
-	UpdateApplication(application *Application, waitOnRunning bool) (*DeploymentID, error)
+	UpdateApplication(application *Application) (*DeploymentID, error)
 	// a list of deployments on a application
 	ApplicationDeployments(name string) ([]*DeploymentID, error)
 	// scale a application
@@ -91,7 +91,7 @@ type Marathon interface {
 	// retrieve a specific group from marathon
 	Group(name string) (*Group, error)
 	// create a group deployment
-	CreateGroup(group *Group, waitOnRunning bool) error
+	CreateGroup(group *Group) error
 	// delete a group
 	DeleteGroup(name string) (*DeploymentID, error)
 	// update a groups

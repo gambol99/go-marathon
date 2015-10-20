@@ -101,23 +101,14 @@ func (r *marathonClient) HasGroup(name string) (bool, error) {
 
 // CreateGroup creates a new group in marathon
 //		group:			a pointer the Group structure defining the group
-func (r *marathonClient) CreateGroup(group *Group, waitOnRunning bool) error {
-	if err := r.apiPost(MARATHON_API_GROUPS, group, nil); err != nil {
-		return err
-	}
-	if waitOnRunning {
-		return r.WaitOnGroup(group.ID, 0)
-	}
-	return nil
+func (r *marathonClient) CreateGroup(group *Group) error {
+	return r.apiPost(MARATHON_API_GROUPS, group, nil)
 }
 
 // WaitOnGroup waits for all the applications in a group to be deployed
 // 		group:			the identifier for the group
 //		timeout: 		a duration of time to wait before considering it failed (all tasks in all apps running defined as deployed)
 func (r *marathonClient) WaitOnGroup(name string, timeout time.Duration) error {
-	if timeout <= 0 {
-		timeout = time.Duration(500) * time.Second
-	}
 	err := deadline(timeout, func(stop_channel chan bool) error {
 		var flick atomicSwitch
 		go func() {

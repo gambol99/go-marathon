@@ -84,7 +84,7 @@ application.AddEnv("SERVICE_80_NAME", "test_http")
 application.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80).Expose(443)
 application.CheckHTTP("/health", 10, 5)
 
-if _, err := client.CreateApplication(application, true); err != nil {
+if _, err := client.CreateApplication(application); err != nil {
 	glog.Errorf("Failed to create application: %s, error: %s", application, err)
 } else {
 	glog.Infof("Created the application: %s", application)
@@ -100,7 +100,7 @@ glog.Infof("Scale to 4 instances")
 if err := client.ScaleApplicationInstances(application.ID, 10); err != nil {
 	glog.Errorf("Failed to delete the application: %s, error: %s", application, err)
 } else {
-	client.WaitOnApplication(application.ID, 0)
+	client.WaitOnApplication(application.ID, 30 * time.Second)
 	glog.Infof("Successfully scaled the application")
 }
 ```

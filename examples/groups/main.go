@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"os"
+	"time"
 
 	marathon "github.com/gambol99/go-marathon"
 	"github.com/golang/glog"
@@ -105,7 +106,7 @@ func main() {
 	group := marathon.NewApplicationGroup(GROUP_NAME)
 	group.App(frontend).App(redis).App(mysql)
 
-	Assert(client.CreateGroup(group, true))
+	Assert(client.CreateGroup(group))
 	glog.Infof("Successfully created the group: %s", group.ID)
 
 	glog.Infof("Updating the group paramaters")
@@ -114,5 +115,5 @@ func main() {
 	id, err := client.UpdateGroup(GROUP_NAME, group)
 	Assert(err)
 	glog.Infof("Successfully updated the group: %s, version: %s", group.ID, id.DeploymentID)
-	Assert(client.WaitOnGroup(GROUP_NAME, 0))
+	Assert(client.WaitOnGroup(GROUP_NAME, 500*time.Second))
 }
