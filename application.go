@@ -55,7 +55,7 @@ type Application struct {
 	BackoffSeconds        float64             `json:"backoffSeconds,omitempty"`
 	BackoffFactor         float64             `json:"backoffFactor,omitempty"`
 	MaxLaunchDelaySeconds float64             `json:"maxLaunchDelaySeconds,omitempty"`
-	DeploymentID          []map[string]string `json:"deployments,omitempty"`
+	Deployments           []map[string]string `json:"deployments,omitempty"`
 	Dependencies          []string            `json:"dependencies"`
 	TasksRunning          int                 `json:"tasksRunning,omitempty"`
 	TasksStaged           int                 `json:"tasksStaged,omitempty"`
@@ -191,13 +191,13 @@ func (r *Application) HasHealthChecks() bool {
 }
 
 // Deployments retrieves the application deployments ID
-func (r *Application) Deployments() []*DeploymentID {
+func (r *Application) DeploymentIDs() []*DeploymentID {
 	var deployments []*DeploymentID
-	if r.DeploymentID == nil || len(r.DeploymentID) <= 0 {
+	if r.Deployments == nil || len(r.Deployments) <= 0 {
 		return deployments
 	}
 	// step: extract the deployment id from the result
-	for _, deploy := range r.DeploymentID {
+	for _, deploy := range r.Deployments {
 		if id, found := deploy["id"]; found {
 			deployment := &DeploymentID{
 				Version:      r.Version,
@@ -390,7 +390,7 @@ func (r *marathonClient) ApplicationDeployments(name string) ([]*DeploymentID, e
 		return nil, err
 	}
 
-	return application.Deployments(), nil
+	return application.DeploymentIDs(), nil
 }
 
 // CreateApplication creates a new application in Marathon

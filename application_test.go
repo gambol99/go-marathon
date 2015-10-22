@@ -136,7 +136,7 @@ func TestCreateApplication(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, app)
 	assert.Equal(t, application.ID, "/fake_app")
-	assert.Equal(t, app.DeploymentID[0]["id"], "f44fd4fc-4330-4600-a68b-99c7bd33014a")
+	assert.Equal(t, app.Deployments[0]["id"], "f44fd4fc-4330-4600-a68b-99c7bd33014a")
 }
 
 func TestUpdateApplication(t *testing.T) {

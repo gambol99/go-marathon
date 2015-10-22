@@ -110,7 +110,7 @@ type Marathon interface {
 	// check to see if a deployment exists
 	HasDeployment(id string) (bool, error)
 	// wait of a deployment to finish
-	WaitOnDeployment(version string, timeout time.Duration) error
+	WaitOnDeployment(id string, timeout time.Duration) error
 
 	// --- SUBSCRIPTIONS ---
 
