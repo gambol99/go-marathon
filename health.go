@@ -24,7 +24,7 @@ type HealthCheck struct {
 	GracePeriodSeconds     int      `json:"gracePeriodSeconds,omitempty"`
 	IntervalSeconds        int      `json:"intervalSeconds,omitempty"`
 	PortIndex              int      `json:"portIndex,omitempty"`
-	MaxConsecutiveFailures int      `json:"maxConsecutiveFailures,omitempty"`
+	MaxConsecutiveFailures int      `json:"maxConsecutiveFailures"`
 	TimeoutSeconds         int      `json:"timeoutSeconds,omitempty"`
 }
 
