@@ -190,7 +190,7 @@ func (r *Application) HasHealthChecks() bool {
 	return false
 }
 
-// Deployments retrieves the application deployments ID
+// DeploymentIDs retrieves the application deployments IDs
 func (r *Application) DeploymentIDs() []*DeploymentID {
 	var deployments []*DeploymentID
 	if r.Deployments == nil || len(r.Deployments) <= 0 {
