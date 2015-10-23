@@ -39,14 +39,14 @@ type Applications struct {
 type Application struct {
 	ID                    string              `json:"id,omitempty"`
 	Cmd                   string              `json:"cmd,omitempty"`
-	Args                  []string            `json:"args,omitempty"`
-	Constraints           [][]string          `json:"constraints,omitempty"`
+	Args                  []string            `json:"args"`
+	Constraints           [][]string          `json:"constraints"`
 	Container             *Container          `json:"container,omitempty"`
 	CPUs                  float64             `json:"cpus,omitempty"`
 	Disk                  float64             `json:"disk,omitempty"`
-	Env                   map[string]string   `json:"env,omitempty"`
+	Env                   map[string]string   `json:"env"`
 	Executor              string              `json:"executor,omitempty"`
-	HealthChecks          []*HealthCheck      `json:"healthChecks,omitempty"`
+	HealthChecks          []*HealthCheck      `json:"healthChecks"`
 	Instances             int                 `json:"instances,omitempty"`
 	Mem                   float64             `json:"mem,omitempty"`
 	Tasks                 []*Task             `json:"tasks,omitempty"`
@@ -56,14 +56,14 @@ type Application struct {
 	BackoffFactor         float64             `json:"backoffFactor,omitempty"`
 	MaxLaunchDelaySeconds float64             `json:"maxLaunchDelaySeconds,omitempty"`
 	DeploymentID          []map[string]string `json:"deployments,omitempty"`
-	Dependencies          []string            `json:"dependencies,omitempty"`
+	Dependencies          []string            `json:"dependencies"`
 	TasksRunning          int                 `json:"tasksRunning,omitempty"`
 	TasksStaged           int                 `json:"tasksStaged,omitempty"`
 	TasksHealthy          int                 `json:"tasksHealthy,omitempty"`
 	TasksUnhealthy        int                 `json:"tasksUnhealthy,omitempty"`
 	User                  string              `json:"user,omitempty"`
 	UpgradeStrategy       *UpgradeStrategy    `json:"upgradeStrategy,omitempty"`
-	Uris                  []string            `json:"uris,omitempty"`
+	Uris                  []string            `json:"uris"`
 	Version               string              `json:"version,omitempty"`
 	VersionInfo           *VersionInfo        `json:"versionInfo,omitempty"`
 	Labels                map[string]string   `json:"labels,omitempty"`
