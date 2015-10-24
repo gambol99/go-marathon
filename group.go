@@ -139,7 +139,7 @@ func (r *marathonClient) WaitOnGroup(name string, timeout time.Duration) error {
 						allRunning = false
 					} else if application.TasksRunning != appID.Instances {
 						allRunning = false
-					} else if len(application.Deployments()) > 0 {
+					} else if len(application.DeploymentIDs()) > 0 {
 						allRunning = false
 					}
 				}
