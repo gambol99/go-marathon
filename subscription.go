@@ -78,8 +78,8 @@ func (r *marathonClient) RemoveEventsListener(channel EventsChannel) {
 
 // SubscriptionURL retrieves the subscription call back URL used when registering
 func (r *marathonClient) SubscriptionURL() string {
-	if r.config.CallbackUrl != "" {
-		return fmt.Sprintf("%s%s", r.config.CallbackUrl, DEFAULT_EVENTS_URL)
+	if r.config.CallbackURL != "" {
+		return fmt.Sprintf("%s%s", r.config.CallbackURL, DEFAULT_EVENTS_URL)
 	}
 
 	return fmt.Sprintf("http://%s:%d%s", r.ipAddress, r.config.EventsPort, DEFAULT_EVENTS_URL)

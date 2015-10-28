@@ -38,7 +38,7 @@ type Config struct {
 	// http basic password
 	HttpBasicPassword string
 	// custom callback url
-	CallbackUrl string
+	CallbackURL string
 }
 
 // NewDefaultConfig create a default client config
@@ -51,5 +51,5 @@ func NewDefaultConfig() Config {
 		HttpBasicAuthUser: "",
 		HttpBasicPassword: "",
 		RequestTimeout:    5,
-		CallbackUrl:       ""}
+		CallbackURL:       ""}
 }
