@@ -23,9 +23,11 @@ import (
 )
 
 func TestGroups(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
-	groups, err := client.Groups()
-	assert.Nil(t, err)
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	groups, err := endpoint.Client.Groups()
+	assert.NoError(t, err)
 	assert.NotNil(t, groups)
 	assert.Equal(t, len(groups.Groups), 1)
 	group := groups.Groups[0]
@@ -33,16 +35,18 @@ func TestGroups(t *testing.T) {
 }
 
 func TestGroup(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
-	group, err := client.Group(fakeGroupName)
-	assert.Nil(t, err)
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	group, err := endpoint.Client.Group(fakeGroupName)
+	assert.NoError(t, err)
 	assert.NotNil(t, group)
 	assert.Equal(t, len(group.Apps), 1)
 	assert.Equal(t, group.ID, fakeGroupName)
 
-	group, err = client.Group(fakeGroupName1)
+	group, err = endpoint.Client.Group(fakeGroupName1)
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, group)
 	assert.Equal(t, group.ID, fakeGroupName1)
 	assert.NotNil(t, group.Groups)

@@ -24,44 +24,51 @@ import (
 )
 
 func TestAllTasks(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
-	tasks, err := client.AllTasks(nil)
-	assert.Nil(t, err)
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	tasks, err := endpoint.Client.AllTasks(nil)
+	assert.NoError(t, err)
 	assert.NotNil(t, tasks)
 	assert.Equal(t, len(tasks.Tasks), 2)
 }
 
 func TestAllStagingTasks(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
-	tasks, err := client.AllTasks(url.Values{"status": []string{"staging"}})
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	tasks, err := endpoint.Client.AllTasks(url.Values{"status": []string{"staging"}})
 	assert.Nil(t, err)
 	assert.NotNil(t, tasks)
 	assert.Equal(t, len(tasks.Tasks), 0)
 }
 
 func TestTaskEndpoints(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
 
-	endpoints, err := client.TaskEndpoints(fakeAppNameBroken, 8080, true)
-	assert.Nil(t, err)
+	endpoints, err := endpoint.Client.TaskEndpoints(fakeAppNameBroken, 8080, true)
+	assert.NoError(t, err)
 	assert.NotNil(t, endpoints)
 	assert.Equal(t, len(endpoints), 1, t)
 	assert.Equal(t, endpoints[0], "10.141.141.10:31045", t)
 
-	endpoints, err = client.TaskEndpoints(fakeAppNameBroken, 8080, false)
-	assert.Nil(t, err)
+	endpoints, err = endpoint.Client.TaskEndpoints(fakeAppNameBroken, 8080, false)
+	assert.NoError(t, err)
 	assert.NotNil(t, endpoints)
 	assert.Equal(t, len(endpoints), 2, t)
 	assert.Equal(t, endpoints[0], "10.141.141.10:31045", t)
 	assert.Equal(t, endpoints[1], "10.141.141.10:31234", t)
 
-	endpoints, err = client.TaskEndpoints(fakeAppNameBroken, 80, true)
-	assert.NotNil(t, err)
+	endpoints, err = endpoint.Client.TaskEndpoints(fakeAppNameBroken, 80, true)
+	assert.Error(t, err)
 }
 
 func TestKillApplicationTasks(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
-	tasks, err := client.KillApplicationTasks(fakeAppName, "", false)
-	assert.Nil(t, err)
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	tasks, err := endpoint.Client.KillApplicationTasks(fakeAppName, "", false)
+	assert.NoError(t, err)
 	assert.NotNil(t, tasks)
 }

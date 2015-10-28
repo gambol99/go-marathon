@@ -18,7 +18,6 @@ package main
 
 import (
 	"flag"
-	"os"
 	"time"
 
 	marathon "github.com/gambol99/go-marathon"
@@ -26,19 +25,19 @@ import (
 	"github.com/golang/glog"
 )
 
-var marathon_url string
-var marathon_interface string
-var marathon_port int
+var marathonURL string
+var marathonInterface string
+var marathonPort int
 var timeout int
 
 func init() {
-	flag.StringVar(&marathon_url, "url", "http://127.0.0.1:8080", "the url for the marathon endpoint")
-	flag.StringVar(&marathon_interface, "interface", "eth0", "the interface we should use for events")
-	flag.IntVar(&marathon_port, "port", 19999, "the port the events service should run on")
+	flag.StringVar(&marathonURL, "url", "http://127.0.0.1:8080", "the url for the Marathon endpoint")
+	flag.StringVar(&marathonInterface, "interface", "eth0", "the interface we should use for events")
+	flag.IntVar(&marathonPort, "port", 19999, "the port the events service should run on")
 	flag.IntVar(&timeout, "timeout", 60, "listen to events for x seconds")
 }
 
-func Assert(err error) {
+func assert(err error) {
 	if err != nil {
 		glog.Fatalf("Failed, error: %s", err)
 	}
@@ -47,45 +46,42 @@ func Assert(err error) {
 func main() {
 	flag.Parse()
 	config := marathon.NewDefaultConfig()
-	config.URL = marathon_url
-	config.LogOutput = os.Stdout
-	config.EventsPort = marathon_port
-	config.EventsInterface = marathon_interface
-	glog.Infof("Creating a client Marathon: %s", marathon_url)
+	config.URL = marathonURL
+	config.EventsInterface = marathonInterface
+	config.EventsPort = marathonPort
+	glog.Infof("Creating a client, Marathon: %s", marathonURL)
 
 	client, err := marathon.NewClient(config)
-	Assert(err)
+	assert(err)
 
-	/* step: lets register for events */
+	// Register for events
 	events := make(marathon.EventsChannel, 5)
 	deployments := make(marathon.EventsChannel, 5)
-	Assert(client.AddEventsListener(events, marathon.EVENTS_APPLICATIONS))
-	Assert(client.AddEventsListener(deployments, marathon.EVENT_DEPLOYMENT_STEP_SUCCESS))
+	assert(client.AddEventsListener(events, marathon.EVENTS_APPLICATIONS))
+	assert(client.AddEventsListener(deployments, marathon.EVENT_DEPLOYMENT_STEP_SUCCESS))
 
-	// lets listen for 10 seconds and then split
+	// Listen for x seconds and then split
 	timer := time.After(time.Duration(timeout) * time.Second)
-	kill_off := false
+	done := false
 	for {
-		if kill_off {
+		if done {
 			break
 		}
 		select {
 		case <-timer:
-			glog.Infof("Exitting the loop")
-			kill_off = true
+			glog.Infof("Exiting the loop")
+			done = true
 		case event := <-events:
 			glog.Infof("Recieved application event: %s", event)
 		case event := <-deployments:
 			glog.Infof("Recieved deployment event: %v", event)
 			var deployment *marathon.EventDeploymentStepSuccess
 			deployment = event.Event.(*marathon.EventDeploymentStepSuccess)
-			glog.Infof("deployment step:: %v", deployment.CurrentStep)
+			glog.Infof("deployment step: %v", deployment.CurrentStep)
 		}
 	}
 
 	glog.Infof("Removing our subscription")
 	client.RemoveEventsListener(events)
 	client.RemoveEventsListener(deployments)
-
-	Assert(client.UnSubscribe())
 }

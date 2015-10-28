@@ -18,7 +18,6 @@ package main
 
 import (
 	"flag"
-	"os"
 	"time"
 
 	marathon "github.com/gambol99/go-marathon"
@@ -26,23 +25,16 @@ import (
 	"github.com/golang/glog"
 )
 
-var marathon_url string
+var marathonURL string
 
 func init() {
-	flag.StringVar(&marathon_url, "url", "http://127.0.0.1:8080,127.0.0.1:8080", "the url for the marathon endpoint")
-}
-
-func Assert(err error) {
-	if err != nil {
-		glog.Fatalf("Failed, error: %s", err)
-	}
+	flag.StringVar(&marathonURL, "url", "http://127.0.0.1:8080,127.0.0.1:8080", "the url for the marathon endpoint")
 }
 
 func main() {
 	flag.Parse()
 	config := marathon.NewDefaultConfig()
-	config.URL = marathon_url
-	config.LogOutput = os.Stdout
+	config.URL = marathonURL
 	client, err := marathon.NewClient(config)
 	if err != nil {
 		glog.Fatalf("Failed to create a client for marathon, error: %s", err)

@@ -154,6 +154,8 @@ type marathonClient struct {
 	sync.RWMutex
 	// the configuration for the client
 	config Config
+	// the flag used to prevent multiple SSE subscriptions
+	subscribedToSSE bool
 	// the ip address of the client
 	ipAddress string
 	// the http server */
@@ -302,34 +304,39 @@ func (r *marathonClient) apiCall(method, uri, body string, result interface{}) (
 
 func (r *marathonClient) httpRequest(method, uri, body string) (int, string, *http.Response, error) {
 	var content string
+	var response *http.Response
 
-	// step: get a member from the cluster
-	marathon, err := r.cluster.GetMember()
-	if err != nil {
-		return 0, "", nil, err
-	}
+	// Try to connect to Marathon until succeed or
+	// the whole custer is down
+	for {
+		// Get a member from the cluster
+		marathon, err := r.cluster.GetMember()
+		if err != nil {
+			return 0, "", nil, err
+		}
 
-	url := fmt.Sprintf("%s/%s", marathon, uri)
+		url := fmt.Sprintf("%s/%s", marathon, uri)
 
-	glog.V(DEBUG_LEVEL).Infof("[http] request: %s, uri: %s, url: %s", method, uri, url)
-	// step: make the http request to marathon
-	request, err := http.NewRequest(method, url, strings.NewReader(body))
-	if err != nil {
-		return 0, "", nil, err
-	}
+		glog.V(DEBUG_LEVEL).Infof("[http] request: %s, uri: %s, url: %s", method, uri, url)
+		// Make the http request to Marathon
+		request, err := http.NewRequest(method, url, strings.NewReader(body))
+		if err != nil {
+			return 0, "", nil, err
+		}
 
-	// step: add any basic auth and the content headers
-	if r.config.HttpBasicAuthUser != "" {
-		request.SetBasicAuth(r.config.HttpBasicAuthUser, r.config.HttpBasicPassword)
-	}
-	request.Header.Add("Content-Type", "application/json")
-	request.Header.Add("Accept", "application/json")
+		// Add any basic auth and the content headers
+		if r.config.HttpBasicAuthUser != "" {
+			request.SetBasicAuth(r.config.HttpBasicAuthUser, r.config.HttpBasicPassword)
+		}
+		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Accept", "application/json")
 
-	response, err := r.httpClient.Do(request)
-	if err != nil {
+		response, err = r.httpClient.Do(request)
+		if err == nil {
+			break
+		}
+
 		r.cluster.MarkDown()
-		// step: retry the request with another endpoint
-		return r.httpRequest(method, uri, body)
 	}
 
 	if response.ContentLength != 0 {

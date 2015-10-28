@@ -23,9 +23,11 @@ import (
 )
 
 func TestDeployments(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
-	deployments, err := client.Deployments()
-	assert.Nil(t, err)
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	deployments, err := endpoint.Client.Deployments()
+	assert.NoError(t, err)
 	assert.NotNil(t, deployments)
 	assert.Equal(t, len(deployments), 1)
 	deployment := deployments[0]
@@ -36,9 +38,11 @@ func TestDeployments(t *testing.T) {
 }
 
 func TestDeleteDeployment(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
-	id, err := client.DeleteDeployment(fakeDeploymentID, false)
-	assert.Nil(t, err)
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	id, err := endpoint.Client.DeleteDeployment(fakeDeploymentID, false)
+	assert.NoError(t, err)
 	assert.NotNil(t, t)
 	assert.Equal(t, id.DeploymentID, "0b1467fc-d5cd-4bbc-bac2-2805351cee1e")
 	assert.Equal(t, id.Version, "2014-08-26T08:20:26.171Z")

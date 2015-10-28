@@ -23,24 +23,30 @@ import (
 )
 
 func TestInfo(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
-	info, err := client.Info()
-	assert.Nil(t, err)
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	info, err := endpoint.Client.Info()
+	assert.NoError(t, err)
 	assert.Equal(t, info.FrameworkId, "20140730-222531-1863654316-5050-10422-0000")
 	assert.Equal(t, info.Leader, "127.0.0.1:8080")
 	assert.Equal(t, info.Version, "0.7.0-SNAPSHOT")
 }
 
 func TestLeader(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
-	leader, err := client.Leader()
-	assert.Nil(t, err)
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	leader, err := endpoint.Client.Leader()
+	assert.NoError(t, err)
 	assert.Equal(t, leader, "127.0.0.1:8080")
 }
 
 func TestAbdicateLeader(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
-	message, err := client.AbdicateLeader()
-	assert.Nil(t, err)
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	message, err := endpoint.Client.AbdicateLeader()
+	assert.NoError(t, err)
 	assert.Equal(t, message, "Leadership abdicted")
 }

@@ -85,7 +85,7 @@ func TestHasHealthChecks(t *testing.T) {
 	assert.False(t, app.HasHealthChecks())
 	app.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80)
 	_, err := app.CheckTCP(80, 10)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.True(t, app.HasHealthChecks())
 }
 
@@ -93,11 +93,11 @@ func TestApplicationCheckTCP(t *testing.T) {
 	app := NewDockerApplication()
 	assert.False(t, app.HasHealthChecks())
 	_, err := app.CheckTCP(80, 10)
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 	assert.False(t, app.HasHealthChecks())
 	app.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80)
 	_, err = app.CheckTCP(80, 10)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.True(t, app.HasHealthChecks())
 	check := app.HealthChecks[0]
 	if check == nil {
@@ -112,11 +112,11 @@ func TestApplicationCheckHTTP(t *testing.T) {
 	app := NewDockerApplication()
 	assert.False(t, app.HasHealthChecks())
 	_, err := app.CheckHTTP("/", 80, 10)
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 	assert.False(t, app.HasHealthChecks())
 	app.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80)
 	_, err = app.CheckHTTP("/health", 80, 10)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.True(t, app.HasHealthChecks())
 	check := app.HealthChecks[0]
 	if check == nil {
@@ -129,38 +129,46 @@ func TestApplicationCheckHTTP(t *testing.T) {
 }
 
 func TestCreateApplication(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
 	application := NewDockerApplication()
 	application.ID = "/fake_app"
-	app, err := client.CreateApplication(application)
-	assert.Nil(t, err)
+	app, err := endpoint.Client.CreateApplication(application)
+	assert.NoError(t, err)
 	assert.NotNil(t, app)
 	assert.Equal(t, application.ID, "/fake_app")
 	assert.Equal(t, app.Deployments[0]["id"], "f44fd4fc-4330-4600-a68b-99c7bd33014a")
 }
 
 func TestUpdateApplication(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
 	application := NewDockerApplication()
 	application.ID = "/fake_app"
-	id, err := client.UpdateApplication(application)
-	assert.Nil(t, err)
+	id, err := endpoint.Client.UpdateApplication(application)
+	assert.NoError(t, err)
 	assert.Equal(t, id.DeploymentID, "83b215a6-4e26-4e44-9333-5c385eda6438")
 	assert.Equal(t, id.Version, "2014-08-26T07:37:50.462Z")
 }
 
 func TestApplications(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
-	applications, err := client.Applications(nil)
-	assert.Nil(t, err)
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	applications, err := endpoint.Client.Applications(nil)
+	assert.NoError(t, err)
 	assert.NotNil(t, applications)
 	assert.Equal(t, len(applications.Apps), 2)
 }
 
 func TestListApplications(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
-	applications, err := client.ListApplications(nil)
-	assert.Nil(t, err)
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	applications, err := endpoint.Client.ListApplications(nil)
+	assert.NoError(t, err)
 	assert.NotNil(t, applications)
 	assert.Equal(t, len(applications), 2)
 	assert.Equal(t, applications[0], fakeAppName)
@@ -168,78 +176,92 @@ func TestListApplications(t *testing.T) {
 }
 
 func TestApplicationVersions(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
-	versions, err := client.ApplicationVersions(fakeAppName)
-	assert.Nil(t, err)
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	versions, err := endpoint.Client.ApplicationVersions(fakeAppName)
+	assert.NoError(t, err)
 	assert.NotNil(t, versions)
 	assert.NotNil(t, versions.Versions)
 	assert.Equal(t, len(versions.Versions), 1)
 	assert.Equal(t, versions.Versions[0], "2014-04-04T06:25:31.399Z")
 	/* check we get an error on app not there */
-	versions, err = client.ApplicationVersions("/not/there")
-	assert.NotNil(t, err)
+	versions, err = endpoint.Client.ApplicationVersions("/not/there")
+	assert.Error(t, err)
 }
 
 func TestRestartApplication(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
-	id, err := client.RestartApplication(fakeAppName, false)
-	assert.Nil(t, err)
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	id, err := endpoint.Client.RestartApplication(fakeAppName, false)
+	assert.NoError(t, err)
 	assert.NotNil(t, id)
 	assert.Equal(t, "83b215a6-4e26-4e44-9333-5c385eda6438", id.DeploymentID)
 	assert.Equal(t, "2014-08-26T07:37:50.462Z", id.Version)
-	id, err = client.RestartApplication("/not/there", false)
-	assert.NotNil(t, err)
+	id, err = endpoint.Client.RestartApplication("/not/there", false)
+	assert.Error(t, err)
 	assert.Nil(t, id)
 }
 
 func TestSetApplicationVersion(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
-	deployment, err := client.SetApplicationVersion(fakeAppName, &ApplicationVersion{Version: "2014-08-26T07:37:50.462Z"})
-	assert.Nil(t, err)
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	deployment, err := endpoint.Client.SetApplicationVersion(fakeAppName, &ApplicationVersion{Version: "2014-08-26T07:37:50.462Z"})
+	assert.NoError(t, err)
 	assert.NotNil(t, deployment)
 	assert.NotNil(t, deployment.Version)
 	assert.NotNil(t, deployment.DeploymentID)
 	assert.Equal(t, deployment.Version, "2014-08-26T07:37:50.462Z")
 	assert.Equal(t, deployment.DeploymentID, "83b215a6-4e26-4e44-9333-5c385eda6438")
-	_, err = client.SetApplicationVersion("/not/there", &ApplicationVersion{Version: "2014-04-04T06:25:31.399Z"})
-	assert.NotNil(t, err)
+	_, err = endpoint.Client.SetApplicationVersion("/not/there", &ApplicationVersion{Version: "2014-04-04T06:25:31.399Z"})
+	assert.Error(t, err)
 }
 
 func TestHasApplicationVersion(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
-	found, err := client.HasApplicationVersion(fakeAppName, "2014-04-04T06:25:31.399Z")
-	assert.Nil(t, err)
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	found, err := endpoint.Client.HasApplicationVersion(fakeAppName, "2014-04-04T06:25:31.399Z")
+	assert.NoError(t, err)
 	assert.True(t, found)
-	found, err = client.HasApplicationVersion(fakeAppName, "###2015-04-04T06:25:31.399Z")
-	assert.Nil(t, err)
+	found, err = endpoint.Client.HasApplicationVersion(fakeAppName, "###2015-04-04T06:25:31.399Z")
+	assert.NoError(t, err)
 	assert.False(t, found)
 }
 
 func TestDeleteApplication(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
-	id, err := client.DeleteApplication(fakeAppName)
-	assert.Nil(t, err)
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	id, err := endpoint.Client.DeleteApplication(fakeAppName)
+	assert.NoError(t, err)
 	assert.NotNil(t, id)
 	assert.Equal(t, "83b215a6-4e26-4e44-9333-5c385eda6438", id.DeploymentID)
 	assert.Equal(t, "2014-08-26T07:37:50.462Z", id.Version)
-	id, err = client.DeleteApplication("no_such_app")
-	assert.NotNil(t, err)
+	id, err = endpoint.Client.DeleteApplication("no_such_app")
+	assert.Error(t, err)
 }
 
 func TestApplicationOK(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
-	ok, err := client.ApplicationOK(fakeAppName)
-	assert.Nil(t, err)
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	ok, err := endpoint.Client.ApplicationOK(fakeAppName)
+	assert.NoError(t, err)
 	assert.True(t, ok)
-	ok, err = client.ApplicationOK(fakeAppNameBroken)
-	assert.Nil(t, err)
+	ok, err = endpoint.Client.ApplicationOK(fakeAppNameBroken)
+	assert.NoError(t, err)
 	assert.False(t, ok)
 }
 
 func TestListApplication(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
-	application, err := client.Application(fakeAppName)
-	assert.Nil(t, err)
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	application, err := endpoint.Client.Application(fakeAppName)
+	assert.NoError(t, err)
 	assert.NotNil(t, application)
 	assert.Equal(t, application.ID, fakeAppName)
 	assert.NotNil(t, application.HealthChecks)
@@ -249,8 +271,10 @@ func TestListApplication(t *testing.T) {
 }
 
 func TestHasApplication(t *testing.T) {
-	client := NewFakeMarathonEndpoint(t)
-	found, err := client.HasApplication(fakeAppName)
-	assert.Nil(t, err)
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	found, err := endpoint.Client.HasApplication(fakeAppName)
+	assert.NoError(t, err)
 	assert.True(t, found)
 }

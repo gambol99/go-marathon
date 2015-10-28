@@ -1,76 +1,78 @@
 [![Build Status](https://travis-ci.org/gambol99/go-marathon.svg?branch=master)](https://travis-ci.org/gambol99/go-marathon)
 [![GoDoc](http://godoc.org/github.com/gambol99/go-marathon?status.png)](http://godoc.org/github.com/gambol99/go-marathon)
 
-#### **Go-Marathon**
------
+# Go-Marathon
 
-Go-marathon is a API library for working with [Marathon](https://mesosphere.github.io/marathon/). It currently supports
+Go-marathon is a API library for working with [Marathon](https://mesosphere.github.io/marathon/).
+It currently supports
 
-  > - Application and group deployment
-  > - Helper filters for pulling the status, configuration and tasks
-  > - Multiple Endpoint support for HA deployments
-  > - Marathon Subscriptions and Event callbacks
+- Application and group deployment
+- Helper filters for pulling the status, configuration and tasks
+- Multiple Endpoint support for HA deployments
+- Marathon Event Subscriptions and Event Streams
 
- Note: the library still under active development; requires >= Go 1.3
+Note: the library is still under active development; requires Go >= 1.3
 
-#### **Code Examples**
- -------
+## Code Examples
 
-There is also a examples directory in the source, which show hints and snippets of code of how to use it - which is probably the best place to start.
+There is also an examples directory in the source which shows hints and snippets of code of how to use it —
+which is probably the best place to start.
 
-**Creating a client**
+### Creating a client
 
 ```Go
 import (
-    "flag"
-
-    marathon "github.com/gambol99/go-marathon"
-    "github.com/golang/glog"
-    "time"
+	marathon "github.com/gambol99/go-marathon"
+	"github.com/golang/glog"
 )
 
-marathon_url := http://10.241.1.71:8080
-  config := marathon.NewDefaultConfig()
-  config.URL = marathon_url
-  config.LogOutput = os.Stdout
-  if client, err := marathon.NewClient(config); err != nil {
-  	glog.Fatalf("Failed to create a client for marathon, error: %s", err)
-  } else {
-  	applications, err := client.Applications()
-  	...
-  ```
+marathonURL := "http://10.241.1.71:8080"
+config := marathon.NewDefaultConfig()
+config.URL = marathonURL
+client, err := marathon.NewClient(config)
+if err != nil {
+	glog.Fatalf("Failed to create a client for marathon, error: %s", err)
+}
 
-> Note, you can also specify multiple endpoint for Marathon (i.e. you have setup Marathon in HA mode and having multiple running)
-
-```Go
-marathon := "http://10.241.1.71:8080,10.241.1.72:8080,10.241.1.73:8080"
+applications, err := client.Applications()
+...
 ```
 
-The first one specified will be used, if that goes offline the member is marked as *"unavailable"* and a background process will continue to ping the member until it's back online.
-
-**Listing the applications**
+Note, you can also specify multiple endpoint for Marathon (i.e. you have setup Marathon in HA mode and
+having multiple running)
 
 ```Go
-if applications, err := client.Applications(); err != nil
+marathonURL := "http://10.241.1.71:8080,10.241.1.72:8080,10.241.1.73:8080"
+```
+
+The first one specified will be used, if that goes offline the member is marked as *"unavailable"* and a
+background process will continue to ping the member until it's back online.
+
+### Listing the applications
+
+```Go
+applications, err := client.Applications()
+if err != nil {
 	glog.Errorf("Failed to list applications")
-} else {
-	glog.Infof("Found %d application running", len(applications.Apps))
-	for _, application := range applications.Apps {
-		glog.Infof("Application: %s", application)
-		details, err := client.Application(application.ID)
-		Assert(err)
-		if details.Tasks != nil && len(details.Tasks) > 0 {
-			for _, task := range details.Tasks {
-				glog.Infof("task: %s", task)
-			}
-			// check the health of the application
-			health, err := client.ApplicationOK(details.ID)
-			glog.Infof("Application: %s, healthy: %t", details.ID, health)
+}
+
+glog.Infof("Found %d applications running", len(applications.Apps))
+for _, application := range applications.Apps {
+	glog.Infof("Application: %s", application)
+	details, err := client.Application(application.ID)
+	assert(err)
+	if details.Tasks != nil && len(details.Tasks) > 0 {
+		for _, task := range details.Tasks {
+			glog.Infof("task: %s", task)
 		}
+		// check the health of the application
+		health, err := client.ApplicationOK(details.ID)
+		glog.Infof("Application: %s, healthy: %t", details.ID, health)
 	}
+}
 ```
 
- **Creating a new application**
+### Creating a new application
 
 ```Go
 glog.Infof("Deploying a new application")
@@ -91,9 +93,9 @@ if _, err := client.CreateApplication(application); err != nil {
 }
 ```
 
-**Scale Application**
+### Scaling application
 
-Change the number of instance of the application to 4
+Change the number of application instances to 4
 
 ```Go
 glog.Infof("Scale to 4 instances")
@@ -105,52 +107,138 @@ if err := client.ScaleApplicationInstances(application.ID, 10); err != nil {
 }
 ```
 
-**Subscription & Events**
+### Subscription & Events
 
-Request to listen to events related to applications - namely status updates, health checks changes and failures
+Request to listen to events related to applications — namely status updates, health checks
+changes and failures. There are two different event transports controlled by `EventsTransport`
+setting with the following possible values: `EventsTransportSSE` and `EventsTransportCallback` (default value).
+See [Event Stream](https://mesosphere.github.io/marathon/docs/rest-api.html#event-stream) and
+[Event Subscriptions](https://mesosphere.github.io/marathon/docs/rest-api.html#event-subscriptions) for details.
+
+#### Event Stream
+
+Only available in Marathon >= 0.9.0. Does not require any special configuration or prerequisites.
 
 ```Go
-/* step: lets register for events */
-update := make(marathon.EventsChannel,5)
-if err := client.AddEventsListener(update, marathon.EVENTS_APPLICATIONS); err != nil {
-	glog.Fatalf("Failed to register for subscriptions, %s", err)
-} else {
-	for {
-	    event := <-update
-	    glog.Infof("EVENT: %s", event )
+// Configure client
+config := marathon.NewDefaultConfig()
+config.URL = marathonURL
+config.EventsTransport = marathon.EventsTransportSSE
+
+client, err := marathon.NewClient(config)
+if err != nil {
+	glog.Fatalf("Failed to create a client for marathon, error: %s", err)
+}
+
+// Register for events
+events := make(marathon.EventsChannel, 5)
+err = client.AddEventsListener(events, marathon.EVENTS_APPLICATIONS)
+if err != nil {
+	glog.Fatalf("Failed to register for events, %s", err)
+}
+
+timer := time.After(60 * time.Second)
+done := false
+
+// Receive events from channel for 60 seconds
+for {
+	if done {
+		break
+	}
+	select {
+	case <-timer:
+		glog.Infof("Exiting the loop")
+		done = true
+	case event := <-events:
+		glog.Infof("Recieved event: %s", event)
 	}
 }
 
-# A full list of the events
+// Unsubscribe from Marathon events
+client.RemoveEventsListener(events)
+```
 
+#### Event Subscriptions
+
+Requires to start a built-in web server accessible by Marathon to connect and push events to. Consider the following
+additional settings:
+
+- `EventsInterface` — the interface we should be listening on for events. Default `"eth0"`.
+- `EventsPort` — built-in web server port. Default `10001`.
+- `CallbackURL` — custom callback URL. Default `""`.
+
+```Go
+// Configure client
+config := marathon.NewDefaultConfig()
+config.URL = marathonURL
+config.EventsInterface = marathonInterface
+config.EventsPort = marathonPort
+
+client, err := marathon.NewClient(config)
+if err != nil {
+	glog.Fatalf("Failed to create a client for marathon, error: %s", err)
+}
+
+// Register for events
+events := make(marathon.EventsChannel, 5)
+err = client.AddEventsListener(events, marathon.EVENTS_APPLICATIONS)
+if err != nil {
+	glog.Fatalf("Failed to register for events, %s", err)
+}
+
+timer := time.After(60 * time.Second)
+done := false
+
+// Receive events from channel for 60 seconds
+for {
+	if done {
+		break
+	}
+	select {
+	case <-timer:
+		glog.Infof("Exiting the loop")
+		done = true
+	case event := <-events:
+		glog.Infof("Recieved event: %s", event)
+	}
+}
+
+// Unsubscribe from Marathon events
+client.RemoveEventsListener(events)
+```
+
+A full list of the events:
+
+```Go
 const (
-    EVENT_API_REQUEST = 1 << iota
-    EVENT_STATUS_UPDATE
-    EVENT_FRAMEWORK_MESSAGE
-    EVENT_SUBSCRIPTION
-    EVENT_UNSUBSCRIBED
-    EVENT_ADD_HEALTH_CHECK
-    EVENT_REMOVE_HEALTH_CHECK
-    EVENT_FAILED_HEALTH_CHECK
-    EVENT_CHANGED_HEALTH_CHECK
-    EVENT_GROUP_CHANGE_SUCCESS
-    EVENT_GROUP_CHANGE_FAILED
-    EVENT_DEPLOYMENT_SUCCESS
-    EVENT_DEPLOYMENT_FAILED
-    EVENT_DEPLOYMENT_INFO
-    EVENT_DEPLOYMENT_STEP_SUCCESS
-    EVENT_DEPLOYMENT_STEP_FAILED
+	EVENT_API_REQUEST = 1 << iota
+	EVENT_STATUS_UPDATE
+	EVENT_FRAMEWORK_MESSAGE
+	EVENT_SUBSCRIPTION
+	EVENT_UNSUBSCRIBED
+	EVENT_STREAM_ATTACHED
+	EVENT_STREAM_DETACHED
+	EVENT_ADD_HEALTH_CHECK
+	EVENT_REMOVE_HEALTH_CHECK
+	EVENT_FAILED_HEALTH_CHECK
+	EVENT_CHANGED_HEALTH_CHECK
+	EVENT_GROUP_CHANGE_SUCCESS
+	EVENT_GROUP_CHANGE_FAILED
+	EVENT_DEPLOYMENT_SUCCESS
+	EVENT_DEPLOYMENT_FAILED
+	EVENT_DEPLOYMENT_INFO
+	EVENT_DEPLOYMENT_STEP_SUCCESS
+	EVENT_DEPLOYMENT_STEP_FAILED
+	EVENT_APP_TERMINATED
 )
 
 const (
-    EVENTS_APPLICATIONS  = EVENT_STATUS_UPDATE | EVENT_CHANGED_HEALTH_CHECK | EVENT_FAILED_HEALTH_CHECK
-    EVENTS_SUBSCRIPTIONS = EVENT_SUBSCRIPTION | EVENT_UNSUBSCRIBED
+	EVENTS_APPLICATIONS  = EVENT_STATUS_UPDATE | EVENT_CHANGED_HEALTH_CHECK | EVENT_FAILED_HEALTH_CHECK | EVENT_APP_TERMINATED
+	EVENTS_SUBSCRIPTIONS = EVENT_SUBSCRIPTION | EVENT_UNSUBSCRIBED | EVENT_STREAM_ATTACHED | EVENT_STREAM_DETACHED
 )
 ```
 
-----
-
-#### **Contributing**
+## Contributing
 
  - Fork it
  - Create your feature branch (git checkout -b my-new-feature)
