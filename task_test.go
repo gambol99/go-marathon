@@ -24,10 +24,18 @@ import (
 
 func TestAllTasks(t *testing.T) {
 	client := NewFakeMarathonEndpoint(t)
-	tasks, err := client.AllTasks()
+	tasks, err := client.AllTasks("")
 	assert.Nil(t, err)
 	assert.NotNil(t, tasks)
 	assert.Equal(t, len(tasks.Tasks), 2)
+}
+
+func TestAllStagingTasks(t *testing.T) {
+	client := NewFakeMarathonEndpoint(t)
+	tasks, err := client.AllTasks("staging")
+	assert.Nil(t, err)
+	assert.NotNil(t, tasks)
+	assert.Equal(t, len(tasks.Tasks), 0)
 }
 
 func TestTaskEndpoints(t *testing.T) {

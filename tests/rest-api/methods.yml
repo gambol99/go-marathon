@@ -753,6 +753,10 @@
             }
         ]
     }
+- uri: /v2/tasks?status=staging
+  method: GET
+  content: |
+    {"tasks":[]}
 - uri: /v2/deployments
   method: GET
   content: |
