@@ -71,7 +71,7 @@ type Application struct {
 	LastTaskFailure       *LastTaskFailure    `json:"lastTaskFailure,omitempty"`
 }
 
-// ApplicationVersions is a collection of application versions for a specific app in marathin
+// ApplicationVersions is a collection of application versions for a specific app in marathon
 type ApplicationVersions struct {
 	Versions []string `json:"versions"`
 }
