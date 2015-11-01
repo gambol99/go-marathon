@@ -56,15 +56,10 @@ func (r *Task) HasHealthCheckResults() bool {
 }
 
 // AllTasks list tasks of all applications.
-//		status:		Return only those tasks whose status matches this parameter.
-//				If "" specified, all tasks are returned. Possible values: running, staging.
-func (r *marathonClient) AllTasks(status string) (*Tasks, error) {
+//		v:		Get parameters for the API call.
+func (r *marathonClient) AllTasks(v url.Values) (*Tasks, error) {
 	tasks := new(Tasks)
-	uri := MARATHON_API_TASKS
-	if status != "" {
-		uri = fmt.Sprintf("%s?status=%s", uri, status)
-	}
-	if err := r.apiGet(uri, nil, tasks); err != nil {
+	if err := r.apiGet(MARATHON_API_TASKS+"?"+v.Encode(), nil, tasks); err != nil {
 		return nil, err
 	}
 
