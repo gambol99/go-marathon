@@ -55,10 +55,11 @@ func (r *Task) HasHealthCheckResults() bool {
 	return true
 }
 
-// AllTasks ... Retrieve all the tasks currently running
-func (r *marathonClient) AllTasks() (*Tasks, error) {
+// AllTasks list tasks of all applications.
+//		v:		Get parameters for the API call.
+func (r *marathonClient) AllTasks(v url.Values) (*Tasks, error) {
 	tasks := new(Tasks)
-	if err := r.apiGet(MARATHON_API_TASKS, nil, tasks); err != nil {
+	if err := r.apiGet(MARATHON_API_TASKS+"?"+v.Encode(), nil, tasks); err != nil {
 		return nil, err
 	}
 
@@ -74,20 +75,6 @@ func (r *marathonClient) Tasks(id string) (*Tasks, error) {
 	}
 
 	return tasks, nil
-}
-
-// ListTasks ... Retrieve an array of task ids currently running in marathon
-func (r *marathonClient) ListTasks() ([]string, error) {
-	tasks, err := r.AllTasks()
-	if err != nil {
-		return nil, err
-	}
-	list := make([]string, 0)
-	for _, task := range tasks.Tasks {
-		list = append(list, task.ID)
-	}
-
-	return list, nil
 }
 
 // KillApplicationTasks ... Kill all tasks relating to an application
