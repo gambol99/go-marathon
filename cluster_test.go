@@ -46,12 +46,15 @@ func TestNonActive(t *testing.T) {
 func TestGetMember(t *testing.T) {
 	cluster, _ := newCluster(fakeMarathonURL)
 	member, err := cluster.GetMember()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, member, "http://127.0.0.1:3000")
 }
 
-func TestMarkdown(t *testing.T) {
-	cluster, _ := newCluster(fakeMarathonURL)
+func TestMarkDown(t *testing.T) {
+	endpoint := NewFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	cluster, _ := newCluster(endpoint.URL)
 	assert.Equal(t, len(cluster.Active()), 3)
 	cluster.MarkDown()
 	cluster.MarkDown()

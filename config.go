@@ -21,10 +21,15 @@ import (
 	"io/ioutil"
 )
 
-// Config hold the setting and options for the client
+// EventsTransport describes which transport should be used to deliver Marathon events
+type EventsTransport int
+
+// Config holds the settings and options for the client
 type Config struct {
 	// the url for marathon
 	URL string
+	// events transport: EventsTransportCallback or EventsTransportSSE
+	EventsTransport EventsTransport
 	// event handler port
 	EventsPort int
 	// the interface we should be listening on for events
@@ -45,6 +50,7 @@ type Config struct {
 func NewDefaultConfig() Config {
 	return Config{
 		URL:               "http://127.0.0.1:8080",
+		EventsTransport:   EventsTransportCallback,
 		EventsPort:        10001,
 		EventsInterface:   "eth0",
 		LogOutput:         ioutil.Discard,

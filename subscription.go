@@ -25,10 +25,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/donovanhide/eventsource"
 	"github.com/golang/glog"
 )
 
-// Subscriptions is a collection to urls that marathon is implmenting a callback on
+// Subscriptions is a collection to urls that marathon is implementing a callback on
 type Subscriptions struct {
 	CallbackURLs []string `json:"callbackUrls"`
 }
@@ -48,9 +49,10 @@ func (r *marathonClient) Subscriptions() (*Subscriptions, error) {
 func (r *marathonClient) AddEventsListener(channel EventsChannel, filter int) error {
 	r.Lock()
 	defer r.Unlock()
+
 	// step: someone has asked to start listening to event, we need to register for events
 	// if we haven't done so already
-	if err := r.RegisterSubscription(); err != nil {
+	if err := r.registerSubscription(); err != nil {
 		return err
 	}
 
@@ -66,17 +68,18 @@ func (r *marathonClient) AddEventsListener(channel EventsChannel, filter int) er
 func (r *marathonClient) RemoveEventsListener(channel EventsChannel) {
 	r.Lock()
 	defer r.Unlock()
+
 	if _, found := r.listeners[channel]; found {
 		delete(r.listeners, channel)
-		/* step: if there is no one listening anymore, lets remove our self
+		/* step: if there is no one listening anymore, let's remove ourselves
 		from the events callback */
-		if len(r.listeners) <= 0 {
+		if r.config.EventsTransport == EventsTransportCallback && len(r.listeners) == 0 {
 			r.UnSubscribe()
 		}
 	}
 }
 
-// SubscriptionURL retrieves the subscription call back URL used when registering
+// SubscriptionURL retrieves the subscription callback URL used when registering
 func (r *marathonClient) SubscriptionURL() string {
 	if r.config.CallbackURL != "" {
 		return fmt.Sprintf("%s%s", r.config.CallbackURL, DEFAULT_EVENTS_URL)
@@ -85,8 +88,19 @@ func (r *marathonClient) SubscriptionURL() string {
 	return fmt.Sprintf("http://%s:%d%s", r.ipAddress, r.config.EventsPort, DEFAULT_EVENTS_URL)
 }
 
-// RegisterSubscription registers ourselves with Marathon to receive events from it's callback facility
-func (r *marathonClient) RegisterSubscription() error {
+// RegisterSubscription registers ourselves with Marathon to receive events from configured transport facility
+func (r *marathonClient) registerSubscription() error {
+	switch r.config.EventsTransport {
+	case EventsTransportCallback:
+		return r.registerCallbackSubscription()
+	case EventsTransportSSE:
+		return r.registerSSESubscription()
+	default:
+		return fmt.Errorf("the events transport: %d is not supported", r.config.EventsTransport)
+	}
+}
+
+func (r *marathonClient) registerCallbackSubscription() error {
 	if r.eventsHTTP == nil {
 		ipAddress, err := getInterfaceAddress(r.config.EventsInterface)
 		if err != nil {
@@ -98,7 +112,7 @@ func (r *marathonClient) RegisterSubscription() error {
 		r.ipAddress = ipAddress
 		binding := fmt.Sprintf("%s:%d", ipAddress, r.config.EventsPort)
 		// step: register the handler
-		http.HandleFunc(DEFAULT_EVENTS_URL, r.handleMarathonEvent)
+		http.HandleFunc(DEFAULT_EVENTS_URL, r.handleCallbackEvent)
 		// step: create the http server
 		r.eventsHTTP = &http.Server{
 			Addr:           binding,
@@ -130,13 +144,56 @@ func (r *marathonClient) RegisterSubscription() error {
 		return err
 	}
 	if !found {
-		// step: we need to register our self
+		// step: we need to register ourselves
 		uri := fmt.Sprintf("%s?callbackUrl=%s", MARATHON_API_SUBSCRIPTION, callback)
 		if err := r.apiPost(uri, "", nil); err != nil {
 			return err
 		}
 	}
 
+	return nil
+}
+
+func (r *marathonClient) registerSSESubscription() error {
+	// Prevent multiple SSE subscriptions
+	if r.subscribedToSSE {
+		return nil
+	}
+
+	var stream *eventsource.Stream
+
+	// Try to connect to Marathon until succeed or
+	// the whole custer is down
+	for {
+		// Get a member from the cluster
+		marathon, err := r.cluster.GetMember()
+		if err != nil {
+			return err
+		}
+		url := fmt.Sprintf("%s/%s", marathon, MARATHON_API_EVENT_STREAM)
+
+		// Try to connect to stream
+		stream, err = eventsource.Subscribe(url, "")
+		if err == nil {
+			break
+		}
+
+		glog.V(DEBUG_LEVEL).Infof("failed to connect to Marathon event stream, error: %s", err)
+		r.cluster.MarkDown()
+	}
+
+	go func() {
+		for {
+			select {
+			case ev := <-stream.Events:
+				r.handleEvent(ev.Data())
+			case err := <-stream.Errors:
+				glog.V(DEBUG_LEVEL).Infof("failed to receive event, error: %s", err)
+			}
+		}
+	}()
+
+	r.subscribedToSSE = true
 	return nil
 }
 
@@ -164,32 +221,26 @@ func (r *marathonClient) HasSubscription(callback string) (bool, error) {
 	return false, nil
 }
 
-func (r *marathonClient) handleMarathonEvent(writer http.ResponseWriter, request *http.Request) {
-	body, err := ioutil.ReadAll(request.Body)
-	if err != nil {
-		return
-	}
-
-	// step: process the event and decode the event
-	content := string(body[:])
+func (r *marathonClient) handleEvent(content string) {
+	// step: process and decode the event
 	eventType := new(EventType)
-	err = json.NewDecoder(strings.NewReader(content)).Decode(eventType)
+	err := json.NewDecoder(strings.NewReader(content)).Decode(eventType)
 	if err != nil {
 		glog.V(DEBUG_LEVEL).Infof("failed to decode the event type, content: %s, error: %s", content, err)
 		return
 	}
 
-	// step: check the type is handled
-	event, err := r.GetEvent(eventType.EventType)
+	// step: check whether event type is handled
+	event, err := GetEvent(eventType.EventType)
 	if err != nil {
-		glog.V(DEBUG_LEVEL).Infof("unable to retrieve the event, type: %s", eventType.EventType)
+		glog.V(DEBUG_LEVEL).Infof("unable to handle event, type: %s, error: %s", eventType.EventType, err)
 		return
 	}
 
-	// step: lets decode message
+	// step: let's decode message
 	err = json.NewDecoder(strings.NewReader(content)).Decode(event.Event)
 	if err != nil {
-		glog.V(DEBUG_LEVEL).Infof("failed to decode the event type: %d, name: %s error: %s", event.ID, err)
+		glog.V(DEBUG_LEVEL).Infof("failed to decode the event, id: %d, error: %s", event.ID, err)
 		return
 	}
 
@@ -207,51 +258,12 @@ func (r *marathonClient) handleMarathonEvent(writer http.ResponseWriter, request
 	}
 }
 
-func (r *marathonClient) GetEvent(name string) (*Event, error) {
-	// step: check it's supported
-	id, found := Events[name]
-	if found {
-		event := new(Event)
-		event.ID = id
-		event.Name = name
-		switch name {
-		case "api_post_event":
-			event.Event = new(EventAPIRequest)
-		case "status_update_event":
-			event.Event = new(EventStatusUpdate)
-		case "framework_message_event":
-			event.Event = new(EventFrameworkMessage)
-		case "subscribe_event":
-			event.Event = new(EventSubscription)
-		case "unsubscribe_event":
-			event.Event = new(EventUnsubscription)
-		case "add_health_check_event":
-			event.Event = new(EventAddHealthCheck)
-		case "remove_health_check_event":
-			event.Event = new(EventRemoveHealthCheck)
-		case "failed_health_check_event":
-			event.Event = new(EventFailedHealthCheck)
-		case "health_status_changed_event":
-			event.Event = new(EventHealthCheckChanged)
-		case "group_change_success":
-			event.Event = new(EventGroupChangeSuccess)
-		case "group_change_failed":
-			event.Event = new(EventGroupChangeFailed)
-		case "deployment_success":
-			event.Event = new(EventDeploymentSuccess)
-		case "deployment_failed":
-			event.Event = new(EventDeploymentFailed)
-		case "deployment_info":
-			event.Event = new(EventDeploymentInfo)
-		case "deployment_step_success":
-			event.Event = new(EventDeploymentStepSuccess)
-		case "deployment_step_failure":
-			event.Event = new(EventDeploymentStepFailure)
-		case "app_terminated_event":
-			event.Event = new(EventAppTerminated)
-		}
-		return event, nil
+func (r *marathonClient) handleCallbackEvent(writer http.ResponseWriter, request *http.Request) {
+	body, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		glog.V(DEBUG_LEVEL).Infof("failed to read request body, error: %s", err)
+		return
 	}
 
-	return nil, fmt.Errorf("the event type: %s was not found or supported", name)
+	r.handleEvent(string(body[:]))
 }

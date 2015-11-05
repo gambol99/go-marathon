@@ -23,6 +23,7 @@ const (
 
 	/* --- api related constants --- */
 	MARATHON_API_VERSION      = "v2"
+	MARATHON_API_EVENT_STREAM = MARATHON_API_VERSION + "/events"
 	MARATHON_API_SUBSCRIPTION = MARATHON_API_VERSION + "/eventSubscriptions"
 	MARATHON_API_APPS         = MARATHON_API_VERSION + "/apps"
 	MARATHON_API_TASKS        = MARATHON_API_VERSION + "/tasks"
@@ -35,4 +36,12 @@ const (
 	MARATHON_API_LOGGING      = "/logging"
 	MARATHON_API_HELP         = "/help"
 	MARATHON_API_METRICS      = "/metrics"
+)
+
+const (
+	// EventsTransportCallback activates callback events transport
+	EventsTransportCallback EventsTransport = 1 << iota
+
+	// EventsTransportSSE activates stream events transport
+	EventsTransportSSE
 )

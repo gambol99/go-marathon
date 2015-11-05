@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-
 )
 
 func TestUtilsAtomicIsSwitched(t *testing.T) {
@@ -41,23 +40,23 @@ func TestUtilsAtomicIsSwitchedOff(t *testing.T) {
 }
 
 func TestUtilsDeadline(t *testing.T) {
-	err := deadline(time.Duration(5) * time.Millisecond, func(chan bool) error {
+	err := deadline(time.Duration(5)*time.Millisecond, func(chan bool) error {
 		<-time.After(time.Duration(1) * time.Second)
 		return nil
 	})
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 	assert.Equal(t, ErrTimeoutError, err)
 
-	err = deadline(time.Duration(5) * time.Second, func(chan bool) error {
+	err = deadline(time.Duration(5)*time.Second, func(chan bool) error {
 		<-time.After(time.Duration(5) * time.Millisecond)
 		return nil
 	})
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }
 
 func TestUtilsContains(t *testing.T) {
-	list := []string{"1","2","3"}
+	list := []string{"1", "2", "3"}
 	assert.True(t, contains(list, "2"))
 	assert.False(t, contains(list, "12"))
 }
@@ -71,10 +70,10 @@ func TestUtilsValidateID(t *testing.T) {
 
 func TestUtilsGetInterfaceAddress(t *testing.T) {
 	address, err := getInterfaceAddress("lo")
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "127.0.0.1", address)
 	address, err = getInterfaceAddress("nothing")
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 	assert.Equal(t, "", address)
 }
 
