@@ -22,6 +22,13 @@ deps:
 	@echo "--> Installing build dependencies"
 	@go get -d -v ./... $(DEPS)
 
+lint:
+	@echo "--> Running golint"
+	@which golint 2>/dev/null ; if [ $$? -eq 1 ]; then \
+		go get -u github.com/golang/lint/golint; \
+	fi
+	@golint .
+
 vet:
 	@echo "--> Running go tool vet $(VETARGS) ."
 	@go tool vet 2>/dev/null ; if [ $$? -eq 3 ]; then \

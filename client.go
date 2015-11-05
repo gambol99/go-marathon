@@ -119,7 +119,7 @@ type Marathon interface {
 	// remove a events listener
 	RemoveEventsListener(channel EventsChannel)
 	// remove our self from subscriptions
-	UnSubscribe() error
+	Unsubscribe(string) error
 
 	// --- MISC ---
 

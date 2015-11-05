@@ -71,10 +71,10 @@ func (r *marathonClient) RemoveEventsListener(channel EventsChannel) {
 
 	if _, found := r.listeners[channel]; found {
 		delete(r.listeners, channel)
-		/* step: if there is no one listening anymore, let's remove ourselves
-		from the events callback */
+		// step: if there is no one else listening, let's remove ourselves
+		// from the events callback
 		if r.config.EventsTransport == EventsTransportCallback && len(r.listeners) == 0 {
-			r.UnSubscribe()
+			r.Unsubscribe(r.SubscriptionURL())
 		}
 	}
 }
@@ -197,10 +197,11 @@ func (r *marathonClient) registerSSESubscription() error {
 	return nil
 }
 
-// UnSubscribe removes ourselves from Marathon's callback facility
-func (r *marathonClient) UnSubscribe() error {
-	// step: remove from the list of subscriptions
-	return r.apiDelete(fmt.Sprintf("%s?callbackUrl=%s", MARATHON_API_SUBSCRIPTION, r.SubscriptionURL()), nil, nil)
+// Unsubscribe removes ourselves from Marathon's callback facility
+//	url		: the url you wish to unsubscribe
+func (r *marathonClient) Unsubscribe(callbackURL string) error {
+	// step: remove from the list of subscriptions	
+	return r.apiDelete(fmt.Sprintf("%s?callbackUrl=%s", MARATHON_API_SUBSCRIPTION, callbackURL), nil, nil)
 }
 
 // HasSubscription checks to see a subscription already exists with Marathon
