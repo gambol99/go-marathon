@@ -44,7 +44,7 @@ func main() {
 			glog.Errorf("Failed to retrieve a list of applications, error: %s", err)
 		} else {
 			glog.Infof("Retrieved a list of applications, %v", application)
-		}
+		}	
 		glog.Infof("Going to sleep for 20 seconds")
 		time.Sleep(5 * time.Second)
 	}

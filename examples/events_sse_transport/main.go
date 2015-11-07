@@ -20,7 +20,7 @@ import (
 	"flag"
 	"time"
 
-	marathon "github.com/x-cray/go-marathon"
+	marathon "github.com/gambol99/go-marathon"
 
 	"github.com/golang/glog"
 )
