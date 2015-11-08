@@ -11,7 +11,9 @@ It currently supports
 - Multiple Endpoint support for HA deployments
 - Marathon Event Subscriptions and Event Streams
 
-Note: the library is still under active development; requires Go >= 1.3
+Note: the library is still under active development; users should expect frequent (possibly breaking) API changes for the time being.
+
+It requires Go version 1.3 or higher.
 
 ## Code Examples
 
