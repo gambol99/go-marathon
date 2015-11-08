@@ -130,15 +130,15 @@ func (r *Application) AllTaskRunning() bool {
 	return false
 }
 
-// DependsOn adds a dependency for this application. Note, if you want to wait for an application
-// dependency to actually be UP, i.e. not just deployed, you need a health check on the
-// dependant app.
-//		name:	the application id which this application depends on
-func (r *Application) DependsOn(name string) *Application {
+// DependsOn adds one or more dependencies for this application. Note, if you want to wait for
+// an application dependency to actually be UP, i.e. not just deployed, you need a health check
+// on the dependant app.
+//		names:	the application id(s) this application depends on
+func (r *Application) DependsOn(names ...string) *Application {
 	if r.Dependencies == nil {
 		r.Dependencies = make([]string, 0)
 	}
-	r.Dependencies = append(r.Dependencies, name)
+	r.Dependencies = append(r.Dependencies, names...)
 
 	return r
 }
@@ -159,13 +159,13 @@ func (r *Application) Count(count int) *Application {
 	return r
 }
 
-// Arg adds an argument to the applications
-//		argument:	the argument you are adding
-func (r *Application) Arg(argument string) *Application {
+// Arg adds one or more arguments to the applications
+//		arguments:	the argument(s) you are adding
+func (r *Application) Arg(arguments ...string) *Application {
 	if r.Args == nil {
 		r.Args = make([]string, 0)
 	}
-	r.Args = append(r.Args, argument)
+	r.Args = append(r.Args, arguments...)
 
 	return r
 }
