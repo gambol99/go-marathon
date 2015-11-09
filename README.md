@@ -97,6 +97,8 @@ if _, err := client.CreateApplication(application); err != nil {
 }
 ```
 
+Note: Applications may also be defined by means of initializing a `marathon.Application` struct instance directly. However, go-marathon's DSL as shown above provides a more concise way to achieve the same.
+
 ### Scaling application
 
 Change the number of application instances to 4
