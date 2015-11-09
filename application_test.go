@@ -80,6 +80,13 @@ func TestApplicationEnvs(t *testing.T) {
 	assert.Equal(t, 1, len(app.Env))
 }
 
+func TestApplicationLabels(t *testing.T) {
+	app := NewDockerApplication()
+	assert.Equal(t, 0, len(app.Labels))
+	app.AddLabel("hello", "world")
+	assert.Equal(t, 1, len(app.Labels))
+}
+
 func TestHasHealthChecks(t *testing.T) {
 	app := NewDockerApplication()
 	assert.False(t, app.HasHealthChecks())

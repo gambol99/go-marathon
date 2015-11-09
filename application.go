@@ -182,6 +182,18 @@ func (r *Application) AddEnv(name, value string) *Application {
 	return r
 }
 
+// AddLabel adds a label to the application
+//		name:	the name of the label
+//		value:	go figure, the value associated to the above
+func (r *Application) AddLabel(name, value string) *Application {
+	if r.Labels == nil {
+		r.Labels = make(map[string]string, 0)
+	}
+	r.Labels[name] = value
+
+	return r
+}
+
 // HasHealthChecks is more of a helper method, used to check if an application has healtchecks
 func (r *Application) HasHealthChecks() bool {
 	if r.HealthChecks != nil && len(r.HealthChecks) > 0 {
