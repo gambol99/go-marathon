@@ -197,7 +197,7 @@ func (r *marathonClient) GetMarathonURL() string {
 
 // Ping pings the current marathon endpoint (note, this is not a ICMP ping, but a rest api call)
 func (r *marathonClient) Ping() (bool, error) {
-	if err := r.apiGet(MARATHON_API_PING, nil, nil); err != nil {
+	if err := r.apiGet(marathonAPIPing, nil, nil); err != nil {
 		return false, err
 	}
 	return true, nil
@@ -260,18 +260,18 @@ func (r *marathonClient) apiOperation(method, uri string, post, result interface
 }
 
 func (r *marathonClient) apiCall(method, uri, body string, result interface{}) (int, string, error) {
-	glog.V(DEBUG_LEVEL).Infof("[api]: method: %s, uri: %s, body: %s", method, uri, body)
+	glog.V(debugLevel).Infof("[api]: method: %s, uri: %s, body: %s", method, uri, body)
 
 	status, content, _, err := r.httpRequest(method, uri, body)
 	if err != nil {
 		return 0, "", err
 	}
 
-	glog.V(DEBUG_LEVEL).Infof("[api] result: status: %d, content: %s\n", status, content)
+	glog.V(debugLevel).Infof("[api] result: status: %d, content: %s\n", status, content)
 	if status >= 200 && status <= 299 {
 		if result != nil {
 			if err := r.decodeRequest(strings.NewReader(content), result); err != nil {
-				glog.V(DEBUG_LEVEL).Infof("failed to unmarshall the response from marathon, error: %s", err)
+				glog.V(debugLevel).Infof("failed to unmarshall the response from marathon, error: %s", err)
 				return status, content, ErrInvalidResponse
 			}
 		}
@@ -317,7 +317,7 @@ func (r *marathonClient) httpRequest(method, uri, body string) (int, string, *ht
 
 		url := fmt.Sprintf("%s/%s", marathon, uri)
 
-		glog.V(DEBUG_LEVEL).Infof("[http] request: %s, uri: %s, url: %s", method, uri, url)
+		glog.V(debugLevel).Infof("[http] request: %s, uri: %s, url: %s", method, uri, url)
 		// Make the http request to Marathon
 		request, err := http.NewRequest(method, url, strings.NewReader(body))
 		if err != nil {
@@ -325,8 +325,8 @@ func (r *marathonClient) httpRequest(method, uri, body string) (int, string, *ht
 		}
 
 		// Add any basic auth and the content headers
-		if r.config.HttpBasicAuthUser != "" {
-			request.SetBasicAuth(r.config.HttpBasicAuthUser, r.config.HttpBasicPassword)
+		if r.config.HTTPBasicAuthUser != "" {
+			request.SetBasicAuth(r.config.HTTPBasicAuthUser, r.config.HTTPBasicPassword)
 		}
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Accept", "application/json")

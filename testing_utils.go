@@ -43,7 +43,7 @@ const (
 	fakeAPIPort       = 3000
 )
 
-type RestMethod struct {
+type restMethod struct {
 	// the uri of the method
 	URI string `yaml:"uri,omitempty"`
 	// the http method type (GET|PUT etc)
@@ -52,17 +52,17 @@ type RestMethod struct {
 	Content string `yaml:"content,omitempty"`
 }
 
-type FakeServer struct {
+type fakeServer struct {
 	io.Closer
 
 	eventSrv *eventsource.Server
 	httpSrv  *httptest.Server
 }
 
-type Endpoint struct {
+type endpoint struct {
 	io.Closer
 
-	Server FakeServer
+	Server fakeServer
 	Client Marathon
 	URL    string
 }
@@ -75,11 +75,11 @@ var uris map[string]*string
 var once sync.Once
 
 func getTestURL(urlString string) string {
-	parsedUrl, _ := url.Parse(urlString)
-	return fmt.Sprintf("%s://%s", parsedUrl.Scheme, strings.Join([]string{parsedUrl.Host, parsedUrl.Host, parsedUrl.Host}, ","))
+	parsedURL, _ := url.Parse(urlString)
+	return fmt.Sprintf("%s://%s", parsedURL.Scheme, strings.Join([]string{parsedURL.Host, parsedURL.Host, parsedURL.Host}, ","))
 }
 
-func NewFakeMarathonEndpoint(t *testing.T, config *Config) *Endpoint {
+func newFakeMarathonEndpoint(t *testing.T, config *Config) *endpoint {
 	once.Do(func() {
 		// step: open and read in the methods yaml
 		contents, err := ioutil.ReadFile(fakeAPIFilename)
@@ -87,7 +87,7 @@ func NewFakeMarathonEndpoint(t *testing.T, config *Config) *Endpoint {
 			glog.Fatalf("unable to read in the methods yaml file: %s", fakeAPIFilename)
 		}
 		// step: unmarshal the yaml
-		var methods []*RestMethod
+		var methods []*restMethod
 		err = yaml.Unmarshal([]byte(contents), &methods)
 		if err != nil {
 			glog.Fatalf("Unable to unmarshal the methods yaml, error: %s", err)
@@ -132,8 +132,8 @@ func NewFakeMarathonEndpoint(t *testing.T, config *Config) *Endpoint {
 		t.Fatalf("Failed to create the fake client, %s, error: %s", config.URL, err)
 	}
 
-	return &Endpoint{
-		Server: FakeServer{
+	return &endpoint{
+		Server: fakeServer{
 			eventSrv: eventSrv,
 			httpSrv:  httpSrv,
 		},
@@ -154,16 +154,16 @@ func (t fakeEvent) Data() string {
 	return t.data
 }
 
-func (s *FakeServer) PublishEvent(event string) {
+func (s *fakeServer) PublishEvent(event string) {
 	s.eventSrv.Publish([]string{"event"}, fakeEvent{event})
 }
 
-func (s *FakeServer) Close() error {
+func (s *fakeServer) Close() error {
 	s.eventSrv.Close()
 	s.httpSrv.Close()
 	return nil
 }
 
-func (e *Endpoint) Close() error {
+func (e *endpoint) Close() error {
 	return e.Server.Close()
 }

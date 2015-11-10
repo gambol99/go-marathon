@@ -23,7 +23,7 @@ import (
 )
 
 func TestGroups(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	groups, err := endpoint.Client.Groups()
@@ -35,7 +35,7 @@ func TestGroups(t *testing.T) {
 }
 
 func TestGroup(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	group, err := endpoint.Client.Group(fakeGroupName)

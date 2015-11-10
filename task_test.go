@@ -24,7 +24,7 @@ import (
 )
 
 func TestAllTasks(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	tasks, err := endpoint.Client.AllTasks(nil)
@@ -34,7 +34,7 @@ func TestAllTasks(t *testing.T) {
 }
 
 func TestAllStagingTasks(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	tasks, err := endpoint.Client.AllTasks(url.Values{"status": []string{"staging"}})
@@ -44,7 +44,7 @@ func TestAllStagingTasks(t *testing.T) {
 }
 
 func TestTaskEndpoints(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	endpoints, err := endpoint.Client.TaskEndpoints(fakeAppNameBroken, 8080, true)
@@ -65,7 +65,7 @@ func TestTaskEndpoints(t *testing.T) {
 }
 
 func TestKillApplicationTasks(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	tasks, err := endpoint.Client.KillApplicationTasks(fakeAppName, "", false)

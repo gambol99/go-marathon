@@ -51,7 +51,7 @@ func TestGetMember(t *testing.T) {
 }
 
 func TestMarkDown(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	cluster, _ := newCluster(endpoint.URL)

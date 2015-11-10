@@ -112,7 +112,7 @@ var testCases = map[string]*testCase{
 }
 
 func TestSubscriptions(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	sub, err := endpoint.Client.Subscriptions()
@@ -126,7 +126,7 @@ func TestEventStreamConnectionErrorsForwarded(t *testing.T) {
 	config := NewDefaultConfig()
 	config.EventsTransport = EventsTransportSSE
 	config.URL = "http://non-existing-marathon-host.local:5555"
-	endpoint := NewFakeMarathonEndpoint(t, &config)
+	endpoint := newFakeMarathonEndpoint(t, &config)
 	defer endpoint.Close()
 
 	events := make(EventsChannel)
@@ -137,7 +137,7 @@ func TestEventStreamConnectionErrorsForwarded(t *testing.T) {
 func TestEventStreamEventsReceived(t *testing.T) {
 	config := NewDefaultConfig()
 	config.EventsTransport = EventsTransportSSE
-	endpoint := NewFakeMarathonEndpoint(t, &config)
+	endpoint := newFakeMarathonEndpoint(t, &config)
 	defer endpoint.Close()
 
 	events := make(EventsChannel)

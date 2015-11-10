@@ -39,9 +39,9 @@ type Config struct {
 	// the timeout for requests
 	RequestTimeout int
 	// http basic auth
-	HttpBasicAuthUser string
+	HTTPBasicAuthUser string
 	// http basic password
-	HttpBasicPassword string
+	HTTPBasicPassword string
 	// custom callback url
 	CallbackURL string
 }
@@ -49,13 +49,11 @@ type Config struct {
 // NewDefaultConfig create a default client config
 func NewDefaultConfig() Config {
 	return Config{
-		URL:               "http://127.0.0.1:8080",
-		EventsTransport:   EventsTransportCallback,
-		EventsPort:        10001,
-		EventsInterface:   "eth0",
-		LogOutput:         ioutil.Discard,
-		HttpBasicAuthUser: "",
-		HttpBasicPassword: "",
-		RequestTimeout:    5,
-		CallbackURL:       ""}
+		URL:             "http://127.0.0.1:8080",
+		EventsTransport: EventsTransportCallback,
+		EventsPort:      10001,
+		EventsInterface: "eth0",
+		LogOutput:       ioutil.Discard,
+		RequestTimeout:  5,
+	}
 }

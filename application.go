@@ -276,7 +276,7 @@ func (r *Application) CheckTCP(port, interval int) (*Application, error) {
 // Applications retrieves an array of all the applications which are running in marathon
 func (r *marathonClient) Applications(v url.Values) (*Applications, error) {
 	applications := new(Applications)
-	err := r.apiGet(MARATHON_API_APPS+"?"+v.Encode(), nil, applications)
+	err := r.apiGet(marathonAPIApps+"?"+v.Encode(), nil, applications)
 	if err != nil {
 		return nil, err
 	}
@@ -314,7 +314,7 @@ func (r *marathonClient) HasApplicationVersion(name, version string) (bool, erro
 // ApplicationVersions is a list of versions which has been deployed with marathon for a specific application
 //		name:		the id used to identify the application
 func (r *marathonClient) ApplicationVersions(name string) (*ApplicationVersions, error) {
-	uri := fmt.Sprintf("%s/%s/versions", MARATHON_API_APPS, trimRootPath(name))
+	uri := fmt.Sprintf("%s/%s/versions", marathonAPIApps, trimRootPath(name))
 	versions := new(ApplicationVersions)
 	if err := r.apiGet(uri, nil, versions); err != nil {
 		return nil, err
@@ -326,7 +326,7 @@ func (r *marathonClient) ApplicationVersions(name string) (*ApplicationVersions,
 // 		name: 		the id used to identify the application
 //		version: 	the version (normally a timestamp) you wish to change to
 func (r *marathonClient) SetApplicationVersion(name string, version *ApplicationVersion) (*DeploymentID, error) {
-	uri := fmt.Sprintf("%s/%s", MARATHON_API_APPS, trimRootPath(name))
+	uri := fmt.Sprintf("%s/%s", marathonAPIApps, trimRootPath(name))
 	deploymentID := new(DeploymentID)
 	if err := r.apiPut(uri, version, deploymentID); err != nil {
 		return nil, err
@@ -342,7 +342,7 @@ func (r *marathonClient) Application(name string) (*Application, error) {
 		Application *Application `json:"app"`
 	}
 
-	if err := r.apiGet(fmt.Sprintf("%s/%s", MARATHON_API_APPS, trimRootPath(name)), nil, &wrapper); err != nil {
+	if err := r.apiGet(fmt.Sprintf("%s/%s", marathonAPIApps, trimRootPath(name)), nil, &wrapper); err != nil {
 		return nil, err
 	}
 
@@ -409,7 +409,7 @@ func (r *marathonClient) ApplicationDeployments(name string) ([]*DeploymentID, e
 // 		application:		the structure holding the application configuration
 func (r *marathonClient) CreateApplication(application *Application) (*Application, error) {
 	result := new(Application)
-	if err := r.apiPost(MARATHON_API_APPS, &application, result); err != nil {
+	if err := r.apiPost(marathonAPIApps, &application, result); err != nil {
 		return nil, err
 	}
 
@@ -471,7 +471,7 @@ func (r *marathonClient) HasApplication(name string) (bool, error) {
 func (r *marathonClient) DeleteApplication(name string) (*DeploymentID, error) {
 	// step: check of the application already exists
 	deployID := new(DeploymentID)
-	if err := r.apiDelete(fmt.Sprintf("%s/%s", MARATHON_API_APPS, trimRootPath(name)), nil, deployID); err != nil {
+	if err := r.apiDelete(fmt.Sprintf("%s/%s", marathonAPIApps, trimRootPath(name)), nil, deployID); err != nil {
 		return nil, err
 	}
 
@@ -481,13 +481,13 @@ func (r *marathonClient) DeleteApplication(name string) (*DeploymentID, error) {
 // RestartApplication performs a rolling restart of marathon application
 // 		name: 		the id used to identify the application
 func (r *marathonClient) RestartApplication(name string, force bool) (*DeploymentID, error) {
-	glog.V(DEBUG_LEVEL).Infof("restarting the application: %s, force: %s", name, force)
+	glog.V(debugLevel).Infof("restarting the application: %s, force: %s", name, force)
 	deployment := new(DeploymentID)
 	var options struct {
 		Force bool `json:"force"`
 	}
 	options.Force = force
-	if err := r.apiPost(fmt.Sprintf("%s/%s/restart", MARATHON_API_APPS, trimRootPath(name)), &options, deployment); err != nil {
+	if err := r.apiPost(fmt.Sprintf("%s/%s/restart", marathonAPIApps, trimRootPath(name)), &options, deployment); err != nil {
 		return nil, err
 	}
 
@@ -499,11 +499,11 @@ func (r *marathonClient) RestartApplication(name string, force bool) (*Deploymen
 // 		instances:	the number of instances you wish to change to
 //    force: used to force the scale operation in case of blocked deployment
 func (r *marathonClient) ScaleApplicationInstances(name string, instances int, force bool) (*DeploymentID, error) {
-	glog.V(DEBUG_LEVEL).Infof("scaling the application: %s, instance: %d", name, instances)
+	glog.V(debugLevel).Infof("scaling the application: %s, instance: %d", name, instances)
 	changes := new(Application)
 	changes.ID = validateID(name)
 	changes.Instances = instances
-	uri := fmt.Sprintf("%s/%s?force=%t", MARATHON_API_APPS, trimRootPath(name), force)
+	uri := fmt.Sprintf("%s/%s?force=%t", marathonAPIApps, trimRootPath(name), force)
 	deployID := new(DeploymentID)
 	if err := r.apiPut(uri, &changes, deployID); err != nil {
 		return nil, err
@@ -516,9 +516,9 @@ func (r *marathonClient) ScaleApplicationInstances(name string, instances int, f
 // 		application:		the structure holding the application configuration
 func (r *marathonClient) UpdateApplication(application *Application) (*DeploymentID, error) {
 	result := new(DeploymentID)
-	glog.V(DEBUG_LEVEL).Infof("updating application: %s", application)
+	glog.V(debugLevel).Infof("updating application: %s", application)
 
-	uri := fmt.Sprintf("%s/%s", MARATHON_API_APPS, trimRootPath(application.ID))
+	uri := fmt.Sprintf("%s/%s", marathonAPIApps, trimRootPath(application.ID))
 
 	if err := r.apiPut(uri, &application, result); err != nil {
 		return nil, err

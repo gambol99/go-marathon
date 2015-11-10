@@ -23,7 +23,7 @@ import (
 )
 
 func TestPing(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	found, err := endpoint.Client.Ping()
@@ -32,7 +32,7 @@ func TestPing(t *testing.T) {
 }
 
 func TestGetMarathonURL(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	assert.Equal(t, endpoint.Client.GetMarathonURL(), endpoint.URL)

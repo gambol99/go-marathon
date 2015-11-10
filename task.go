@@ -53,7 +53,7 @@ func (r *Task) HasHealthCheckResults() bool {
 //		v:		Get parameters for the API call.
 func (r *marathonClient) AllTasks(v url.Values) (*Tasks, error) {
 	tasks := new(Tasks)
-	if err := r.apiGet(MARATHON_API_TASKS+"?"+v.Encode(), nil, tasks); err != nil {
+	if err := r.apiGet(marathonAPITasks+"?"+v.Encode(), nil, tasks); err != nil {
 		return nil, err
 	}
 
@@ -64,7 +64,7 @@ func (r *marathonClient) AllTasks(v url.Values) (*Tasks, error) {
 //		application_id:		the id for the application
 func (r *marathonClient) Tasks(id string) (*Tasks, error) {
 	tasks := new(Tasks)
-	if err := r.apiGet(fmt.Sprintf("%s/%s/tasks", MARATHON_API_APPS, trimRootPath(id)), nil, tasks); err != nil {
+	if err := r.apiGet(fmt.Sprintf("%s/%s/tasks", marathonAPIApps, trimRootPath(id)), nil, tasks); err != nil {
 		return nil, err
 	}
 
@@ -83,7 +83,7 @@ func (r *marathonClient) KillApplicationTasks(id, hostname string, scale bool) (
 	options.Host = hostname
 	options.Scale = scale
 	tasks := new(Tasks)
-	if err := r.apiDelete(fmt.Sprintf("%s/%s/tasks", MARATHON_API_APPS, trimRootPath(id)), &options, tasks); err != nil {
+	if err := r.apiDelete(fmt.Sprintf("%s/%s/tasks", marathonAPIApps, trimRootPath(id)), &options, tasks); err != nil {
 		return nil, err
 	}
 
@@ -93,14 +93,14 @@ func (r *marathonClient) KillApplicationTasks(id, hostname string, scale bool) (
 // KillTask ... Kill the task associated with a given ID
 // 	task_id:		the id for the task
 // 	scale:		Scale the app down
-func (r *marathonClient) KillTask(taskId string, scale bool) (*Task, error) {
+func (r *marathonClient) KillTask(taskID string, scale bool) (*Task, error) {
 	var options struct {
 		Scale bool `json:"bool"`
 	}
 	options.Scale = scale
 	task := new(Task)
-	appName := taskId[0:strings.LastIndex(taskId, ".")]
-	if err := r.apiDelete(fmt.Sprintf("%s/%s/tasks/%s", MARATHON_API_APPS, appName, taskId), &options, task); err != nil {
+	appName := taskID[0:strings.LastIndex(taskID, ".")]
+	if err := r.apiDelete(fmt.Sprintf("%s/%s/tasks/%s", marathonAPIApps, appName, taskID), &options, task); err != nil {
 		return nil, err
 	}
 
@@ -118,7 +118,7 @@ func (r *marathonClient) KillTasks(tasks []string, scale bool) error {
 	}
 	post.TaskIDs = tasks
 
-	return r.apiPost(fmt.Sprintf("%s/delete?%s", MARATHON_API_TASKS, v.Encode()), &post, nil)
+	return r.apiPost(fmt.Sprintf("%s/delete?%s", marathonAPITasks, v.Encode()), &post, nil)
 }
 
 // TaskEndpoints ... Get the endpoints i.e. HOST_IP:DYNAMIC_PORT for a specific application service
@@ -133,7 +133,7 @@ func (r *marathonClient) KillTasks(tasks []string, scale bool) error {
 //		name:		the identifier for the application
 //		port:		the container port you are interested in
 //		health: 	whether to check the health or not
-func (r *marathonClient) TaskEndpoints(name string, port int, health_check bool) ([]string, error) {
+func (r *marathonClient) TaskEndpoints(name string, port int, healthCheck bool) ([]string, error) {
 	// step: get the application details
 	application, err := r.Application(name)
 	if err != nil {
@@ -141,12 +141,12 @@ func (r *marathonClient) TaskEndpoints(name string, port int, health_check bool)
 	}
 
 	// step: we need to get the port index of the service we are interested in
-	port_index, err := application.Container.Docker.ServicePortIndex(port)
+	portIndex, err := application.Container.Docker.ServicePortIndex(port)
 	if err != nil {
 		return nil, err
 	}
 
-	list := make([]string, 0)
+	var list []string
 	// step: do we have any tasks?
 	if application.Tasks == nil || len(application.Tasks) <= 0 {
 		return list, nil
@@ -155,7 +155,7 @@ func (r *marathonClient) TaskEndpoints(name string, port int, health_check bool)
 	// step: iterate the tasks and extract the dynamic ports
 	for _, task := range application.Tasks {
 		// step: if we are checking health the 'service' has a health check?
-		if health_check && application.HasHealthChecks() {
+		if healthCheck && application.HasHealthChecks() {
 			/*
 				check: does the task have a health check result, if NOT, it's because the
 				health of the task hasn't yet been performed, hence we assume it as DOWN
@@ -165,19 +165,19 @@ func (r *marathonClient) TaskEndpoints(name string, port int, health_check bool)
 			}
 
 			// step: check the health results then
-			skip_endpoint := false
+			skipEndpoint := false
 			for _, health := range task.HealthCheckResult {
 				if health.Alive == false {
-					skip_endpoint = true
+					skipEndpoint = true
 				}
 			}
 
-			if skip_endpoint == true {
+			if skipEndpoint == true {
 				continue
 			}
 		}
 		// else we can just add it
-		list = append(list, fmt.Sprintf("%s:%d", task.Host, task.Ports[port_index]))
+		list = append(list, fmt.Sprintf("%s:%d", task.Host, task.Ports[portIndex]))
 	}
 
 	return list, nil

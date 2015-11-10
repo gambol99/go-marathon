@@ -136,7 +136,7 @@ func TestApplicationCheckHTTP(t *testing.T) {
 }
 
 func TestCreateApplication(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	application := NewDockerApplication()
@@ -149,7 +149,7 @@ func TestCreateApplication(t *testing.T) {
 }
 
 func TestUpdateApplication(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	application := NewDockerApplication()
@@ -161,7 +161,7 @@ func TestUpdateApplication(t *testing.T) {
 }
 
 func TestApplications(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	applications, err := endpoint.Client.Applications(nil)
@@ -171,7 +171,7 @@ func TestApplications(t *testing.T) {
 }
 
 func TestListApplications(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	applications, err := endpoint.Client.ListApplications(nil)
@@ -183,7 +183,7 @@ func TestListApplications(t *testing.T) {
 }
 
 func TestApplicationVersions(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	versions, err := endpoint.Client.ApplicationVersions(fakeAppName)
@@ -198,7 +198,7 @@ func TestApplicationVersions(t *testing.T) {
 }
 
 func TestRestartApplication(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	id, err := endpoint.Client.RestartApplication(fakeAppName, false)
@@ -212,7 +212,7 @@ func TestRestartApplication(t *testing.T) {
 }
 
 func TestSetApplicationVersion(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	deployment, err := endpoint.Client.SetApplicationVersion(fakeAppName, &ApplicationVersion{Version: "2014-08-26T07:37:50.462Z"})
@@ -227,7 +227,7 @@ func TestSetApplicationVersion(t *testing.T) {
 }
 
 func TestHasApplicationVersion(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	found, err := endpoint.Client.HasApplicationVersion(fakeAppName, "2014-04-04T06:25:31.399Z")
@@ -239,7 +239,7 @@ func TestHasApplicationVersion(t *testing.T) {
 }
 
 func TestDeleteApplication(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	id, err := endpoint.Client.DeleteApplication(fakeAppName)
@@ -252,7 +252,7 @@ func TestDeleteApplication(t *testing.T) {
 }
 
 func TestApplicationOK(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	ok, err := endpoint.Client.ApplicationOK(fakeAppName)
@@ -264,7 +264,7 @@ func TestApplicationOK(t *testing.T) {
 }
 
 func TestListApplication(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	application, err := endpoint.Client.Application(fakeAppName)
@@ -278,7 +278,7 @@ func TestListApplication(t *testing.T) {
 }
 
 func TestHasApplication(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	found, err := endpoint.Client.HasApplication(fakeAppName)

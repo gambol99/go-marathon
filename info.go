@@ -19,13 +19,13 @@ package marathon
 // Info is the detailed stats returned from marathon info
 type Info struct {
 	EventSubscriber struct {
-		HttpEndpoints []string `json:"http_endpoints"`
+		HTTPEndpoints []string `json:"http_endpoints"`
 		Type          string   `json:"type"`
 	} `json:"event_subscriber"`
-	FrameworkId string `json:"frameworkId"`
-	HttpConfig  struct {
+	FrameworkID string `json:"frameworkId"`
+	HTTPConfig  struct {
 		AssetsPath interface{} `json:"assets_path"`
-		HttpPort   float64     `json:"http_port"`
+		HTTPPort   float64     `json:"http_port"`
 		HTTPSPort  float64     `json:"https_port"`
 	} `json:"http_config"`
 	Leader         string `json:"leader"`
@@ -61,7 +61,7 @@ type Info struct {
 // Info retrieves the info stats from marathon
 func (r *marathonClient) Info() (*Info, error) {
 	info := new(Info)
-	if err := r.apiGet(MARATHON_API_INFO, nil, info); err != nil {
+	if err := r.apiGet(marathonAPIInfo, nil, info); err != nil {
 		return nil, err
 	}
 
@@ -73,7 +73,7 @@ func (r *marathonClient) Leader() (string, error) {
 	var leader struct {
 		Leader string `json:"leader"`
 	}
-	if err := r.apiGet(MARATHON_API_LEADER, nil, &leader); err != nil {
+	if err := r.apiGet(marathonAPILeader, nil, &leader); err != nil {
 		return "", err
 	}
 
@@ -86,7 +86,7 @@ func (r *marathonClient) AbdicateLeader() (string, error) {
 		Message string `json:"message"`
 	}
 
-	if err := r.apiDelete(MARATHON_API_LEADER, nil, &message); err != nil {
+	if err := r.apiDelete(marathonAPILeader, nil, &message); err != nil {
 		return "", err
 	}
 

@@ -68,7 +68,7 @@ func (r *Group) App(application *Application) *Group {
 // Groups retrieves a list of all the groups from marathon
 func (r *marathonClient) Groups() (*Groups, error) {
 	groups := new(Groups)
-	if err := r.apiGet(MARATHON_API_GROUPS, "", groups); err != nil {
+	if err := r.apiGet(marathonAPIGroups, "", groups); err != nil {
 		return nil, err
 	}
 	return groups, nil
@@ -78,7 +78,7 @@ func (r *marathonClient) Groups() (*Groups, error) {
 //		name:			the identifier for the group
 func (r *marathonClient) Group(name string) (*Group, error) {
 	group := new(Group)
-	if err := r.apiGet(fmt.Sprintf("%s/%s", MARATHON_API_GROUPS, trimRootPath(name)), nil, group); err != nil {
+	if err := r.apiGet(fmt.Sprintf("%s/%s", marathonAPIGroups, trimRootPath(name)), nil, group); err != nil {
 		return nil, err
 	}
 	return group, nil
@@ -87,7 +87,7 @@ func (r *marathonClient) Group(name string) (*Group, error) {
 // HasGroup checks if the group exists in marathon
 // 		name:			the identifier for the group
 func (r *marathonClient) HasGroup(name string) (bool, error) {
-	uri := fmt.Sprintf("%s/%s", MARATHON_API_GROUPS, trimRootPath(name))
+	uri := fmt.Sprintf("%s/%s", marathonAPIGroups, trimRootPath(name))
 	status, _, err := r.apiCall("GET", uri, "", nil)
 	if err == nil {
 		return true, nil
@@ -102,7 +102,7 @@ func (r *marathonClient) HasGroup(name string) (bool, error) {
 // CreateGroup creates a new group in marathon
 //		group:			a pointer the Group structure defining the group
 func (r *marathonClient) CreateGroup(group *Group) error {
-	return r.apiPost(MARATHON_API_GROUPS, group, nil)
+	return r.apiPost(marathonAPIGroups, group, nil)
 }
 
 // WaitOnGroup waits for all the applications in a group to be deployed
@@ -160,7 +160,7 @@ func (r *marathonClient) WaitOnGroup(name string, timeout time.Duration) error {
 //		name:			the identifier for the group
 func (r *marathonClient) DeleteGroup(name string) (*DeploymentID, error) {
 	version := new(DeploymentID)
-	uri := fmt.Sprintf("%s/%s", MARATHON_API_GROUPS, trimRootPath(name))
+	uri := fmt.Sprintf("%s/%s", marathonAPIGroups, trimRootPath(name))
 	if err := r.apiDelete(uri, nil, version); err != nil {
 		return nil, err
 	}
@@ -173,7 +173,7 @@ func (r *marathonClient) DeleteGroup(name string) (*DeploymentID, error) {
 //		group:  		the group structure with the new params
 func (r *marathonClient) UpdateGroup(name string, group *Group) (*DeploymentID, error) {
 	deploymentID := new(DeploymentID)
-	uri := fmt.Sprintf("%s/%s", MARATHON_API_GROUPS, trimRootPath(name))
+	uri := fmt.Sprintf("%s/%s", marathonAPIGroups, trimRootPath(name))
 	if err := r.apiPut(uri, group, deploymentID); err != nil {
 		return nil, err
 	}
