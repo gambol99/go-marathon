@@ -41,12 +41,6 @@ type Task struct {
 	Version           string               `json:"version"`
 }
 
-// String returns a string representation of the struct
-func (r Task) String() string {
-	return fmt.Sprintf("id: %s, application: %s, host: %s, ports: %v, created: %s",
-		r.ID, r.AppID, r.Host, r.Ports, r.StartedAt)
-}
-
 // HasHealthCheckResults ... Check if the task has any health checks
 func (r *Task) HasHealthCheckResults() bool {
 	if r.HealthCheckResult == nil || len(r.HealthCheckResult) <= 0 {
