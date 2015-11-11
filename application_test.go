@@ -25,8 +25,8 @@ import (
 func TestApplicationDependsOn(t *testing.T) {
 	app := NewDockerApplication()
 	app.DependsOn("fake_app")
-	app.DependsOn("fake_app1")
-	assert.Equal(t, 2, len(app.Dependencies))
+	app.DependsOn("fake_app1", "fake_app2")
+	assert.Equal(t, 3, len(app.Dependencies))
 }
 
 func TestApplicationMemory(t *testing.T) {
@@ -66,7 +66,7 @@ func TestApplicationCPU(t *testing.T) {
 func TestApplicationArgs(t *testing.T) {
 	app := NewDockerApplication()
 	assert.Equal(t, 0, len(app.Args))
-	app.Arg("-p").Arg("option").Arg("-v")
+	app.Arg("-p").Arg("option", "-v")
 	assert.Equal(t, 3, len(app.Args))
 	assert.Equal(t, "-p", app.Args[0])
 	assert.Equal(t, "option", app.Args[1])

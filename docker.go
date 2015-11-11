@@ -102,17 +102,21 @@ func (docker *Docker) Bridged() *Docker {
 	return docker
 }
 
-// Expose sets the container to expose the following port
-//		port:			the port the container is exposing
-func (docker *Docker) Expose(port int) *Docker {
-	docker.ExposePort(port, 0, 0, "tcp")
+// Expose sets the container to expose the following TCP ports
+//		ports:			the TCP ports the container is exposing
+func (docker *Docker) Expose(ports ...int) *Docker {
+	for _, port := range ports {
+		docker.ExposePort(port, 0, 0, "tcp")
+	}
 	return docker
 }
 
-// ExposeUDP sets the container to expose the following UDP port
-//		port:			the port the container is exposing
-func (docker *Docker) ExposeUDP(port int) *Docker {
-	docker.ExposePort(port, 0, 0, "udp")
+// ExposeUDP sets the container to expose the following UDP ports
+//		ports:			the UDP ports the container is exposing
+func (docker *Docker) ExposeUDP(ports ...int) *Docker {
+	for _, port := range ports {
+		docker.ExposePort(port, 0, 0, "udp")
+	}
 	return docker
 }
 

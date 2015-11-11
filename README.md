@@ -81,13 +81,13 @@ glog.Infof("Deploying a new application")
 application := marathon.NewDockerApplication()
 application.Name("/product/name/frontend")
 application.CPU(0.1).Memory(64).Storage(0.0).Count(2)
-application.Arg("/usr/sbin/apache2ctl").Arg("-D").Arg("FOREGROUND")
+application.Arg("/usr/sbin/apache2ctl", "-D", "FOREGROUND")
 application.AddEnv("NAME", "frontend_http")
 application.AddEnv("SERVICE_80_NAME", "test_http")
 application.AddLabel("environment", "staging")
 application.AddLabel("security", "none")
 // add the docker container
-application.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80).Expose(443)
+application.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80, 443)
 application.CheckHTTP("/health", 10, 5)
 
 if _, err := client.CreateApplication(application); err != nil {
