@@ -17,25 +17,22 @@ limitations under the License.
 package marathon
 
 const (
-	DEBUG_LEVEL = 10
+	debugLevel = 10
 
-	DEFAULT_EVENTS_URL = "/event"
+	defaultEventsURL = "/event"
 
 	/* --- api related constants --- */
-	MARATHON_API_VERSION      = "v2"
-	MARATHON_API_EVENT_STREAM = MARATHON_API_VERSION + "/events"
-	MARATHON_API_SUBSCRIPTION = MARATHON_API_VERSION + "/eventSubscriptions"
-	MARATHON_API_APPS         = MARATHON_API_VERSION + "/apps"
-	MARATHON_API_TASKS        = MARATHON_API_VERSION + "/tasks"
-	MARATHON_API_DEPLOYMENTS  = MARATHON_API_VERSION + "/deployments"
-	MARATHON_API_GROUPS       = MARATHON_API_VERSION + "/groups"
-	MARATHON_API_QUEUE        = MARATHON_API_VERSION + "/queue"
-	MARATHON_API_INFO         = MARATHON_API_VERSION + "/info"
-	MARATHON_API_LEADER       = MARATHON_API_VERSION + "/leader"
-	MARATHON_API_PING         = "/ping"
-	MARATHON_API_LOGGING      = "/logging"
-	MARATHON_API_HELP         = "/help"
-	MARATHON_API_METRICS      = "/metrics"
+	marathonAPIVersion      = "v2"
+	marathonAPIEventStream  = marathonAPIVersion + "/events"
+	marathonAPISubscription = marathonAPIVersion + "/eventSubscriptions"
+	marathonAPIApps         = marathonAPIVersion + "/apps"
+	marathonAPITasks        = marathonAPIVersion + "/tasks"
+	marathonAPIDeployments  = marathonAPIVersion + "/deployments"
+	marathonAPIGroups       = marathonAPIVersion + "/groups"
+	marathonAPIQueue        = marathonAPIVersion + "/queue"
+	marathonAPIInfo         = marathonAPIVersion + "/info"
+	marathonAPILeader       = marathonAPIVersion + "/leader"
+	marathonAPIPing         = "/ping"
 )
 
 const (

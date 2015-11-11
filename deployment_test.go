@@ -23,7 +23,7 @@ import (
 )
 
 func TestDeployments(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	deployments, err := endpoint.Client.Deployments()
@@ -38,7 +38,7 @@ func TestDeployments(t *testing.T) {
 }
 
 func TestDeleteDeployment(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	id, err := endpoint.Client.DeleteDeployment(fakeDeploymentID, false)

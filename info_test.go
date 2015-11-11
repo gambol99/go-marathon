@@ -23,18 +23,18 @@ import (
 )
 
 func TestInfo(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	info, err := endpoint.Client.Info()
 	assert.NoError(t, err)
-	assert.Equal(t, info.FrameworkId, "20140730-222531-1863654316-5050-10422-0000")
+	assert.Equal(t, info.FrameworkID, "20140730-222531-1863654316-5050-10422-0000")
 	assert.Equal(t, info.Leader, "127.0.0.1:8080")
 	assert.Equal(t, info.Version, "0.7.0-SNAPSHOT")
 }
 
 func TestLeader(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	leader, err := endpoint.Client.Leader()
@@ -43,7 +43,7 @@ func TestLeader(t *testing.T) {
 }
 
 func TestAbdicateLeader(t *testing.T) {
-	endpoint := NewFakeMarathonEndpoint(t, nil)
+	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	message, err := endpoint.Client.AbdicateLeader()
