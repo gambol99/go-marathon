@@ -87,7 +87,7 @@ func getInterfaceAddress(name string) (string, error) {
 			}
 			// step: return the first address
 			if len(addrs) > 0 {
-				return strings.SplitN(addrs[0].String(), "/", 2)[0], nil
+				return parseIPAddr(addrs[0]), nil
 			}
 		}
 	}
@@ -102,4 +102,8 @@ func contains(elements []string, value string) bool {
 		}
 	}
 	return false
+}
+
+func parseIPAddr(addr net.Addr) string {
+	return strings.SplitN(addr.String(), "/", 2)[0]
 }

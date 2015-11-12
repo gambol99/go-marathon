@@ -17,11 +17,24 @@ limitations under the License.
 package marathon
 
 import (
+	"net"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
+
+type stubAddr struct {
+	addr string
+}
+
+func (sa stubAddr) Network() string {
+	return "network"
+}
+
+func (sa stubAddr) String() string {
+	return sa.addr + "/8"
+}
 
 func TestUtilsAtomicIsSwitched(t *testing.T) {
 	var sw atomicSwitch
@@ -69,9 +82,20 @@ func TestUtilsValidateID(t *testing.T) {
 }
 
 func TestUtilsGetInterfaceAddress(t *testing.T) {
-	address, err := getInterfaceAddress("lo")
+	// Find actual IP address we can test against.
+	interfaces, err := net.Interfaces()
 	assert.NoError(t, err)
-	assert.Equal(t, "127.0.0.1", address)
+	assert.NotEqual(t, 0, len(interfaces))
+	iface := interfaces[0]
+	expectedName := iface.Name
+	addresses, err := iface.Addrs()
+	assert.NoError(t, err)
+	expectedIPAddress := parseIPAddr(addresses[0])
+
+	// Execute test.
+	address, err := getInterfaceAddress(expectedName)
+	assert.NoError(t, err)
+	assert.Equal(t, expectedIPAddress, address)
 	address, err = getInterfaceAddress("nothing")
 	assert.Error(t, err)
 	assert.Equal(t, "", address)
@@ -82,4 +106,10 @@ func TestUtilsTrimRootPath(t *testing.T) {
 	assert.Equal(t, trimRootPath(path), "test/path")
 	path = "test/path"
 	assert.Equal(t, trimRootPath(path), "test/path")
+}
+
+func TestParseIPAddr(t *testing.T) {
+	ipAddr := "127.0.0.1"
+	addr := stubAddr{ipAddr}
+	assert.Equal(t, ipAddr, parseIPAddr(addr))
 }
