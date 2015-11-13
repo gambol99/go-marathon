@@ -148,6 +148,8 @@ var (
 	ErrInvalidArgument = errors.New("the argument passed is invalid")
 	// ErrTimeoutError is thrown when the operation has timed out
 	ErrTimeoutError = errors.New("the operation has timed out")
+	// ErrConflict is thrown when the resource is conflicting (ie. app already exists)
+	ErrConflict = errors.New("conflicting resource")
 )
 
 type marathonClient struct {
@@ -283,6 +285,8 @@ func (r *marathonClient) apiCall(method, uri, body string, result interface{}) (
 		return status, "", ErrInvalidResponse
 	case 404:
 		return status, "", ErrDoesNotExist
+	case 409:
+		return status, "", ErrConflict
 	}
 
 	// step: lets decode into a error message
