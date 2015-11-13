@@ -34,8 +34,6 @@ type Config struct {
 	EventsPort int
 	// the interface we should be listening on for events
 	EventsInterface string
-	// the output for logging
-	LogOutput io.Writer
 	// the timeout for requests
 	RequestTimeout int
 	// http basic auth
@@ -53,7 +51,6 @@ func NewDefaultConfig() Config {
 		EventsTransport: EventsTransportCallback,
 		EventsPort:      10001,
 		EventsInterface: "eth0",
-		LogOutput:       ioutil.Discard,
 		RequestTimeout:  5,
 	}
 }
