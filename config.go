@@ -16,11 +16,6 @@ limitations under the License.
 
 package marathon
 
-import (
-	"io"
-	"io/ioutil"
-)
-
 // EventsTransport describes which transport should be used to deliver Marathon events
 type EventsTransport int
 
