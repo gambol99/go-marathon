@@ -16,11 +16,6 @@ limitations under the License.
 
 package marathon
 
-import (
-	"io"
-	"io/ioutil"
-)
-
 // EventsTransport describes which transport should be used to deliver Marathon events
 type EventsTransport int
 
@@ -34,8 +29,6 @@ type Config struct {
 	EventsPort int
 	// the interface we should be listening on for events
 	EventsInterface string
-	// the output for logging
-	LogOutput io.Writer
 	// the timeout for requests
 	RequestTimeout int
 	// http basic auth
@@ -53,7 +46,6 @@ func NewDefaultConfig() Config {
 		EventsTransport: EventsTransportCallback,
 		EventsPort:      10001,
 		EventsInterface: "eth0",
-		LogOutput:       ioutil.Discard,
 		RequestTimeout:  5,
 	}
 }
