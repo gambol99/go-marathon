@@ -163,7 +163,7 @@ func (r *marathonCluster) GetMember() (string, error) {
 		if r.active.next != nil {
 			r.active = r.active.next
 		} else {
-			return "", errors.New("no cluster memebers available at the moment")
+			return "", errors.New("no cluster members available at the moment")
 		}
 	}
 
