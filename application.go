@@ -453,17 +453,16 @@ func (r *marathonClient) HasApplication(name string) (bool, error) {
 	if name == "" {
 		return false, ErrInvalidArgument
 	}
-	applications, err := r.ListApplications(nil)
-	if err != nil {
+
+	if _, err := r.Application(name); err != nil {
+		if err == ErrDoesNotExist {
+			return false, nil
+		}
+
 		return false, err
 	}
-	for _, id := range applications {
-		if name == id {
-			return true, nil
-		}
-	}
 
-	return false, nil
+	return true, nil
 }
 
 // DeleteApplication deletes an application from marathon

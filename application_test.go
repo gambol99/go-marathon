@@ -284,4 +284,16 @@ func TestHasApplication(t *testing.T) {
 	found, err := endpoint.Client.HasApplication(fakeAppName)
 	assert.NoError(t, err)
 	assert.True(t, found)
+
+	found, err = endpoint.Client.HasApplication("no_such_app")
+	assert.NoError(t, err)
+	assert.False(t, found)
+
+	config := NewDefaultConfig()
+	config.URL = "http://non-existing-marathon-host.local:5555"
+	endpoint = newFakeMarathonEndpoint(t, &config)
+
+	found, err = endpoint.Client.HasApplication(fakeAppName)
+	assert.Error(t, err)
+	assert.False(t, found)
 }
