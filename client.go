@@ -305,36 +305,30 @@ func (r *marathonClient) httpRequest(method, uri, body string) (int, string, *ht
 	var content string
 	var response *http.Response
 
-	// Try to connect to Marathon until succeed or
-	// the whole custer is down
-	for {
-		// Get a member from the cluster
-		marathon, err := r.cluster.GetMember()
-		if err != nil {
-			return 0, "", nil, err
-		}
+	// Get a member from the cluster
+	marathon, err := r.cluster.GetMember()
+	if err != nil {
+		return 0, "", nil, err
+	}
 
-		url := fmt.Sprintf("%s/%s", marathon, uri)
+	url := fmt.Sprintf("%s/%s", marathon, uri)
 
-		// Make the http request to Marathon
-		request, err := http.NewRequest(method, url, strings.NewReader(body))
-		if err != nil {
-			return 0, "", nil, err
-		}
+	// Make the http request to Marathon
+	request, err := http.NewRequest(method, url, strings.NewReader(body))
+	if err != nil {
+		return 0, "", nil, err
+	}
 
-		// Add any basic auth and the content headers
-		if r.config.HTTPBasicAuthUser != "" {
-			request.SetBasicAuth(r.config.HTTPBasicAuthUser, r.config.HTTPBasicPassword)
-		}
-		request.Header.Add("Content-Type", "application/json")
-		request.Header.Add("Accept", "application/json")
+	// Add any basic auth and the content headers
+	if r.config.HTTPBasicAuthUser != "" {
+		request.SetBasicAuth(r.config.HTTPBasicAuthUser, r.config.HTTPBasicPassword)
+	}
+	request.Header.Add("Content-Type", "application/json")
+	request.Header.Add("Accept", "application/json")
 
-		response, err = r.httpClient.Do(request)
-		if err == nil {
-			break
-		}
-
-		r.cluster.MarkDown()
+	response, err = r.httpClient.Do(request)
+	if err != nil {
+		return 0, "", nil, err
 	}
 
 	if response.ContentLength != 0 {

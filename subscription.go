@@ -158,26 +158,17 @@ func (r *marathonClient) registerSSESubscription() error {
 		return nil
 	}
 
-	var stream *eventsource.Stream
+	// Get a member from the cluster
+	marathon, err := r.cluster.GetMember()
+	if err != nil {
+		return err
+	}
+	url := fmt.Sprintf("%s/%s", marathon, marathonAPIEventStream)
 
-	// Try to connect to Marathon until succeed or
-	// the whole custer is down
-	for {
-		// Get a member from the cluster
-		marathon, err := r.cluster.GetMember()
-		if err != nil {
-			return err
-		}
-		url := fmt.Sprintf("%s/%s", marathon, marathonAPIEventStream)
-
-		// Try to connect to stream
-		stream, err = eventsource.Subscribe(url, "")
-		if err == nil {
-			break
-		}
-
-		log.Printf("failed to connect to Marathon event stream, error: %s", err)
-		r.cluster.MarkDown()
+	// Try to connect to stream
+	stream, err := eventsource.Subscribe(url, "")
+	if err != nil {
+		return err
 	}
 
 	go func() {
@@ -186,7 +177,7 @@ func (r *marathonClient) registerSSESubscription() error {
 			case ev := <-stream.Events:
 				r.handleEvent(ev.Data())
 			case err := <-stream.Errors:
-				log.Printf("failed to receive event, error: %s", err)
+				log.Printf("registerSSESubscription(): failed to receive event: %v\n", err)
 			}
 		}
 	}()
