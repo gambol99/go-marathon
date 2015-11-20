@@ -175,8 +175,12 @@ func (r *marathonClient) registerSSESubscription() error {
 		for {
 			select {
 			case ev := <-stream.Events:
-				r.handleEvent(ev.Data())
+				if err := r.handleEvent(ev.Data()); err != nil {
+					// TODO let the user handle this error instead of logging it here
+					log.Printf("registerSSESubscription(): failed to handle event: %v\n", err)
+				}
 			case err := <-stream.Errors:
+				// TODO let the user handle this error instead of logging it here
 				log.Printf("registerSSESubscription(): failed to receive event: %v\n", err)
 			}
 		}
@@ -211,27 +215,24 @@ func (r *marathonClient) HasSubscription(callback string) (bool, error) {
 	return false, nil
 }
 
-func (r *marathonClient) handleEvent(content string) {
+func (r *marathonClient) handleEvent(content string) error {
 	// step: process and decode the event
 	eventType := new(EventType)
 	err := json.NewDecoder(strings.NewReader(content)).Decode(eventType)
 	if err != nil {
-		log.Printf("failed to decode the event type, content: %s, error: %s", content, err)
-		return
+		return fmt.Errorf("failed to decode the event type, content: %s, error: %s", content, err)
 	}
 
 	// step: check whether event type is handled
 	event, err := GetEvent(eventType.EventType)
 	if err != nil {
-		log.Printf("unable to handle event, type: %s, error: %s", eventType.EventType, err)
-		return
+		return fmt.Errorf("unable to handle event, type: %s, error: %s", eventType.EventType, err)
 	}
 
 	// step: let's decode message
 	err = json.NewDecoder(strings.NewReader(content)).Decode(event.Event)
 	if err != nil {
-		log.Printf("failed to decode the event, id: %d, error: %s", event.ID, err)
-		return
+		return fmt.Errorf("failed to decode the event, id: %d, error: %s", event.ID, err)
 	}
 
 	r.RLock()
@@ -246,14 +247,20 @@ func (r *marathonClient) handleEvent(content string) {
 			}(channel, event)
 		}
 	}
+
+	return nil
 }
 
 func (r *marathonClient) handleCallbackEvent(writer http.ResponseWriter, request *http.Request) {
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
-		log.Printf("failed to read request body, error: %s", err)
+		// TODO should this return a 500?
+		log.Printf("handleCallbackEvent(): failed to read request body, error: %s\n", err)
 		return
 	}
 
-	r.handleEvent(string(body[:]))
+	if err := r.handleEvent(string(body[:])); err != nil {
+		// TODO should this return a 500?
+		log.Printf("handleCallbackEvent(): failed to handle event: %v\n", err)
+	}
 }
