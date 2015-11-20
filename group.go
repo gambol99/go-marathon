@@ -88,15 +88,14 @@ func (r *marathonClient) Group(name string) (*Group, error) {
 // 		name:			the identifier for the group
 func (r *marathonClient) HasGroup(name string) (bool, error) {
 	uri := fmt.Sprintf("%s/%s", marathonAPIGroups, trimRootPath(name))
-	status, _, err := r.apiCall("GET", uri, "", nil)
-	if err == nil {
-		return true, nil
+	err := r.apiCall("GET", uri, "", nil)
+	if err != nil {
+		if err == ErrDoesNotExist {
+			return false, nil
+		}
+		return false, err
 	}
-	if status == 404 {
-		return false, nil
-	}
-
-	return false, err
+	return true, nil
 }
 
 // CreateGroup creates a new group in marathon

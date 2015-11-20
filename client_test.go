@@ -26,9 +26,9 @@ func TestPing(t *testing.T) {
 	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
-	found, err := endpoint.Client.Ping()
+	pong, err := endpoint.Client.Ping()
 	assert.NoError(t, err)
-	assert.True(t, found)
+	assert.True(t, pong)
 }
 
 func TestGetMarathonURL(t *testing.T) {

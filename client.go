@@ -17,15 +17,14 @@ limitations under the License.
 package marathon
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
-	"strings"
 	"sync"
 	"time"
 )
@@ -201,122 +200,44 @@ func (r *marathonClient) Ping() (bool, error) {
 	return true, nil
 }
 
-func (r *marathonClient) encodeRequest(data interface{}) (string, error) {
-	response, err := json.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-
-	return string(response), err
-}
-
-func (r *marathonClient) decodeRequest(stream io.Reader, result interface{}) error {
-	if err := json.NewDecoder(stream).Decode(result); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *marathonClient) buildPostData(data interface{}) (string, error) {
-	if data == nil {
-		return "", nil
-	}
-	content, err := r.encodeRequest(data)
-	if err != nil {
-		return "", err
-	}
-
-	return content, nil
-}
-
+// TODO remove post, this is a GET request!
 func (r *marathonClient) apiGet(uri string, post, result interface{}) error {
-	return r.apiOperation("GET", uri, post, result)
+	return r.apiCall("GET", uri, post, result)
 }
 
 func (r *marathonClient) apiPut(uri string, post, result interface{}) error {
-	return r.apiOperation("PUT", uri, post, result)
+	return r.apiCall("PUT", uri, post, result)
 }
 
 func (r *marathonClient) apiPost(uri string, post, result interface{}) error {
-	return r.apiOperation("POST", uri, post, result)
+	return r.apiCall("POST", uri, post, result)
 }
 
 func (r *marathonClient) apiDelete(uri string, post, result interface{}) error {
-	return r.apiOperation("DELETE", uri, post, result)
+	return r.apiCall("DELETE", uri, post, result)
 }
 
-func (r *marathonClient) apiOperation(method, uri string, post, result interface{}) error {
-	content, err := r.buildPostData(post)
-	if err != nil {
-		return err
-	}
-
-	_, _, err = r.apiCall(method, uri, content, result)
-
-	return err
-}
-
-func (r *marathonClient) apiCall(method, uri, body string, result interface{}) (int, string, error) {
-	log.Printf("apiCall(): request: method: %s, uri: %s, body: %s\n", method, uri, body)
-	status, content, _, err := r.httpRequest(method, uri, body)
-	if err != nil {
-		return 0, "", err
-	}
-	log.Printf("apiCall(): response: status: %d, content: %s\n", status, content)
-
-	if status >= 200 && status <= 299 {
-		if result != nil {
-			if err := r.decodeRequest(strings.NewReader(content), result); err != nil {
-				log.Printf("apiCall(): failed to unmarshall the response from marathon, error: %s\n", err)
-				return status, content, ErrInvalidResponse
-			}
-		}
-		return status, content, nil
-	}
-
-	switch status {
-	case 500:
-		return status, "", ErrInvalidResponse
-	case 404:
-		return status, "", ErrDoesNotExist
-	case 409:
-		return status, "", ErrConflict
-	}
-
-	// step: lets decode into a error message
-	var message struct {
-		Message string `json:"message"`
-	}
-
-	if err := r.decodeRequest(strings.NewReader(content), &message); err != nil {
-		return status, content, ErrInvalidResponse
-	}
-
-	errorMessage := "unknown error"
-	if message.Message != "" {
-		errorMessage = message.Message
-	}
-
-	return status, "", fmt.Errorf("%s", errorMessage)
-}
-
-func (r *marathonClient) httpRequest(method, uri, body string) (int, string, *http.Response, error) {
-	var content string
-	var response *http.Response
-
+func (r *marathonClient) apiCall(method, uri string, body, result interface{}) error {
 	// Get a member from the cluster
 	marathon, err := r.cluster.GetMember()
 	if err != nil {
-		return 0, "", nil, err
+		return err
 	}
 
 	url := fmt.Sprintf("%s/%s", marathon, uri)
 
+	var jsonBody []byte
+	if body != nil {
+		jsonBody, err = json.Marshal(body)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Make the http request to Marathon
-	request, err := http.NewRequest(method, url, strings.NewReader(body))
+	request, err := http.NewRequest(method, url, bytes.NewReader(jsonBody))
 	if err != nil {
-		return 0, "", nil, err
+		return err
 	}
 
 	// Add any basic auth and the content headers
@@ -326,18 +247,38 @@ func (r *marathonClient) httpRequest(method, uri, body string) (int, string, *ht
 	request.Header.Add("Content-Type", "application/json")
 	request.Header.Add("Accept", "application/json")
 
-	response, err = r.httpClient.Do(request)
+	response, err := r.httpClient.Do(request)
 	if err != nil {
-		return 0, "", nil, err
+		return err
+	}
+	defer response.Body.Close()
+
+	respBody, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return err
 	}
 
-	if response.ContentLength != 0 {
-		responseContent, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			return response.StatusCode, "", response, err
+	log.Printf("apiCall(): %v %v (body: %s) returned [%v] %s\n", request.Method, request.URL.String(), jsonBody, response.Status, respBody)
+
+	if response.StatusCode >= 200 && response.StatusCode <= 299 {
+		if result != nil {
+			if err := json.Unmarshal(respBody, result); err != nil {
+				log.Printf("apiCall(): failed to unmarshall the response from marathon, error: %s\n", err)
+				return ErrInvalidResponse
+			}
 		}
-		content = string(responseContent)
+		return nil
+
+	} else if response.StatusCode == 404 {
+		return ErrDoesNotExist
+
+	} else if response.StatusCode == 409 {
+		return ErrConflict
+
+	} else if response.StatusCode >= 500 {
+		return ErrInvalidResponse
 	}
 
-	return response.StatusCode, content, response, nil
+	log.Printf("apiCall(): unknown error: %s", respBody)
+	return ErrInvalidResponse
 }
