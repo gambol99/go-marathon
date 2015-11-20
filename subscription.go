@@ -56,7 +56,6 @@ func (r *marathonClient) AddEventsListener(channel EventsChannel, filter int) er
 	}
 
 	if _, found := r.listeners[channel]; !found {
-		log.Printf("adding a watch for events: %d, channel: %v", filter, channel)
 		r.listeners[channel] = filter
 	}
 	return nil
