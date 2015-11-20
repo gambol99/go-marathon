@@ -28,8 +28,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/golang/glog"
 )
 
 // Marathon is the interface to the marathon API
@@ -164,8 +162,6 @@ type marathonClient struct {
 	eventsHTTP *http.Server
 	// the http client use for making requests
 	httpClient *http.Client
-	// the output for the logger
-	logger *log.Logger
 	// the marathon cluster
 	cluster Cluster
 	// a map of service you wish to listen to
@@ -262,18 +258,18 @@ func (r *marathonClient) apiOperation(method, uri string, post, result interface
 }
 
 func (r *marathonClient) apiCall(method, uri, body string, result interface{}) (int, string, error) {
-	glog.V(debugLevel).Infof("[api]: method: %s, uri: %s, body: %s", method, uri, body)
+	log.Printf("[api]: method: %s, uri: %s, body: %s", method, uri, body)
 
 	status, content, _, err := r.httpRequest(method, uri, body)
 	if err != nil {
 		return 0, "", err
 	}
 
-	glog.V(debugLevel).Infof("[api] result: status: %d, content: %s\n", status, content)
+	log.Printf("[api] result: status: %d, content: %s\n", status, content)
 	if status >= 200 && status <= 299 {
 		if result != nil {
 			if err := r.decodeRequest(strings.NewReader(content), result); err != nil {
-				glog.V(debugLevel).Infof("failed to unmarshall the response from marathon, error: %s", err)
+				log.Printf("failed to unmarshall the response from marathon, error: %s", err)
 				return status, content, ErrInvalidResponse
 			}
 		}
@@ -321,7 +317,7 @@ func (r *marathonClient) httpRequest(method, uri, body string) (int, string, *ht
 
 		url := fmt.Sprintf("%s/%s", marathon, uri)
 
-		glog.V(debugLevel).Infof("[http] request: %s, uri: %s, url: %s", method, uri, url)
+		log.Printf("[http] request: %s, uri: %s, url: %s", method, uri, url)
 		// Make the http request to Marathon
 		request, err := http.NewRequest(method, url, strings.NewReader(body))
 		if err != nil {

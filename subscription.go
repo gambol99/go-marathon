@@ -19,14 +19,13 @@ package marathon
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/donovanhide/eventsource"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/donovanhide/eventsource"
-	"github.com/golang/glog"
 )
 
 // Subscriptions is a collection to urls that marathon is implementing a callback on
@@ -57,7 +56,7 @@ func (r *marathonClient) AddEventsListener(channel EventsChannel, filter int) er
 	}
 
 	if _, found := r.listeners[channel]; !found {
-		glog.V(debugLevel).Infof("adding a watch for events: %d, channel: %v", filter, channel)
+		log.Printf("adding a watch for events: %d, channel: %v", filter, channel)
 		r.listeners[channel] = filter
 	}
 	return nil
@@ -178,7 +177,7 @@ func (r *marathonClient) registerSSESubscription() error {
 			break
 		}
 
-		glog.V(debugLevel).Infof("failed to connect to Marathon event stream, error: %s", err)
+		log.Printf("failed to connect to Marathon event stream, error: %s", err)
 		r.cluster.MarkDown()
 	}
 
@@ -188,7 +187,7 @@ func (r *marathonClient) registerSSESubscription() error {
 			case ev := <-stream.Events:
 				r.handleEvent(ev.Data())
 			case err := <-stream.Errors:
-				glog.V(debugLevel).Infof("failed to receive event, error: %s", err)
+				log.Printf("failed to receive event, error: %s", err)
 			}
 		}
 	}()
@@ -227,21 +226,21 @@ func (r *marathonClient) handleEvent(content string) {
 	eventType := new(EventType)
 	err := json.NewDecoder(strings.NewReader(content)).Decode(eventType)
 	if err != nil {
-		glog.V(debugLevel).Infof("failed to decode the event type, content: %s, error: %s", content, err)
+		log.Printf("failed to decode the event type, content: %s, error: %s", content, err)
 		return
 	}
 
 	// step: check whether event type is handled
 	event, err := GetEvent(eventType.EventType)
 	if err != nil {
-		glog.V(debugLevel).Infof("unable to handle event, type: %s, error: %s", eventType.EventType, err)
+		log.Printf("unable to handle event, type: %s, error: %s", eventType.EventType, err)
 		return
 	}
 
 	// step: let's decode message
 	err = json.NewDecoder(strings.NewReader(content)).Decode(event.Event)
 	if err != nil {
-		glog.V(debugLevel).Infof("failed to decode the event, id: %d, error: %s", event.ID, err)
+		log.Printf("failed to decode the event, id: %d, error: %s", event.ID, err)
 		return
 	}
 
@@ -262,7 +261,7 @@ func (r *marathonClient) handleEvent(content string) {
 func (r *marathonClient) handleCallbackEvent(writer http.ResponseWriter, request *http.Request) {
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
-		glog.V(debugLevel).Infof("failed to read request body, error: %s", err)
+		log.Printf("failed to read request body, error: %s", err)
 		return
 	}
 

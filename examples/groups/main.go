@@ -18,10 +18,9 @@ package main
 
 import (
 	"flag"
-	"time"
-
 	marathon "github.com/gambol99/go-marathon"
-	"github.com/golang/glog"
+	"log"
+	"time"
 )
 
 var marathonURL string
@@ -32,7 +31,7 @@ func init() {
 
 func assert(err error) {
 	if err != nil {
-		glog.Fatalf("Failed, error: %s", err)
+		log.Fatalf("Failed, error: %s", err)
 	}
 }
 
@@ -42,15 +41,15 @@ func main() {
 	config.URL = marathonURL
 	client, err := marathon.NewClient(config)
 	if err != nil {
-		glog.Fatalf("Failed to create a client for marathon, error: %s", err)
+		log.Fatalf("Failed to create a client for marathon, error: %s", err)
 	}
 
-	glog.Infof("Retrieving a list of groups")
+	log.Printf("Retrieving a list of groups")
 	if groups, err := client.Groups(); err != nil {
-		glog.Errorf("Failed to retrieve the groups from maratho, error: %s", err)
+		log.Fatalf("Failed to retrieve the groups from maratho, error: %s", err)
 	} else {
 		for _, group := range groups.Groups {
-			glog.Infof("Found group: %s", group.ID)
+			log.Printf("Found group: %s", group.ID)
 		}
 	}
 
@@ -59,7 +58,7 @@ func main() {
 	found, err := client.HasGroup(groupName)
 	assert(err)
 	if found {
-		glog.Infof("Deleting the grouy: %s, as it already exists", groupName)
+		log.Printf("Deleting the group: %s, as it already exists", groupName)
 		id, err := client.DeleteGroup(groupName)
 		assert(err)
 		err = client.WaitOnDeployment(id.DeploymentID, 0)
@@ -105,13 +104,13 @@ func main() {
 	group.App(frontend).App(redis).App(mysql)
 
 	assert(client.CreateGroup(group))
-	glog.Infof("Successfully created the group: %s", group.ID)
+	log.Printf("Successfully created the group: %s", group.ID)
 
-	glog.Infof("Updating the group paramaters")
+	log.Printf("Updating the group paramaters")
 	frontend.Count(4)
 
 	id, err := client.UpdateGroup(groupName, group)
 	assert(err)
-	glog.Infof("Successfully updated the group: %s, version: %s", group.ID, id.DeploymentID)
+	log.Printf("Successfully updated the group: %s, version: %s", group.ID, id.DeploymentID)
 	assert(client.WaitOnGroup(groupName, 500*time.Second))
 }

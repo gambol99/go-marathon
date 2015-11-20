@@ -18,11 +18,9 @@ package main
 
 import (
 	"flag"
-	"time"
-
 	marathon "github.com/gambol99/go-marathon"
-
-	"github.com/golang/glog"
+	"log"
+	"time"
 )
 
 var marathonURL string
@@ -37,15 +35,15 @@ func main() {
 	config.URL = marathonURL
 	client, err := marathon.NewClient(config)
 	if err != nil {
-		glog.Fatalf("Failed to create a client for marathon, error: %s", err)
+		log.Fatalf("Failed to create a client for marathon, error: %s", err)
 	}
 	for {
 		if application, err := client.Applications(nil); err != nil {
-			glog.Errorf("Failed to retrieve a list of applications, error: %s", err)
+			log.Fatalf("Failed to retrieve a list of applications, error: %s", err)
 		} else {
-			glog.Infof("Retrieved a list of applications, %v", application)
-		}	
-		glog.Infof("Going to sleep for 20 seconds")
+			log.Printf("Retrieved a list of applications, %v", application)
+		}
+		log.Printf("Going to sleep for 20 seconds")
 		time.Sleep(5 * time.Second)
 	}
 }

@@ -18,18 +18,17 @@ package marathon
 
 import (
 	"fmt"
+	"github.com/donovanhide/eventsource"
+	yaml "gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"sync"
 	"testing"
-
-	"github.com/donovanhide/eventsource"
-	"github.com/golang/glog"
-	yaml "gopkg.in/yaml.v2"
 )
 
 const (
@@ -84,13 +83,13 @@ func newFakeMarathonEndpoint(t *testing.T, config *Config) *endpoint {
 		// step: open and read in the methods yaml
 		contents, err := ioutil.ReadFile(fakeAPIFilename)
 		if err != nil {
-			glog.Fatalf("unable to read in the methods yaml file: %s", fakeAPIFilename)
+			log.Fatalf("unable to read in the methods yaml file: %s", fakeAPIFilename)
 		}
 		// step: unmarshal the yaml
 		var methods []*restMethod
 		err = yaml.Unmarshal([]byte(contents), &methods)
 		if err != nil {
-			glog.Fatalf("Unable to unmarshal the methods yaml, error: %s", err)
+			log.Fatalf("Unable to unmarshal the methods yaml, error: %s", err)
 		}
 
 		// step: construct a hash from the methods
