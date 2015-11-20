@@ -317,7 +317,6 @@ func (r *marathonClient) httpRequest(method, uri, body string) (int, string, *ht
 
 		url := fmt.Sprintf("%s/%s", marathon, uri)
 
-		log.Printf("[http] request: %s, uri: %s, url: %s", method, uri, url)
 		// Make the http request to Marathon
 		request, err := http.NewRequest(method, url, strings.NewReader(body))
 		if err != nil {
