@@ -258,18 +258,17 @@ func (r *marathonClient) apiOperation(method, uri string, post, result interface
 }
 
 func (r *marathonClient) apiCall(method, uri, body string, result interface{}) (int, string, error) {
-	log.Printf("[api]: method: %s, uri: %s, body: %s", method, uri, body)
-
+	log.Printf("apiCall(): request: method: %s, uri: %s, body: %s\n", method, uri, body)
 	status, content, _, err := r.httpRequest(method, uri, body)
 	if err != nil {
 		return 0, "", err
 	}
+	log.Printf("apiCall(): response: status: %d, content: %s\n", status, content)
 
-	log.Printf("[api] result: status: %d, content: %s\n", status, content)
 	if status >= 200 && status <= 299 {
 		if result != nil {
 			if err := r.decodeRequest(strings.NewReader(content), result); err != nil {
-				log.Printf("failed to unmarshall the response from marathon, error: %s", err)
+				log.Printf("apiCall(): failed to unmarshall the response from marathon, error: %s\n", err)
 				return status, content, ErrInvalidResponse
 			}
 		}
