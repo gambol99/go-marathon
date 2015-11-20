@@ -19,7 +19,6 @@ package marathon
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/url"
 	"time"
 )
@@ -479,7 +478,6 @@ func (r *marathonClient) DeleteApplication(name string) (*DeploymentID, error) {
 // RestartApplication performs a rolling restart of marathon application
 // 		name: 		the id used to identify the application
 func (r *marathonClient) RestartApplication(name string, force bool) (*DeploymentID, error) {
-	log.Printf("restarting the application: %s, force: %v", name, force)
 	deployment := new(DeploymentID)
 	var options struct {
 		Force bool `json:"force"`
@@ -497,7 +495,6 @@ func (r *marathonClient) RestartApplication(name string, force bool) (*Deploymen
 // 		instances:	the number of instances you wish to change to
 //    force: used to force the scale operation in case of blocked deployment
 func (r *marathonClient) ScaleApplicationInstances(name string, instances int, force bool) (*DeploymentID, error) {
-	log.Printf("scaling the application: %s, instance: %d", name, instances)
 	changes := new(Application)
 	changes.ID = validateID(name)
 	changes.Instances = instances
@@ -514,13 +511,9 @@ func (r *marathonClient) ScaleApplicationInstances(name string, instances int, f
 // 		application:		the structure holding the application configuration
 func (r *marathonClient) UpdateApplication(application *Application) (*DeploymentID, error) {
 	result := new(DeploymentID)
-	log.Printf("updating application: %v", application)
-
 	uri := fmt.Sprintf("%s/%s", marathonAPIApps, trimRootPath(application.ID))
-
 	if err := r.apiPut(uri, &application, result); err != nil {
 		return nil, err
 	}
-
 	return result, nil
 }
