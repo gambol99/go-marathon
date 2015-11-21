@@ -13,7 +13,7 @@ It currently supports
 
 Note: the library is still under active development; users should expect frequent (possibly breaking) API changes for the time being.
 
-It requires Go version 1.3 or higher.
+It requires Go version 1.4 or higher.
 
 ## Code Examples
 
