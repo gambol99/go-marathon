@@ -265,7 +265,8 @@ func (r *marathonClient) apiCall(method, uri string, body, result interface{}) e
 		log.Printf("apiCall(): %v %v returned %v %s\n", request.Method, request.URL.String(), response.Status, oneLogLine(respBody))
 	}
 
-	if response.StatusCode >= 200 && response.StatusCode <= 299 {
+	switch {
+	case response.StatusCode >= 200 && response.StatusCode <= 299:
 		if result != nil {
 			if err := json.Unmarshal(respBody, result); err != nil {
 				log.Printf("apiCall(): failed to unmarshall the response from marathon, error: %s\n", err)
@@ -274,18 +275,19 @@ func (r *marathonClient) apiCall(method, uri string, body, result interface{}) e
 		}
 		return nil
 
-	} else if response.StatusCode == 404 {
+	case response.StatusCode == 404:
 		return ErrDoesNotExist
 
-	} else if response.StatusCode == 409 {
+	case response.StatusCode == 409:
 		return ErrConflict
 
-	} else if response.StatusCode >= 500 {
+	case response.StatusCode >= 500:
+		return ErrInvalidResponse
+
+	default:
+		log.Printf("apiCall(): unknown error: %s", oneLogLine(respBody))
 		return ErrInvalidResponse
 	}
-
-	log.Printf("apiCall(): unknown error: %s", oneLogLine(respBody))
-	return ErrInvalidResponse
 }
 
 var oneLogLineRegex = regexp.MustCompile(`(?m)^\s*`)
