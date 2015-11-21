@@ -16,10 +16,6 @@ limitations under the License.
 
 package marathon
 
-import (
-	"log"
-)
-
 const (
 	defaultEventsURL = "/event"
 
@@ -44,7 +40,3 @@ const (
 	// EventsTransportSSE activates stream events transport
 	EventsTransportSSE
 )
-
-func init() {
-	log.SetFlags(log.Ltime | log.Ldate | log.Lshortfile)
-}
