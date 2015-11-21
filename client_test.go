@@ -37,3 +37,18 @@ func TestGetMarathonURL(t *testing.T) {
 
 	assert.Equal(t, endpoint.Client.GetMarathonURL(), endpoint.URL)
 }
+
+func TestOneLogLine(t *testing.T) {
+	in := `
+	a
+	b    c
+	d\n
+	  efgh
+	i\r\n
+	j\t
+	{"json":  "works",
+		"f o o": "ba    r"
+	}
+	`
+	assert.Equal(t, `a\n b    c\n d\n\n efgh\n i\r\n\n j\t\n {"json":  "works",\n "f o o": "ba    r"\n }\n `, string(oneLogLine([]byte(in))))
+}

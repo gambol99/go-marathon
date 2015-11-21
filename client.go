@@ -25,6 +25,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
 	"sync"
 	"time"
 )
@@ -258,7 +259,11 @@ func (r *marathonClient) apiCall(method, uri string, body, result interface{}) e
 		return err
 	}
 
-	log.Printf("apiCall(): %v %v (body: %s) returned [%v] %s\n", request.Method, request.URL.String(), jsonBody, response.Status, respBody)
+	if len(jsonBody) > 0 {
+		log.Printf("apiCall(): %v %v %s returned %v %s\n", request.Method, request.URL.String(), jsonBody, response.Status, oneLogLine(respBody))
+	} else {
+		log.Printf("apiCall(): %v %v returned %v %s\n", request.Method, request.URL.String(), response.Status, oneLogLine(respBody))
+	}
 
 	if response.StatusCode >= 200 && response.StatusCode <= 299 {
 		if result != nil {
@@ -279,6 +284,14 @@ func (r *marathonClient) apiCall(method, uri string, body, result interface{}) e
 		return ErrInvalidResponse
 	}
 
-	log.Printf("apiCall(): unknown error: %s", respBody)
+	log.Printf("apiCall(): unknown error: %s", oneLogLine(respBody))
 	return ErrInvalidResponse
+}
+
+var oneLogLineRegex = regexp.MustCompile(`(?m)^\s*`)
+
+// oneLogLine removes indentation at the beginning of each line and
+// escapes new line characters.
+func oneLogLine(in []byte) []byte {
+	return bytes.Replace(oneLogLineRegex.ReplaceAll(in, nil), []byte("\n"), []byte("\\n "), -1)
 }
