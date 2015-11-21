@@ -18,9 +18,10 @@ package main
 
 import (
 	"flag"
-	marathon "github.com/gambol99/go-marathon"
 	"log"
 	"time"
+
+	marathon "github.com/gambol99/go-marathon"
 )
 
 var marathonURL string

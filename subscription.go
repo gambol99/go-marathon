@@ -19,13 +19,14 @@ package marathon
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/donovanhide/eventsource"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/donovanhide/eventsource"
 )
 
 // Subscriptions is a collection to urls that marathon is implementing a callback on

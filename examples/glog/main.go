@@ -16,6 +16,7 @@ package main
 
 import (
 	"flag"
+
 	marathon "github.com/gambol99/go-marathon"
 	"github.com/golang/glog"
 )

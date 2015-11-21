@@ -18,8 +18,6 @@ package marathon
 
 import (
 	"fmt"
-	"github.com/donovanhide/eventsource"
-	yaml "gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -28,6 +26,9 @@ import (
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/donovanhide/eventsource"
+	yaml "gopkg.in/yaml.v2"
 )
 
 const (
