@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -131,6 +132,10 @@ type Marathon interface {
 	Leader() (string, error)
 	// cause the current leader to abdicate
 	AbdicateLeader() (string, error)
+	// set log output
+	SetLogOutput(w io.Writer)
+	// set flags for logger
+	SetLogFlags(flag int)
 }
 
 var (
@@ -166,6 +171,8 @@ type marathonClient struct {
 	cluster Cluster
 	// a map of service you wish to listen to
 	listeners map[EventsChannel]int
+	// a custom logger for debug log messages
+	debugLog *log.Logger
 }
 
 // NewClient creates a new marathon client
@@ -177,15 +184,29 @@ func NewClient(config Config) (Marathon, error) {
 		return nil, err
 	}
 
-	service := new(marathonClient)
-	service.config = config
-	service.listeners = make(map[EventsChannel]int, 0)
-	service.cluster = cluster
-	service.httpClient = &http.Client{
+	client := new(marathonClient)
+	client.config = config
+	client.listeners = make(map[EventsChannel]int, 0)
+	client.cluster = cluster
+	client.httpClient = &http.Client{
 		Timeout: (time.Duration(config.RequestTimeout) * time.Second),
 	}
 
-	return service, nil
+	// Discard all logging by default
+	client.debugLog = log.New(ioutil.Discard, "", 0)
+
+	return client, nil
+}
+
+// SetLogOutput sets the output for go-marathon's debug log.
+// The default output is `ioutil.Discard`.
+func (r *marathonClient) SetLogOutput(w io.Writer) {
+	r.debugLog.SetOutput(w)
+}
+
+// SetLogFlags sets the flags for go-marathon's debug log.
+func (r *marathonClient) SetLogFlags(flag int) {
+	r.debugLog.SetFlags(flag)
 }
 
 // GetMarathonURL retrieves the marathon url
@@ -260,16 +281,16 @@ func (r *marathonClient) apiCall(method, uri string, body, result interface{}) e
 	}
 
 	if len(jsonBody) > 0 {
-		log.Printf("apiCall(): %v %v %s returned %v %s\n", request.Method, request.URL.String(), jsonBody, response.Status, oneLogLine(respBody))
+		r.debugLog.Printf("apiCall(): %v %v %s returned %v %s\n", request.Method, request.URL.String(), jsonBody, response.Status, oneLogLine(respBody))
 	} else {
-		log.Printf("apiCall(): %v %v returned %v %s\n", request.Method, request.URL.String(), response.Status, oneLogLine(respBody))
+		r.debugLog.Printf("apiCall(): %v %v returned %v %s\n", request.Method, request.URL.String(), response.Status, oneLogLine(respBody))
 	}
 
 	switch {
 	case response.StatusCode >= 200 && response.StatusCode <= 299:
 		if result != nil {
 			if err := json.Unmarshal(respBody, result); err != nil {
-				log.Printf("apiCall(): failed to unmarshall the response from marathon, error: %s\n", err)
+				r.debugLog.Printf("apiCall(): failed to unmarshall the response from marathon, error: %s\n", err)
 				return ErrInvalidResponse
 			}
 		}
@@ -285,7 +306,7 @@ func (r *marathonClient) apiCall(method, uri string, body, result interface{}) e
 		return ErrInvalidResponse
 
 	default:
-		log.Printf("apiCall(): unknown error: %s", oneLogLine(respBody))
+		r.debugLog.Printf("apiCall(): unknown error: %s", oneLogLine(respBody))
 		return ErrInvalidResponse
 	}
 }

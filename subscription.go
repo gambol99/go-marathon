@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"strings"
@@ -178,11 +177,11 @@ func (r *marathonClient) registerSSESubscription() error {
 			case ev := <-stream.Events:
 				if err := r.handleEvent(ev.Data()); err != nil {
 					// TODO let the user handle this error instead of logging it here
-					log.Printf("registerSSESubscription(): failed to handle event: %v\n", err)
+					r.debugLog.Printf("registerSSESubscription(): failed to handle event: %v\n", err)
 				}
 			case err := <-stream.Errors:
 				// TODO let the user handle this error instead of logging it here
-				log.Printf("registerSSESubscription(): failed to receive event: %v\n", err)
+				r.debugLog.Printf("registerSSESubscription(): failed to receive event: %v\n", err)
 			}
 		}
 	}()
@@ -256,12 +255,12 @@ func (r *marathonClient) handleCallbackEvent(writer http.ResponseWriter, request
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
 		// TODO should this return a 500?
-		log.Printf("handleCallbackEvent(): failed to read request body, error: %s\n", err)
+		r.debugLog.Printf("handleCallbackEvent(): failed to read request body, error: %s\n", err)
 		return
 	}
 
 	if err := r.handleEvent(string(body[:])); err != nil {
 		// TODO should this return a 500?
-		log.Printf("handleCallbackEvent(): failed to handle event: %v\n", err)
+		r.debugLog.Printf("handleCallbackEvent(): failed to handle event: %v\n", err)
 	}
 }

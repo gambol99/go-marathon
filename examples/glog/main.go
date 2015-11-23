@@ -12,6 +12,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// go run main.go -logtostderr
+
 package main
 
 import (
@@ -23,9 +25,16 @@ import (
 
 var marathonURL string
 
-func init() {
-	glog.CopyStandardLogTo("INFO") // redirect marathon logs to glog
+type logBridge struct{}
 
+func (l *logBridge) Write(b []byte) (n int, err error) {
+	glog.InfoDepth(3, "go-marathon: "+string(b))
+	return len(b), nil
+}
+
+var lb = new(logBridge)
+
+func init() {
 	flag.StringVar(&marathonURL, "url", "http://127.0.0.1:8080", "the url for the marathon endpoint")
 }
 
@@ -37,6 +46,7 @@ func main() {
 	if err != nil {
 		glog.Exitln(err)
 	}
+	client.SetLogOutput(lb)
 
 	applications, err := client.Applications(nil)
 	if err != nil {
