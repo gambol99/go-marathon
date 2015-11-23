@@ -32,8 +32,6 @@ func (l *logBridge) Write(b []byte) (n int, err error) {
 	return len(b), nil
 }
 
-var lb = new(logBridge)
-
 func init() {
 	flag.StringVar(&marathonURL, "url", "http://127.0.0.1:8080", "the url for the marathon endpoint")
 }
@@ -42,11 +40,11 @@ func main() {
 	flag.Parse()
 	config := marathon.NewDefaultConfig()
 	config.URL = marathonURL
+	config.LogOutput = new(logBridge)
 	client, err := marathon.NewClient(config)
 	if err != nil {
 		glog.Exitln(err)
 	}
-	client.SetLogOutput(lb)
 
 	applications, err := client.Applications(nil)
 	if err != nil {

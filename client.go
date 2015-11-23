@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -132,10 +131,6 @@ type Marathon interface {
 	Leader() (string, error)
 	// cause the current leader to abdicate
 	AbdicateLeader() (string, error)
-	// set log output
-	SetLogOutput(w io.Writer)
-	// set flags for logger
-	SetLogFlags(flag int)
 }
 
 var (
@@ -191,22 +186,9 @@ func NewClient(config Config) (Marathon, error) {
 	client.httpClient = &http.Client{
 		Timeout: (time.Duration(config.RequestTimeout) * time.Second),
 	}
-
-	// Discard all logging by default
-	client.debugLog = log.New(ioutil.Discard, "", 0)
+	client.debugLog = log.New(config.LogOutput, "", 0)
 
 	return client, nil
-}
-
-// SetLogOutput sets the output for go-marathon's debug log.
-// The default output is `ioutil.Discard`.
-func (r *marathonClient) SetLogOutput(w io.Writer) {
-	r.debugLog.SetOutput(w)
-}
-
-// SetLogFlags sets the flags for go-marathon's debug log.
-func (r *marathonClient) SetLogFlags(flag int) {
-	r.debugLog.SetFlags(flag)
 }
 
 // GetMarathonURL retrieves the marathon url
