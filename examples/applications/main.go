@@ -66,7 +66,7 @@ func main() {
 
 	applicationName := "/my/product"
 
-	if found, _ := client.HasApplication(applicationName); found {
+	if _, err := client.Application(applicationName); err != nil {
 		deployID, err := client.DeleteApplication(applicationName)
 		assert(err)
 		waitOnDeployment(client, deployID)

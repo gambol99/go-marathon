@@ -263,7 +263,7 @@ func TestApplicationOK(t *testing.T) {
 	assert.False(t, ok)
 }
 
-func TestListApplication(t *testing.T) {
+func TestApplication(t *testing.T) {
 	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
@@ -275,25 +275,16 @@ func TestListApplication(t *testing.T) {
 	assert.NotNil(t, application.Tasks)
 	assert.Equal(t, len(application.HealthChecks), 1)
 	assert.Equal(t, len(application.Tasks), 2)
-}
 
-func TestHasApplication(t *testing.T) {
-	endpoint := newFakeMarathonEndpoint(t, nil)
-	defer endpoint.Close()
-
-	found, err := endpoint.Client.HasApplication(fakeAppName)
-	assert.NoError(t, err)
-	assert.True(t, found)
-
-	found, err = endpoint.Client.HasApplication("no_such_app")
-	assert.NoError(t, err)
-	assert.False(t, found)
+	_, err = endpoint.Client.Application("no_such_app")
+	assert.Equal(t, ErrDoesNotExist, err)
 
 	config := NewDefaultConfig()
 	config.URL = "http://non-existing-marathon-host.local:5555"
 	endpoint = newFakeMarathonEndpoint(t, &config)
+	defer endpoint.Close()
 
-	found, err = endpoint.Client.HasApplication(fakeAppName)
+	_, err = endpoint.Client.Application(fakeAppName)
+	assert.NotEqual(t, ErrDoesNotExist, err)
 	assert.Error(t, err)
-	assert.False(t, found)
 }

@@ -351,13 +351,6 @@ func (r *marathonClient) Application(name string) (*Application, error) {
 // If no health checks exist, we simply return true
 // 		name: 		the id used to identify the application
 func (r *marathonClient) ApplicationOK(name string) (bool, error) {
-	// step: check the application even exists
-	if found, err := r.HasApplication(name); err != nil {
-		return false, err
-	} else if !found {
-		return false, ErrDoesNotExist
-	}
-
 	// step: get the application
 	application, err := r.Application(name)
 	if err != nil {
@@ -431,36 +424,18 @@ func (r *marathonClient) WaitOnApplication(name string, timeout time.Duration) e
 			flick.SwitchOn()
 		}()
 		for !flick.IsSwitched() {
-			if found, err := r.HasApplication(name); err != nil {
+			app, err := r.Application(name)
+			if err != nil && err != ErrDoesNotExist {
 				continue
-			} else if found {
-				if app, err := r.Application(name); err == nil && app.AllTaskRunning() {
-					return nil
-				}
+			}
+			if err == nil && app.AllTaskRunning() {
+				return nil
 			}
 			time.Sleep(time.Duration(500) * time.Millisecond)
 		}
 		return nil
 	})
 	return err
-}
-
-// HasApplication checks to see if the application exists in marathon
-// 		name: 		the id used to identify the application
-func (r *marathonClient) HasApplication(name string) (bool, error) {
-	if name == "" {
-		return false, ErrInvalidArgument
-	}
-
-	if _, err := r.Application(name); err != nil {
-		if err == ErrDoesNotExist {
-			return false, nil
-		}
-
-		return false, err
-	}
-
-	return true, nil
 }
 
 // DeleteApplication deletes an application from marathon
