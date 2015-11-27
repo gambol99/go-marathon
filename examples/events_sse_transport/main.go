@@ -18,11 +18,10 @@ package main
 
 import (
 	"flag"
+	"log"
 	"time"
 
 	marathon "github.com/gambol99/go-marathon"
-
-	"github.com/golang/glog"
 )
 
 var marathonURL string
@@ -35,7 +34,7 @@ func init() {
 
 func assert(err error) {
 	if err != nil {
-		glog.Fatalf("Failed, error: %s", err)
+		log.Fatalf("Failed, error: %s", err)
 	}
 }
 
@@ -44,7 +43,7 @@ func main() {
 	config := marathon.NewDefaultConfig()
 	config.URL = marathonURL
 	config.EventsTransport = marathon.EventsTransportSSE
-	glog.Infof("Creating a client, Marathon: %s", marathonURL)
+	log.Printf("Creating a client, Marathon: %s", marathonURL)
 
 	client, err := marathon.NewClient(config)
 	assert(err)
@@ -64,19 +63,19 @@ func main() {
 		}
 		select {
 		case <-timer:
-			glog.Infof("Exiting the loop")
+			log.Printf("Exiting the loop")
 			done = true
 		case event := <-events:
-			glog.Infof("Recieved application event: %s", event)
+			log.Printf("Recieved application event: %s", event)
 		case event := <-deployments:
-			glog.Infof("Recieved deployment event: %v", event)
+			log.Printf("Recieved deployment event: %v", event)
 			var deployment *marathon.EventDeploymentStepSuccess
 			deployment = event.Event.(*marathon.EventDeploymentStepSuccess)
-			glog.Infof("deployment step: %v", deployment.CurrentStep)
+			log.Printf("deployment step: %v", deployment.CurrentStep)
 		}
 	}
 
-	glog.Infof("Removing our subscription")
+	log.Printf("Removing our subscription")
 	client.RemoveEventsListener(events)
 	client.RemoveEventsListener(deployments)
 }

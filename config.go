@@ -16,6 +16,11 @@ limitations under the License.
 
 package marathon
 
+import (
+	"io"
+	"io/ioutil"
+)
+
 // EventsTransport describes which transport should be used to deliver Marathon events
 type EventsTransport int
 
@@ -37,6 +42,8 @@ type Config struct {
 	HTTPBasicPassword string
 	// custom callback url
 	CallbackURL string
+	// the output for debug log messages
+	LogOutput io.Writer
 }
 
 // NewDefaultConfig create a default client config
@@ -47,5 +54,6 @@ func NewDefaultConfig() Config {
 		EventsPort:      10001,
 		EventsInterface: "eth0",
 		RequestTimeout:  5,
+		LogOutput:       ioutil.Discard,
 	}
 }

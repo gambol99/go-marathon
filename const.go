@@ -17,8 +17,6 @@ limitations under the License.
 package marathon
 
 const (
-	debugLevel = 10
-
 	defaultEventsURL = "/event"
 
 	/* --- api related constants --- */

@@ -17,19 +17,17 @@ limitations under the License.
 package marathon
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
-	"strings"
+	"regexp"
 	"sync"
 	"time"
-
-	"github.com/golang/glog"
 )
 
 // Marathon is the interface to the marathon API
@@ -164,12 +162,12 @@ type marathonClient struct {
 	eventsHTTP *http.Server
 	// the http client use for making requests
 	httpClient *http.Client
-	// the output for the logger
-	logger *log.Logger
 	// the marathon cluster
 	cluster Cluster
 	// a map of service you wish to listen to
 	listeners map[EventsChannel]int
+	// a custom logger for debug log messages
+	debugLog *log.Logger
 }
 
 // NewClient creates a new marathon client
@@ -181,15 +179,16 @@ func NewClient(config Config) (Marathon, error) {
 		return nil, err
 	}
 
-	service := new(marathonClient)
-	service.config = config
-	service.listeners = make(map[EventsChannel]int, 0)
-	service.cluster = cluster
-	service.httpClient = &http.Client{
+	client := new(marathonClient)
+	client.config = config
+	client.listeners = make(map[EventsChannel]int, 0)
+	client.cluster = cluster
+	client.httpClient = &http.Client{
 		Timeout: (time.Duration(config.RequestTimeout) * time.Second),
 	}
+	client.debugLog = log.New(config.LogOutput, "", 0)
 
-	return service, nil
+	return client, nil
 }
 
 // GetMarathonURL retrieves the marathon url
@@ -205,151 +204,99 @@ func (r *marathonClient) Ping() (bool, error) {
 	return true, nil
 }
 
-func (r *marathonClient) encodeRequest(data interface{}) (string, error) {
-	response, err := json.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-
-	return string(response), err
-}
-
-func (r *marathonClient) decodeRequest(stream io.Reader, result interface{}) error {
-	if err := json.NewDecoder(stream).Decode(result); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *marathonClient) buildPostData(data interface{}) (string, error) {
-	if data == nil {
-		return "", nil
-	}
-	content, err := r.encodeRequest(data)
-	if err != nil {
-		return "", err
-	}
-
-	return content, nil
-}
-
+// TODO remove post, this is a GET request!
 func (r *marathonClient) apiGet(uri string, post, result interface{}) error {
-	return r.apiOperation("GET", uri, post, result)
+	return r.apiCall("GET", uri, post, result)
 }
 
 func (r *marathonClient) apiPut(uri string, post, result interface{}) error {
-	return r.apiOperation("PUT", uri, post, result)
+	return r.apiCall("PUT", uri, post, result)
 }
 
 func (r *marathonClient) apiPost(uri string, post, result interface{}) error {
-	return r.apiOperation("POST", uri, post, result)
+	return r.apiCall("POST", uri, post, result)
 }
 
 func (r *marathonClient) apiDelete(uri string, post, result interface{}) error {
-	return r.apiOperation("DELETE", uri, post, result)
+	return r.apiCall("DELETE", uri, post, result)
 }
 
-func (r *marathonClient) apiOperation(method, uri string, post, result interface{}) error {
-	content, err := r.buildPostData(post)
+func (r *marathonClient) apiCall(method, uri string, body, result interface{}) error {
+	// Get a member from the cluster
+	marathon, err := r.cluster.GetMember()
 	if err != nil {
 		return err
 	}
 
-	_, _, err = r.apiCall(method, uri, content, result)
+	url := fmt.Sprintf("%s/%s", marathon, uri)
 
-	return err
-}
-
-func (r *marathonClient) apiCall(method, uri, body string, result interface{}) (int, string, error) {
-	glog.V(debugLevel).Infof("[api]: method: %s, uri: %s, body: %s", method, uri, body)
-
-	status, content, _, err := r.httpRequest(method, uri, body)
-	if err != nil {
-		return 0, "", err
+	var jsonBody []byte
+	if body != nil {
+		jsonBody, err = json.Marshal(body)
+		if err != nil {
+			return err
+		}
 	}
 
-	glog.V(debugLevel).Infof("[api] result: status: %d, content: %s\n", status, content)
-	if status >= 200 && status <= 299 {
+	// Make the http request to Marathon
+	request, err := http.NewRequest(method, url, bytes.NewReader(jsonBody))
+	if err != nil {
+		return err
+	}
+
+	// Add any basic auth and the content headers
+	if r.config.HTTPBasicAuthUser != "" {
+		request.SetBasicAuth(r.config.HTTPBasicAuthUser, r.config.HTTPBasicPassword)
+	}
+	request.Header.Add("Content-Type", "application/json")
+	request.Header.Add("Accept", "application/json")
+
+	response, err := r.httpClient.Do(request)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	respBody, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return err
+	}
+
+	if len(jsonBody) > 0 {
+		r.debugLog.Printf("apiCall(): %v %v %s returned %v %s\n", request.Method, request.URL.String(), jsonBody, response.Status, oneLogLine(respBody))
+	} else {
+		r.debugLog.Printf("apiCall(): %v %v returned %v %s\n", request.Method, request.URL.String(), response.Status, oneLogLine(respBody))
+	}
+
+	switch {
+	case response.StatusCode >= 200 && response.StatusCode <= 299:
 		if result != nil {
-			if err := r.decodeRequest(strings.NewReader(content), result); err != nil {
-				glog.V(debugLevel).Infof("failed to unmarshall the response from marathon, error: %s", err)
-				return status, content, ErrInvalidResponse
+			if err := json.Unmarshal(respBody, result); err != nil {
+				r.debugLog.Printf("apiCall(): failed to unmarshall the response from marathon, error: %s\n", err)
+				return ErrInvalidResponse
 			}
 		}
-		return status, content, nil
-	}
+		return nil
 
-	switch status {
-	case 500:
-		return status, "", ErrInvalidResponse
-	case 404:
-		return status, "", ErrDoesNotExist
-	case 409:
-		return status, "", ErrConflict
-	}
+	case response.StatusCode == 404:
+		return ErrDoesNotExist
 
-	// step: lets decode into a error message
-	var message struct {
-		Message string `json:"message"`
-	}
+	case response.StatusCode == 409:
+		return ErrConflict
 
-	if err := r.decodeRequest(strings.NewReader(content), &message); err != nil {
-		return status, content, ErrInvalidResponse
-	}
+	case response.StatusCode >= 500:
+		return ErrInvalidResponse
 
-	errorMessage := "unknown error"
-	if message.Message != "" {
-		errorMessage = message.Message
+	default:
+		r.debugLog.Printf("apiCall(): unknown error: %s", oneLogLine(respBody))
+		return ErrInvalidResponse
 	}
-
-	return status, "", fmt.Errorf("%s", errorMessage)
 }
 
-func (r *marathonClient) httpRequest(method, uri, body string) (int, string, *http.Response, error) {
-	var content string
-	var response *http.Response
+var oneLogLineRegex = regexp.MustCompile(`(?m)^\s*`)
 
-	// Try to connect to Marathon until succeed or
-	// the whole custer is down
-	for {
-		// Get a member from the cluster
-		marathon, err := r.cluster.GetMember()
-		if err != nil {
-			return 0, "", nil, err
-		}
-
-		url := fmt.Sprintf("%s/%s", marathon, uri)
-
-		glog.V(debugLevel).Infof("[http] request: %s, uri: %s, url: %s", method, uri, url)
-		// Make the http request to Marathon
-		request, err := http.NewRequest(method, url, strings.NewReader(body))
-		if err != nil {
-			return 0, "", nil, err
-		}
-
-		// Add any basic auth and the content headers
-		if r.config.HTTPBasicAuthUser != "" {
-			request.SetBasicAuth(r.config.HTTPBasicAuthUser, r.config.HTTPBasicPassword)
-		}
-		request.Header.Add("Content-Type", "application/json")
-		request.Header.Add("Accept", "application/json")
-
-		response, err = r.httpClient.Do(request)
-		if err == nil {
-			break
-		}
-
-		r.cluster.MarkDown()
-	}
-
-	if response.ContentLength != 0 {
-		responseContent, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			return response.StatusCode, "", response, err
-		}
-		content = string(responseContent)
-	}
-
-	return response.StatusCode, content, response, nil
+// oneLogLine removes indentation at the beginning of each line and
+// escapes new line characters.
+func oneLogLine(in []byte) []byte {
+	return bytes.Replace(oneLogLineRegex.ReplaceAll(in, nil), []byte("\n"), []byte("\\n "), -1)
 }

@@ -168,6 +168,7 @@ func (r *marathonCluster) GetMember() (string, error) {
 	}
 
 	// we reached the end and there were no members available
+	defer r.MarkDown()
 	return "", ErrMarathonDown
 }
 

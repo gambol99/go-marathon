@@ -13,7 +13,7 @@ It currently supports
 
 Note: the library is still under active development; users should expect frequent (possibly breaking) API changes for the time being.
 
-It requires Go version 1.3 or higher.
+It requires Go version 1.5 or higher.
 
 ## Code Examples
 
@@ -25,7 +25,6 @@ which is probably the best place to start.
 ```Go
 import (
 	marathon "github.com/gambol99/go-marathon"
-	"github.com/golang/glog"
 )
 
 marathonURL := "http://10.241.1.71:8080"
@@ -33,7 +32,7 @@ config := marathon.NewDefaultConfig()
 config.URL = marathonURL
 client, err := marathon.NewClient(config)
 if err != nil {
-	glog.Fatalf("Failed to create a client for marathon, error: %s", err)
+	log.Fatalf("Failed to create a client for marathon, error: %s", err)
 }
 
 applications, err := client.Applications()
@@ -55,21 +54,21 @@ background process will continue to ping the member until it's back online.
 ```Go
 applications, err := client.Applications()
 if err != nil {
-	glog.Errorf("Failed to list applications")
+	log.Fatalf("Failed to list applications")
 }
 
-glog.Infof("Found %d applications running", len(applications.Apps))
+log.Printf("Found %d applications running", len(applications.Apps))
 for _, application := range applications.Apps {
-	glog.Infof("Application: %s", application)
+	log.Printf("Application: %s", application)
 	details, err := client.Application(application.ID)
 	assert(err)
 	if details.Tasks != nil && len(details.Tasks) > 0 {
 		for _, task := range details.Tasks {
-			glog.Infof("task: %s", task)
+			log.Printf("task: %s", task)
 		}
 		// check the health of the application
 		health, err := client.ApplicationOK(details.ID)
-		glog.Infof("Application: %s, healthy: %t", details.ID, health)
+		log.Printf("Application: %s, healthy: %t", details.ID, health)
 	}
 }
 ```
@@ -77,7 +76,7 @@ for _, application := range applications.Apps {
 ### Creating a new application
 
 ```Go
-glog.Infof("Deploying a new application")
+log.Printf("Deploying a new application")
 application := marathon.NewDockerApplication()
 application.Name("/product/name/frontend")
 application.CPU(0.1).Memory(64).Storage(0.0).Count(2)
@@ -91,9 +90,9 @@ application.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Exp
 application.CheckHTTP("/health", 10, 5)
 
 if _, err := client.CreateApplication(application); err != nil {
-	glog.Errorf("Failed to create application: %s, error: %s", application, err)
+	log.Fatalf("Failed to create application: %s, error: %s", application, err)
 } else {
-	glog.Infof("Created the application: %s", application)
+	log.Printf("Created the application: %s", application)
 }
 ```
 
@@ -104,12 +103,12 @@ Note: Applications may also be defined by means of initializing a `marathon.Appl
 Change the number of application instances to 4
 
 ```Go
-glog.Infof("Scale to 4 instances")
+log.Printf("Scale to 4 instances")
 if err := client.ScaleApplicationInstances(application.ID, 10); err != nil {
-	glog.Errorf("Failed to delete the application: %s, error: %s", application, err)
+	log.Fatalf("Failed to delete the application: %s, error: %s", application, err)
 } else {
 	client.WaitOnApplication(application.ID, 30 * time.Second)
-	glog.Infof("Successfully scaled the application")
+	log.Printf("Successfully scaled the application")
 }
 ```
 
@@ -133,14 +132,14 @@ config.EventsTransport = marathon.EventsTransportSSE
 
 client, err := marathon.NewClient(config)
 if err != nil {
-	glog.Fatalf("Failed to create a client for marathon, error: %s", err)
+	log.Fatalf("Failed to create a client for marathon, error: %s", err)
 }
 
 // Register for events
 events := make(marathon.EventsChannel, 5)
 err = client.AddEventsListener(events, marathon.EVENTS_APPLICATIONS)
 if err != nil {
-	glog.Fatalf("Failed to register for events, %s", err)
+	log.Fatalf("Failed to register for events, %s", err)
 }
 
 timer := time.After(60 * time.Second)
@@ -153,10 +152,10 @@ for {
 	}
 	select {
 	case <-timer:
-		glog.Infof("Exiting the loop")
+		log.Printf("Exiting the loop")
 		done = true
 	case event := <-events:
-		glog.Infof("Recieved event: %s", event)
+		log.Printf("Recieved event: %s", event)
 	}
 }
 
@@ -182,14 +181,14 @@ config.EventsPort = marathonPort
 
 client, err := marathon.NewClient(config)
 if err != nil {
-	glog.Fatalf("Failed to create a client for marathon, error: %s", err)
+	log.Fatalf("Failed to create a client for marathon, error: %s", err)
 }
 
 // Register for events
 events := make(marathon.EventsChannel, 5)
 err = client.AddEventsListener(events, marathon.EVENTS_APPLICATIONS)
 if err != nil {
-	glog.Fatalf("Failed to register for events, %s", err)
+	log.Fatalf("Failed to register for events, %s", err)
 }
 
 timer := time.After(60 * time.Second)
@@ -202,10 +201,10 @@ for {
 	}
 	select {
 	case <-timer:
-		glog.Infof("Exiting the loop")
+		log.Printf("Exiting the loop")
 		done = true
 	case event := <-events:
-		glog.Infof("Recieved event: %s", event)
+		log.Printf("Recieved event: %s", event)
 	}
 }
 
