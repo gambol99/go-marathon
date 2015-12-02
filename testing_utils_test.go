@@ -36,6 +36,7 @@ const (
 	fakeGroupName     = "/test"
 	fakeGroupName1    = "/qa/product/1"
 	fakeAppName       = "/fake_app"
+	fakeTaskID        = "fake_app.12345"
 	fakeAppNameBroken = "/fake_app_broken"
 	fakeDeploymentID  = "867ed450-f6a8-4d33-9b0e-e11c5513990b"
 	fakeAPIFilename   = "./tests/rest-api/methods.yml"

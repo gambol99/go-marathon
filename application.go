@@ -192,12 +192,9 @@ func (r *Application) AddLabel(name, value string) *Application {
 	return r
 }
 
-// HasHealthChecks is more of a helper method, used to check if an application has healtchecks
+// HasHealthChecks is a helper method, used to check if an application has healtchecks
 func (r *Application) HasHealthChecks() bool {
-	if r.HealthChecks != nil && len(r.HealthChecks) > 0 {
-		return true
-	}
-	return false
+	return r.HealthChecks != nil && len(r.HealthChecks) > 0
 }
 
 // DeploymentIDs retrieves the application deployments IDs
@@ -369,13 +366,10 @@ func (r *marathonClient) ApplicationOK(name string) (bool, error) {
 
 	// step: iterate the application checks and look for false
 	for _, task := range application.Tasks {
-		if task.HealthCheckResult != nil {
-			for _, check := range task.HealthCheckResult {
+		if task.HealthCheckResults != nil {
+			for _, check := range task.HealthCheckResults {
 				//When a task is flapping in Marathon, this is sometimes nil
-				if check == nil {
-					return false, nil
-				}
-				if !check.Alive {
+				if check == nil || !check.Alive {
 					return false, nil
 				}
 			}

@@ -68,15 +68,15 @@ type Marathon interface {
 	// get a list of tasks for a specific application
 	Tasks(application string) (*Tasks, error)
 	// get a list of all tasks
-	AllTasks(v url.Values) (*Tasks, error)
+	AllTasks(opts *AllTasksOpts) (*Tasks, error)
 	// get the endpoints for a service on a application
 	TaskEndpoints(name string, port int, healthCheck bool) ([]string, error)
 	// kill all the tasks for any application
-	KillApplicationTasks(applicationID, hostname string, scale bool) (*Tasks, error)
+	KillApplicationTasks(applicationID string, opts *KillApplicationTasksOpts) (*Tasks, error)
 	// kill a single task
-	KillTask(taskID string, scale bool) (*Task, error)
+	KillTask(taskID string, opts *KillTaskOpts) (*Task, error)
 	// kill the given array of tasks
-	KillTasks(taskIDs []string, scale bool) error
+	KillTasks(taskIDs []string, opts *KillTaskOpts) error
 
 	// --- GROUPS ---
 
