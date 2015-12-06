@@ -34,8 +34,6 @@ import (
 type Marathon interface {
 	// -- APPLICATIONS ---
 
-	// check it see if a application exists
-	HasApplication(name string) (bool, error)
 	// get a listing of the application ids
 	ListApplications(url.Values) ([]string, error)
 	// a list of application versions
