@@ -20,6 +20,8 @@ It requires Go version 1.5 or higher.
 There is also an examples directory in the source which shows hints and snippets of code of how to use it —
 which is probably the best place to start.
 
+You can use `examples/docker-compose.yml` in order to start a test cluster.
+
 ### Creating a client
 
 ```Go
