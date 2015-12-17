@@ -17,11 +17,17 @@ limitations under the License.
 package marathon
 
 import (
-	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestHasHealthCheckResults(t *testing.T) {
+	task := Task{}
+	assert.False(t, task.HasHealthCheckResults())
+	task.HealthCheckResults = append(task.HealthCheckResults, &HealthCheckResult{})
+	assert.True(t, task.HasHealthCheckResults())
+}
 
 func TestAllTasks(t *testing.T) {
 	endpoint := newFakeMarathonEndpoint(t, nil)
@@ -29,18 +35,54 @@ func TestAllTasks(t *testing.T) {
 
 	tasks, err := endpoint.Client.AllTasks(nil)
 	assert.NoError(t, err)
-	assert.NotNil(t, tasks)
-	assert.Equal(t, len(tasks.Tasks), 2)
+	if assert.NotNil(t, tasks) {
+		assert.Equal(t, len(tasks.Tasks), 2)
+	}
+
+	tasks, err = endpoint.Client.AllTasks(&AllTasksOpts{Status: "staging"})
+	assert.Nil(t, err)
+	if assert.NotNil(t, tasks) {
+		assert.Equal(t, len(tasks.Tasks), 0)
+	}
 }
 
-func TestAllStagingTasks(t *testing.T) {
+func TestTasks(t *testing.T) {
 	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
-	tasks, err := endpoint.Client.AllTasks(url.Values{"status": []string{"staging"}})
-	assert.Nil(t, err)
+	tasks, err := endpoint.Client.Tasks(fakeAppName)
+	assert.NoError(t, err)
+	if assert.NotNil(t, tasks) {
+		assert.Equal(t, len(tasks.Tasks), 2)
+	}
+}
+
+func TestKillApplicationTasks(t *testing.T) {
+	endpoint := newFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	tasks, err := endpoint.Client.KillApplicationTasks(fakeAppName, nil)
+	assert.NoError(t, err)
 	assert.NotNil(t, tasks)
-	assert.Equal(t, len(tasks.Tasks), 0)
+}
+
+func TestKillTask(t *testing.T) {
+	endpoint := newFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	task, err := endpoint.Client.KillTask(fakeTaskID, nil)
+	assert.NoError(t, err)
+	if assert.NotNil(t, task) {
+		assert.Equal(t, fakeTaskID, task.ID)
+	}
+}
+
+func TestKillTasks(t *testing.T) {
+	endpoint := newFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	err := endpoint.Client.KillTasks([]string{fakeTaskID}, nil)
+	assert.NoError(t, err)
 }
 
 func TestTaskEndpoints(t *testing.T) {
@@ -62,13 +104,4 @@ func TestTaskEndpoints(t *testing.T) {
 
 	endpoints, err = endpoint.Client.TaskEndpoints(fakeAppNameBroken, 80, true)
 	assert.Error(t, err)
-}
-
-func TestKillApplicationTasks(t *testing.T) {
-	endpoint := newFakeMarathonEndpoint(t, nil)
-	defer endpoint.Close()
-
-	tasks, err := endpoint.Client.KillApplicationTasks(fakeAppName, "", false)
-	assert.NoError(t, err)
-	assert.NotNil(t, tasks)
 }

@@ -18,50 +18,71 @@ package marathon
 
 import (
 	"fmt"
-	"net/url"
-	"strconv"
 	"strings"
 )
 
-// Tasks ... a collection of marathon tasks
+// Tasks is a collection of marathon tasks
 type Tasks struct {
 	Tasks []Task `json:"tasks"`
 }
 
-// Task ... the definition for a marathon task
+// Task is the definition for a marathon task
 type Task struct {
-	ID                string               `json:"id"`
-	AppID             string               `json:"appId"`
-	Host              string               `json:"host"`
-	HealthCheckResult []*HealthCheckResult `json:"healthCheckResults"`
-	Ports             []int                `json:"ports"`
-	ServicePorts      []int                `json:"servicePorts"`
-	StagedAt          string               `json:"stagedAt"`
-	StartedAt         string               `json:"startedAt"`
-	Version           string               `json:"version"`
+	ID                 string               `json:"id"`
+	AppID              string               `json:"appId"`
+	Host               string               `json:"host"`
+	HealthCheckResults []*HealthCheckResult `json:"healthCheckResults"`
+	Ports              []int                `json:"ports"`
+	ServicePorts       []int                `json:"servicePorts"`
+	StagedAt           string               `json:"stagedAt"`
+	StartedAt          string               `json:"startedAt"`
+	Version            string               `json:"version"`
 }
 
-// HasHealthCheckResults ... Check if the task has any health checks
+// AllTasksOpts contains a payload for AllTasks method
+//		status:		Return only those tasks whose status matches this parameter.
+//				If not specified, all tasks are returned. Possible values: running, staging. Default: none.
+type AllTasksOpts struct {
+	Status string `url:"status,omitempty"`
+}
+
+// KillApplicationTasksOpts contains a payload for KillApplicationTasks method
+//		host:		kill only those tasks on a specific host (optional)
+//		scale:		Scale the app down (i.e. decrement its instances setting by the number of tasks killed) after killing the specified tasks
+type KillApplicationTasksOpts struct {
+	Host  string `url:"host,omitempty"`
+	Scale bool   `url:"scale,omitempty"`
+}
+
+// KillTaskOpts contains a payload for task killing methods
+//		scale:		Scale the app down
+type KillTaskOpts struct {
+	Scale bool `url:"scale,omitempty"`
+}
+
+// HasHealthCheckResults checks if the task has any health checks
 func (r *Task) HasHealthCheckResults() bool {
-	if r.HealthCheckResult == nil || len(r.HealthCheckResult) <= 0 {
-		return false
-	}
-	return true
+	return r.HealthCheckResults != nil && len(r.HealthCheckResults) > 0
 }
 
-// AllTasks list tasks of all applications.
-//		v:		Get parameters for the API call.
-func (r *marathonClient) AllTasks(v url.Values) (*Tasks, error) {
+// AllTasks lists tasks of all applications.
+//		opts: 		AllTasksOpts request payload
+func (r *marathonClient) AllTasks(opts *AllTasksOpts) (*Tasks, error) {
+	u, err := addOptions(marathonAPITasks, opts)
+	if err != nil {
+		return nil, err
+	}
+
 	tasks := new(Tasks)
-	if err := r.apiGet(marathonAPITasks+"?"+v.Encode(), nil, tasks); err != nil {
+	if err := r.apiGet(u, nil, tasks); err != nil {
 		return nil, err
 	}
 
 	return tasks, nil
 }
 
-// Tasks ... Retrieve a list of tasks for an application
-//		application_id:		the id for the application
+// Tasks retrieves a list of tasks for an application
+//		id:		the id of the application
 func (r *marathonClient) Tasks(id string) (*Tasks, error) {
 	tasks := new(Tasks)
 	if err := r.apiGet(fmt.Sprintf("%s/%s/tasks", marathonAPIApps, trimRootPath(id)), nil, tasks); err != nil {
@@ -71,57 +92,65 @@ func (r *marathonClient) Tasks(id string) (*Tasks, error) {
 	return tasks, nil
 }
 
-// KillApplicationTasks ... Kill all tasks relating to an application
-//		application_id:		the id for the application
-//      host:				kill only those tasks on a specific host (optional)
-//		scale:              Scale the app down (i.e. decrement its instances setting by the number of tasks killed) after killing the specified tasks
-func (r *marathonClient) KillApplicationTasks(id, hostname string, scale bool) (*Tasks, error) {
-	var options struct {
-		Host  string `json:"host"`
-		Scale bool   `json:"bool"`
+// KillApplicationTasks kills all tasks relating to an application
+//		id:		the id of the application
+//		opts: 		KillApplicationTasksOpts request payload
+func (r *marathonClient) KillApplicationTasks(id string, opts *KillApplicationTasksOpts) (*Tasks, error) {
+	u := fmt.Sprintf("%s/%s/tasks", marathonAPIApps, trimRootPath(id))
+	u, err := addOptions(u, opts)
+	if err != nil {
+		return nil, err
 	}
-	options.Host = hostname
-	options.Scale = scale
+
 	tasks := new(Tasks)
-	if err := r.apiDelete(fmt.Sprintf("%s/%s/tasks", marathonAPIApps, trimRootPath(id)), &options, tasks); err != nil {
+	if err := r.apiDelete(u, nil, tasks); err != nil {
 		return nil, err
 	}
 
 	return tasks, nil
 }
 
-// KillTask ... Kill the task associated with a given ID
-// 	task_id:		the id for the task
-// 	scale:		Scale the app down
-func (r *marathonClient) KillTask(taskID string, scale bool) (*Task, error) {
-	var options struct {
-		Scale bool `json:"bool"`
-	}
-	options.Scale = scale
-	task := new(Task)
+// KillTask kills the task associated with a given ID
+// 	taskID:		the id for the task
+//	opts:		KillTaskOpts request payload
+func (r *marathonClient) KillTask(taskID string, opts *KillTaskOpts) (*Task, error) {
 	appName := taskID[0:strings.LastIndex(taskID, ".")]
-	if err := r.apiDelete(fmt.Sprintf("%s/%s/tasks/%s", marathonAPIApps, appName, taskID), &options, task); err != nil {
+	u := fmt.Sprintf("%s/%s/tasks/%s", marathonAPIApps, appName, taskID)
+	u, err := addOptions(u, opts)
+	if err != nil {
 		return nil, err
 	}
 
-	return task, nil
-}
+	wrappedTask := new(struct {
+		Task Task `json:"task"`
+	})
 
-// KillTasks ... Kill tasks associated with given array of ids
-// 	tasks: 	the array of task ids
-// 	scale: 	Scale the app down
-func (r *marathonClient) KillTasks(tasks []string, scale bool) error {
-	v := url.Values{}
-	v.Add("scale", strconv.FormatBool(scale))
-	var post struct {
-		TaskIDs []string `json:"ids"`
+	if err := r.apiDelete(u, nil, wrappedTask); err != nil {
+		return nil, err
 	}
-	post.TaskIDs = tasks
 
-	return r.apiPost(fmt.Sprintf("%s/delete?%s", marathonAPITasks, v.Encode()), &post, nil)
+	return &wrappedTask.Task, nil
 }
 
-// TaskEndpoints ... Get the endpoints i.e. HOST_IP:DYNAMIC_PORT for a specific application service
+// KillTasks kills tasks associated with given array of ids
+//	tasks:		the array of task ids
+//	opts:		KillTaskOpts request payload
+func (r *marathonClient) KillTasks(tasks []string, opts *KillTaskOpts) error {
+	u := fmt.Sprintf("%s/delete", marathonAPITasks)
+	u, err := addOptions(u, opts)
+	if err != nil {
+		return nil
+	}
+
+	var post struct {
+		IDs []string `json:"ids"`
+	}
+	post.IDs = tasks
+
+	return r.apiPost(u, &post, nil)
+}
+
+// TaskEndpoints gets the endpoints i.e. HOST_IP:DYNAMIC_PORT for a specific application service
 // I.e. a container running apache, might have ports 80/443 (translated to X dynamic ports), but i want
 // port 80 only and i only want those whom have passed the health check
 //
@@ -146,39 +175,38 @@ func (r *marathonClient) TaskEndpoints(name string, port int, healthCheck bool) 
 		return nil, err
 	}
 
-	var list []string
 	// step: do we have any tasks?
 	if application.Tasks == nil || len(application.Tasks) <= 0 {
-		return list, nil
+		return nil, nil
 	}
 
+	// step: if we are checking health the 'service' has a health check?
+	healthCheck = healthCheck && application.HasHealthChecks()
+
 	// step: iterate the tasks and extract the dynamic ports
+	var list []string
 	for _, task := range application.Tasks {
-		// step: if we are checking health the 'service' has a health check?
-		if healthCheck && application.HasHealthChecks() {
-			/*
-				check: does the task have a health check result, if NOT, it's because the
-				health of the task hasn't yet been performed, hence we assume it as DOWN
-			*/
-			if task.HasHealthCheckResults() == false {
-				continue
-			}
-
-			// step: check the health results then
-			skipEndpoint := false
-			for _, health := range task.HealthCheckResult {
-				if health.Alive == false {
-					skipEndpoint = true
-				}
-			}
-
-			if skipEndpoint == true {
-				continue
-			}
+		if !healthCheck || task.allHealthChecksAlive() {
+			endpoint := fmt.Sprintf("%s:%d", task.Host, task.Ports[portIndex])
+			list = append(list, endpoint)
 		}
-		// else we can just add it
-		list = append(list, fmt.Sprintf("%s:%d", task.Host, task.Ports[portIndex]))
 	}
 
 	return list, nil
+}
+
+func (r *Task) allHealthChecksAlive() bool {
+	// check: does the task have a health check result, if NOT, it's because the
+	// health of the task hasn't yet been performed, hence we assume it as DOWN
+	if !r.HasHealthCheckResults() {
+		return false
+	}
+	// step: check the health results then
+	for _, check := range r.HealthCheckResults {
+		if check.Alive == false {
+			return false
+		}
+	}
+
+	return true
 }

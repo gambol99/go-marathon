@@ -102,6 +102,6 @@ func main() {
 	log.Printf("Created the application: %s", application.ID)
 
 	log.Printf("Delete all the tasks")
-	_, err = client.KillApplicationTasks(application.ID, "", false)
+	_, err = client.KillApplicationTasks(application.ID, nil)
 	assert(err)
 }
