@@ -106,7 +106,7 @@ Change the number of application instances to 4
 
 ```Go
 log.Printf("Scale to 4 instances")
-if err := client.ScaleApplicationInstances(application.ID, 10); err != nil {
+if err := client.ScaleApplicationInstances(application.ID, 4); err != nil {
 	log.Fatalf("Failed to delete the application: %s, error: %s", application, err)
 } else {
 	client.WaitOnApplication(application.ID, 30 * time.Second)
