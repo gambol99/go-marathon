@@ -66,7 +66,7 @@ func main() {
 
 	applicationName := "/my/product"
 
-	if _, err := client.Application(applicationName); err != nil {
+	if _, err := client.Application(applicationName); err == nil {
 		deployID, err := client.DeleteApplication(applicationName)
 		assert(err)
 		waitOnDeployment(client, deployID)
@@ -83,6 +83,7 @@ func main() {
 	application.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80).Expose(443)
 	_, err = client.CreateApplication(application)
 	assert(err)
+	client.WaitOnApplication(application.ID, 30*time.Second)
 
 	log.Printf("Scaling the application to 4 instances")
 	deployID, err := client.ScaleApplicationInstances(application.ID, 4, false)
@@ -93,7 +94,7 @@ func main() {
 	log.Printf("Deleting the application: %s", applicationName)
 	deployID, err = client.DeleteApplication(application.ID)
 	assert(err)
-	time.Sleep(time.Duration(10) * time.Second)
+	waitOnDeployment(client, deployID)
 	log.Printf("Successfully deleted the application")
 
 	log.Printf("Starting the application again")
