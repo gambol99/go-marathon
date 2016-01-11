@@ -62,3 +62,19 @@ func TestMarkDown(t *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 	assert.Equal(t, len(cluster.Active()), 3)
 }
+
+func TestInvalidHosts(t *testing.T) {
+	for _, invalidHost := range []string{
+		"",
+		"://",
+		"http://",
+		"http://,,",
+		"http://,127.0.0.1:3000,127.0.0.1:3000",
+		"http://127.0.0.1:3000,,127.0.0.1:3000",
+		"http://127.0.0.1:3000,127.0.0.1:3000,",
+		"foo://127.0.0.1:3000",
+	} {
+		_, err := newCluster(invalidHost)
+		assert.Equal(t, err, ErrInvalidEndpoint, "undetected invalid host: %s", invalidHost)
+	}
+}
