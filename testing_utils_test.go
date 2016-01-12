@@ -113,7 +113,7 @@ func newFakeMarathonEndpoint(t *testing.T, config *Config) *endpoint {
 			return
 		}
 
-		http.Error(writer, "not found", 404)
+		http.Error(writer, `{"message": "not found"}`, 404)
 	})
 
 	httpSrv := httptest.NewServer(mux)

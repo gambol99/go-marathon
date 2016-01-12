@@ -277,7 +277,10 @@ func TestApplication(t *testing.T) {
 	assert.Equal(t, len(application.Tasks), 2)
 
 	_, err = endpoint.Client.Application("no_such_app")
-	assert.Equal(t, ErrDoesNotExist, err)
+	assert.Error(t, err)
+	apiErr, ok := err.(*APIError)
+	assert.True(t, ok)
+	assert.Equal(t, ErrCodeNotFound, apiErr.ErrCode)
 
 	config := NewDefaultConfig()
 	config.URL = "http://non-existing-marathon-host.local:5555"
@@ -285,6 +288,7 @@ func TestApplication(t *testing.T) {
 	defer endpoint.Close()
 
 	_, err = endpoint.Client.Application(fakeAppName)
-	assert.NotEqual(t, ErrDoesNotExist, err)
 	assert.Error(t, err)
+	_, ok = err.(*APIError)
+	assert.False(t, ok)
 }
