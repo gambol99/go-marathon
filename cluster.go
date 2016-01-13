@@ -102,6 +102,10 @@ func newCluster(marathonURL string) (Cluster, error) {
 	/* step: create a link list of the hosts */
 	var previous *marathonNode
 	for index, host := range strings.SplitN(marathon.Host, ",", -1) {
+		if len(host) == 0 {
+			return nil, ErrInvalidEndpoint
+		}
+
 		// step: create a new cluster member
 		node := new(marathonNode)
 		node.hostname = host
