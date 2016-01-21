@@ -464,9 +464,13 @@ func (r *marathonClient) RestartApplication(name string, force bool) (*Deploymen
 // 		instances:	the number of instances you wish to change to
 //    force: used to force the scale operation in case of blocked deployment
 func (r *marathonClient) ScaleApplicationInstances(name string, instances int, force bool) (*DeploymentID, error) {
-	changes := new(Application)
-	changes.ID = validateID(name)
-	changes.Instances = instances
+	changes := struct {
+		ID        string `json:"id"`
+		Instances int    `json:"instances"`
+	}{
+		ID:        validateID(name),
+		Instances: instances,
+	}
 	uri := fmt.Sprintf("%s/%s?force=%t", marathonAPIApps, trimRootPath(name), force)
 	deployID := new(DeploymentID)
 	if err := r.apiPut(uri, &changes, deployID); err != nil {
