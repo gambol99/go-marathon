@@ -24,12 +24,26 @@ import (
 )
 
 func Test400Error(t *testing.T) {
-	content := []byte(`{"message": "Invalid JSON", "details": [ {"path": "/id", "errors": ["error.expected.jsstring"] } ] }`)
+	content := []byte(`
+		{
+			"message": "Invalid JSON",
+			"details": [
+				{
+					"path": "/id",
+				 	"errors": ["error.expected.jsstring", "error.something.else"]
+				},
+				{
+					"path": "/name",
+				 	"errors": ["error.not.inventive"]
+				}
+			]
+		}
+	`)
 
 	e := validatedAPIError(t, http.StatusBadRequest, content, false)
 
 	assert.Equal(t, ErrCodeBadRequest, e.ErrCode)
-	assert.Contains(t, e.Error(), "Invalid JSON (details: [path: /id errors: error.expected.jsstring])")
+	assert.Contains(t, e.Error(), "Invalid JSON (path: '/id' errors: error.expected.jsstring, error.something.else; path: '/name' errors: error.not.inventive)")
 }
 
 func Test401Error(t *testing.T) {
@@ -78,20 +92,26 @@ func Test409PUTError(t *testing.T) {
 }
 
 func Test422Error(t *testing.T) {
-	content := []byte(`{
-  "message": "Bean is not valid",
-	"errors": [
+	content := []byte(`
 		{
-  		"attribute": "upgradeStrategy.minimumHealthCapacity",
-    	"error": "is greater than 1"
-  	}
-	]
-}`)
+  		"message": "Bean is not valid",
+			"errors": [
+				{
+  				"attribute": "upgradeStrategy.minimumHealthCapacity",
+    			"error": "is greater than 1"
+  			},
+				{
+  				"attribute": "foobar",
+    			"error": "foo does not have enough bar"
+  			}
+			]
+		}
+	`)
 
 	e := validatedAPIError(t, 422, content, false)
 
 	assert.Equal(t, ErrCodeInvalidBean, e.ErrCode)
-	assert.Contains(t, e.Error(), "Bean is not valid (errors: attribute upgradeStrategy.minimumHealthCapacity is greater than 1)")
+	assert.Contains(t, e.Error(), "Bean is not valid (attribute 'upgradeStrategy.minimumHealthCapacity': is greater than 1; attribute 'foobar': foo does not have enough bar)")
 }
 
 func TestServerError(t *testing.T) {

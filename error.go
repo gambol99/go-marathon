@@ -114,12 +114,12 @@ type badRequestDef struct {
 func (def *badRequestDef) message() string {
 	var details []string
 	for _, detail := range def.Details {
-		errDesc := fmt.Sprintf("path: %s errors: %s", detail.Path,
-			strings.Join(detail.Errors, "; "))
+		errDesc := fmt.Sprintf("path: '%s' errors: %s", detail.Path,
+			strings.Join(detail.Errors, ", "))
 		details = append(details, errDesc)
 	}
 
-	return fmt.Sprintf("%s (details: [%s])", def.Message, strings.Join(details, ", "))
+	return fmt.Sprintf("%s (%s)", def.Message, strings.Join(details, "; "))
 }
 
 func (def *badRequestDef) errCode() int {
@@ -167,10 +167,10 @@ func (def *unprocessableEntityDef) message() string {
 	var errs []string
 	for _, err := range def.Errors {
 		errs = append(errs,
-			fmt.Sprintf("attribute %s %s", err.Attribute, err.Error))
+			fmt.Sprintf("attribute '%s': %s", err.Attribute, err.Error))
 	}
 
-	return fmt.Sprintf("%s (errors: %s)", def.Message, strings.Join(errs, ", "))
+	return fmt.Sprintf("%s (%s)", def.Message, strings.Join(errs, "; "))
 }
 
 func (def *unprocessableEntityDef) errCode() int {
