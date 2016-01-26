@@ -136,16 +136,10 @@ var (
 	ErrInvalidEndpoint = errors.New("invalid Marathon endpoint specified")
 	// ErrInvalidResponse is thrown when marathon responds with invalid or error response
 	ErrInvalidResponse = errors.New("invalid response from Marathon")
-	// ErrDoesNotExist is thrown when the resource does not exists
-	ErrDoesNotExist = errors.New("the resource does not exist")
 	// ErrMarathonDown is thrown when all the marathon endpoints are down
 	ErrMarathonDown = errors.New("all the Marathon hosts are presently down")
-	// ErrInvalidArgument is thrown when invalid argument
-	ErrInvalidArgument = errors.New("the argument passed is invalid")
 	// ErrTimeoutError is thrown when the operation has timed out
 	ErrTimeoutError = errors.New("the operation has timed out")
-	// ErrConflict is thrown when the resource is conflicting (ie. app already exists)
-	ErrConflict = errors.New("conflicting resource")
 )
 
 type marathonClient struct {
@@ -266,8 +260,7 @@ func (r *marathonClient) apiCall(method, uri string, body, result interface{}) e
 		r.debugLog.Printf("apiCall(): %v %v returned %v %s\n", request.Method, request.URL.String(), response.Status, oneLogLine(respBody))
 	}
 
-	switch {
-	case response.StatusCode >= 200 && response.StatusCode <= 299:
+	if response.StatusCode >= 200 && response.StatusCode <= 299 {
 		if result != nil {
 			if err := json.Unmarshal(respBody, result); err != nil {
 				r.debugLog.Printf("apiCall(): failed to unmarshall the response from marathon, error: %s\n", err)
@@ -275,20 +268,14 @@ func (r *marathonClient) apiCall(method, uri string, body, result interface{}) e
 			}
 		}
 		return nil
-
-	case response.StatusCode == 404:
-		return ErrDoesNotExist
-
-	case response.StatusCode == 409:
-		return ErrConflict
-
-	case response.StatusCode >= 500:
-		return ErrInvalidResponse
-
-	default:
-		r.debugLog.Printf("apiCall(): unknown error: %s", oneLogLine(respBody))
-		return ErrInvalidResponse
 	}
+
+	apiErr, err := NewAPIError(response.StatusCode, respBody)
+	if err != nil {
+		r.debugLog.Printf("apiCall(): failed to parse error response '%s' with status code %d, error: %s", respBody, response.StatusCode, err)
+	}
+
+	return apiErr
 }
 
 var oneLogLineRegex = regexp.MustCompile(`(?m)^\s*`)

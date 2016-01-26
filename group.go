@@ -90,7 +90,7 @@ func (r *marathonClient) HasGroup(name string) (bool, error) {
 	uri := fmt.Sprintf("%s/%s", marathonAPIGroups, trimRootPath(name))
 	err := r.apiCall("GET", uri, "", nil)
 	if err != nil {
-		if err == ErrDoesNotExist {
+		if apiErr, ok := err.(*APIError); ok && apiErr.ErrCode == ErrCodeNotFound {
 			return false, nil
 		}
 		return false, err
