@@ -19,6 +19,7 @@ package marathon
 import (
 	"io"
 	"io/ioutil"
+	"net/http"
 )
 
 // EventsTransport describes which transport should be used to deliver Marathon events
@@ -26,24 +27,24 @@ type EventsTransport int
 
 // Config holds the settings and options for the client
 type Config struct {
-	// the url for marathon
+	// URL is the url for marathon
 	URL string
-	// events transport: EventsTransportCallback or EventsTransportSSE
+	// EventsTransport is the events transport: EventsTransportCallback or EventsTransportSSE
 	EventsTransport EventsTransport
-	// event handler port
+	// EventsPort is the event handler port
 	EventsPort int
 	// the interface we should be listening on for events
 	EventsInterface string
-	// the timeout for requests
-	RequestTimeout int
-	// http basic auth
+	// HTTPBasicAuthUser is the http basic auth
 	HTTPBasicAuthUser string
-	// http basic password
+	// HTTPBasicPassword is the http basic password
 	HTTPBasicPassword string
-	// custom callback url
+	// CallbackURL custom callback url
 	CallbackURL string
-	// the output for debug log messages
+	// LogOutput the output for debug log messages
 	LogOutput io.Writer
+	// HTTPClient is the http client
+	HTTPClient *http.Client
 }
 
 // NewDefaultConfig create a default client config
@@ -53,7 +54,6 @@ func NewDefaultConfig() Config {
 		EventsTransport: EventsTransportCallback,
 		EventsPort:      10001,
 		EventsInterface: "eth0",
-		RequestTimeout:  5,
 		LogOutput:       ioutil.Discard,
 	}
 }

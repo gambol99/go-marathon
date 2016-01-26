@@ -21,30 +21,31 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"net/http"
 )
 
 func TestUrl(t *testing.T) {
-	cluster, _ := newCluster(fakeMarathonURL)
+	cluster, _ := newCluster(http.DefaultClient, fakeMarathonURL)
 	assert.Equal(t, cluster.URL(), fakeMarathonURL)
 }
 
 func TestSize(t *testing.T) {
-	cluster, _ := newCluster(fakeMarathonURL)
+	cluster, _ := newCluster(http.DefaultClient, fakeMarathonURL)
 	assert.Equal(t, cluster.Size(), 3)
 }
 
 func TestActive(t *testing.T) {
-	cluster, _ := newCluster(fakeMarathonURL)
+	cluster, _ := newCluster(http.DefaultClient, fakeMarathonURL)
 	assert.Equal(t, len(cluster.Active()), 3)
 }
 
 func TestNonActive(t *testing.T) {
-	cluster, _ := newCluster(fakeMarathonURL)
+	cluster, _ := newCluster(http.DefaultClient, fakeMarathonURL)
 	assert.Equal(t, len(cluster.NonActive()), 0)
 }
 
 func TestGetMember(t *testing.T) {
-	cluster, _ := newCluster(fakeMarathonURL)
+	cluster, _ := newCluster(http.DefaultClient, fakeMarathonURL)
 	member, err := cluster.GetMember()
 	assert.NoError(t, err)
 	assert.Equal(t, member, "http://127.0.0.1:3000")
@@ -54,7 +55,7 @@ func TestMarkDown(t *testing.T) {
 	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
-	cluster, _ := newCluster(endpoint.URL)
+	cluster, _ := newCluster(http.DefaultClient, endpoint.URL)
 	assert.Equal(t, len(cluster.Active()), 3)
 	cluster.MarkDown()
 	cluster.MarkDown()
@@ -74,7 +75,7 @@ func TestInvalidHosts(t *testing.T) {
 		"http://127.0.0.1:3000,127.0.0.1:3000,",
 		"foo://127.0.0.1:3000",
 	} {
-		_, err := newCluster(invalidHost)
+		_, err := newCluster(http.DefaultClient, invalidHost)
 		assert.Equal(t, err, ErrInvalidEndpoint, "undetected invalid host: %s", invalidHost)
 	}
 }
