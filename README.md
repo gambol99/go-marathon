@@ -41,8 +41,7 @@ applications, err := client.Applications()
 ...
 ```
 
-Note, you can also specify multiple endpoint for Marathon (i.e. you have setup Marathon in HA mode and
-having multiple running)
+Note, you can also specify multiple endpoint for Marathon (i.e. you have setup Marathon in HA mode and having multiple running)
 
 ```Go
 marathonURL := "http://10.241.1.71:8080,10.241.1.72:8080,10.241.1.73:8080"
@@ -50,6 +49,28 @@ marathonURL := "http://10.241.1.71:8080,10.241.1.72:8080,10.241.1.73:8080"
 
 The first one specified will be used, if that goes offline the member is marked as *"unavailable"* and a
 background process will continue to ping the member until it's back online.
+
+### Custom HTTP Client
+
+If you wish to override the http client (by default http.DefaultClient) used by the API; use cases bypassing TLS verification, load root CA's or change the timeouts etc, you can pass a custom client in the config.
+
+```Go
+marathonURL := "http://10.241.1.71:8080"
+config := marathon.NewDefaultConfig()
+config.URL = marathonURL
+config.HTTPClient = &http.Client{
+    Timeout: (time.Duration(10) * time.Second),
+    Transport: &http.Transport{
+        Dial: (&net.Dialer{
+            Timeout:   10 * time.Second,
+            KeepAlive: 10 * time.Second,
+        }).Dial,
+        TLSClientConfig: &tls.Config{
+            InsecureSkipVerify: true,
+        },
+    },
+}
+```
 
 ### Listing the applications
 

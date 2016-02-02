@@ -17,11 +17,11 @@ limitations under the License.
 package marathon
 
 import (
+	"net/http"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"net/http"
 )
 
 func TestUrl(t *testing.T) {
