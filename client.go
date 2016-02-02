@@ -165,22 +165,23 @@ type marathonClient struct {
 // NewClient creates a new marathon client
 //		config:			the configuration to use
 func NewClient(config Config) (Marathon, error) {
-	// step: we parse the url and build a cluster
-	cluster, err := newCluster(config.URL)
+	// step: if no http client, set to default
+	if config.HTTPClient == nil {
+		config.HTTPClient = http.DefaultClient
+	}
+	// step: create a new cluster
+	cluster, err := newCluster(config.HTTPClient, config.URL)
 	if err != nil {
 		return nil, err
 	}
 
-	client := new(marathonClient)
-	client.config = config
-	client.listeners = make(map[EventsChannel]int, 0)
-	client.cluster = cluster
-	client.httpClient = &http.Client{
-		Timeout: (time.Duration(config.RequestTimeout) * time.Second),
-	}
-	client.debugLog = log.New(config.LogOutput, "", 0)
-
-	return client, nil
+	return &marathonClient{
+		config:     config,
+		listeners:  make(map[EventsChannel]int, 0),
+		cluster:    cluster,
+		httpClient: config.HTTPClient,
+		debugLog:   log.New(config.LogOutput, "", 0),
+	}, nil
 }
 
 // GetMarathonURL retrieves the marathon url
@@ -196,7 +197,6 @@ func (r *marathonClient) Ping() (bool, error) {
 	return true, nil
 }
 
-// TODO remove post, this is a GET request!
 func (r *marathonClient) apiGet(uri string, post, result interface{}) error {
 	return r.apiCall("GET", uri, post, result)
 }
