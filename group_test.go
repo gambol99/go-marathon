@@ -59,7 +59,7 @@ func TestGroup(t *testing.T) {
 		assert.NotNil(t, app.Container)
 		assert.NotNil(t, app.Container.Docker)
 		assert.Equal(t, app.Container.Docker.Network, "BRIDGE")
-		if len(app.Container.Docker.PortMappings) <= 0 {
+		if len(*app.Container.Docker.PortMappings) <= 0 {
 			t.Fail()
 		}
 	}

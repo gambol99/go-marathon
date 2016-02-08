@@ -70,7 +70,7 @@ func main() {
 	frontend := marathon.NewDockerApplication()
 	frontend.Name("/product/group/frontend")
 	frontend.CPU(0.1).Memory(64).Storage(0.0).Count(2)
-	frontend.Arg("/usr/sbin/apache2ctl").Arg("-D").Arg("FOREGROUND")
+	frontend.AddArgs("/usr/sbin/apache2ctl", "-D", "FOREGROUND")
 	frontend.AddEnv("NAME", "frontend_http")
 	frontend.AddEnv("SERVICE_80_NAME", "frontend_http")
 	frontend.AddEnv("SERVICE_443_NAME", "frontend_https")

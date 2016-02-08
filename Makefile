@@ -50,5 +50,8 @@ test: deps
 	@$(MAKE) vet
 	@$(MAKE) cover
 
+examples:
+	make -C examples all
+
 changelog: release
 	git log $(shell git tag | tail -n1)..HEAD --no-merges --format=%B > changelog

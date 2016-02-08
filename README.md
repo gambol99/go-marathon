@@ -100,17 +100,22 @@ for _, application := range applications.Apps {
 
 ```Go
 log.Printf("Deploying a new application")
-application := marathon.NewDockerApplication()
-application.Name("/product/name/frontend")
-application.CPU(0.1).Memory(64).Storage(0.0).Count(2)
-application.Arg("/usr/sbin/apache2ctl", "-D", "FOREGROUND")
-application.AddEnv("NAME", "frontend_http")
-application.AddEnv("SERVICE_80_NAME", "test_http")
-application.AddLabel("environment", "staging")
-application.AddLabel("security", "none")
-// add the docker container
-application.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80, 443)
-application.CheckHTTP("/health", 10, 5)
+application := marathon.NewDockerApplication().
+  Name(applicationName).
+  CPU(0.1).
+  Memory(64).
+  Storage(0.0).
+  Count(2).
+  AddArgs("/usr/sbin/apache2ctl", "-D", "FOREGROUND").
+  AddEnv("NAME", "frontend_http").
+  AddEnv("SERVICE_80_NAME", "test_http").
+  CheckHTTP("/health", 10, 5)
+
+application.
+  Container.Docker.Container("quay.io/gambol99/apache-php:latest").
+  Bridged().
+  Expose(80).
+  Expose(443)
 
 if _, err := client.CreateApplication(application); err != nil {
 	log.Fatalf("Failed to create application: %s, error: %s", application, err)
