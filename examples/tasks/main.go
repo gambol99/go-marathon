@@ -23,7 +23,7 @@ func main() {
 	app.Instances = 3
 	fmt.Println("Creating app.")
 	// Update application will either create or update the app.
-	_, err = client.UpdateApplication(&app)
+	_, err = client.UpdateApplication(&app, false)
 	if err != nil {
 		panic(err)
 	}
