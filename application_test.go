@@ -149,15 +149,17 @@ func TestCreateApplication(t *testing.T) {
 }
 
 func TestUpdateApplication(t *testing.T) {
-	endpoint := newFakeMarathonEndpoint(t, nil)
-	defer endpoint.Close()
+	for _, force := range []bool{false, true} {
+		endpoint := newFakeMarathonEndpoint(t, nil)
+		defer endpoint.Close()
 
-	application := NewDockerApplication()
-	application.ID = "/fake_app"
-	id, err := endpoint.Client.UpdateApplication(application)
-	assert.NoError(t, err)
-	assert.Equal(t, id.DeploymentID, "83b215a6-4e26-4e44-9333-5c385eda6438")
-	assert.Equal(t, id.Version, "2014-08-26T07:37:50.462Z")
+		application := NewDockerApplication()
+		application.ID = "/fake_app"
+		id, err := endpoint.Client.UpdateApplication(application, force)
+		assert.NoError(t, err)
+		assert.Equal(t, id.DeploymentID, "83b215a6-4e26-4e44-9333-5c385eda6438")
+		assert.Equal(t, id.Version, "2014-08-26T07:37:50.462Z")
+	}
 }
 
 func TestApplications(t *testing.T) {
