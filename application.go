@@ -67,7 +67,7 @@ type Application struct {
 	Labels                map[string]string   `json:"labels,omitempty"`
 	AcceptedResourceRoles []string            `json:"acceptedResourceRoles,omitempty"`
 	LastTaskFailure       *LastTaskFailure    `json:"lastTaskFailure,omitempty"`
-	Fetch                 []Fetch             `json:"fetch,omitempty"`
+	Fetch                 []Fetch             `json:"fetch"`
 }
 
 // ApplicationVersions is a collection of application versions for a specific app in marathon
@@ -88,10 +88,10 @@ type VersionInfo struct {
 
 // Fetch will download URI before task starts
 type Fetch struct {
-	URI        string `json:"uri,omitempty"`
-	Executable bool   `json:"executable,omitempty"`
-	Extract    bool   `json:"extract,omitempty"`
-	Cache      bool   `json:"cache,omitempty"`
+	URI        string `json:"uri"`
+	Executable bool   `json:"executable"`
+	Extract    bool   `json:"extract"`
+	Cache      bool   `json:"cache"`
 }
 
 // NewDockerApplication creates a default docker application
