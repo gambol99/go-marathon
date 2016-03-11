@@ -58,8 +58,10 @@ type Marathon interface {
 	RestartApplication(name string, force bool) (*DeploymentID, error)
 	// get a list of applications from marathon
 	Applications(url.Values) (*Applications, error)
-	// get a specific application
+	// get an application by name
 	Application(name string) (*Application, error)
+	// get an application by name and version
+	ApplicationConfiguration(name, version string) (*Application, error)
 	// wait of application
 	WaitOnApplication(name string, timeout time.Duration) error
 
