@@ -294,3 +294,17 @@ func TestApplication(t *testing.T) {
 	_, ok = err.(*APIError)
 	assert.False(t, ok)
 }
+
+func TestApplicationConfiguration(t *testing.T) {
+	endpoint := newFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	application, err := endpoint.Client.ApplicationConfiguration(fakeAppName, "2014-09-12T23:28:21.737Z")
+	assert.NoError(t, err)
+	assert.NotNil(t, application)
+	assert.Equal(t, application.ID, fakeAppName)
+	assert.NotNil(t, application.HealthChecks)
+	assert.NotNil(t, application.Tasks)
+	assert.Equal(t, len(application.HealthChecks), 1)
+	assert.Equal(t, len(application.Tasks), 2)
+}
