@@ -306,4 +306,16 @@ func TestApplicationConfiguration(t *testing.T) {
 	application, err := endpoint.Client.ApplicationByVersion(fakeAppName, "2014-09-12T23:28:21.737Z")
 	assert.NoError(t, err)
 	verifyApplication(application, t)
+
+	_, err = endpoint.Client.ApplicationByVersion(fakeAppName, "no_such_version")
+	assert.Error(t, err)
+	apiErr, ok := err.(*APIError)
+	assert.True(t, ok)
+	assert.Equal(t, ErrCodeNotFound, apiErr.ErrCode)
+
+	_, err = endpoint.Client.ApplicationByVersion("no_such_app", "latest")
+	assert.Error(t, err)
+	apiErr, ok = err.(*APIError)
+	assert.True(t, ok)
+	assert.Equal(t, ErrCodeNotFound, apiErr.ErrCode)
 }
