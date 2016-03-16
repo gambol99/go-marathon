@@ -17,6 +17,7 @@ limitations under the License.
 package marathon
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -24,21 +25,19 @@ import (
 )
 
 func Test400Error(t *testing.T) {
-	content := []byte(`
+	content := []byte(`{
+	"message": "Invalid JSON",
+	"details": [
 		{
-			"message": "Invalid JSON",
-			"details": [
-				{
-					"path": "/id",
-				 	"errors": ["error.expected.jsstring", "error.something.else"]
-				},
-				{
-					"path": "/name",
-				 	"errors": ["error.not.inventive"]
-				}
-			]
+			"path": "/id",
+		 	"errors": ["error.expected.jsstring", "error.something.else"]
+		},
+		{
+			"path": "/name",
+		 	"errors": ["error.not.inventive"]
 		}
-	`)
+	]
+}`)
 
 	e := validatedAPIError(t, http.StatusBadRequest, content, false)
 
@@ -92,26 +91,27 @@ func Test409PUTError(t *testing.T) {
 }
 
 func Test422Error(t *testing.T) {
-	content := []byte(`
+	for _, detailsPropKey := range []string{"details", "errors"} {
+		content := []byte(fmt.Sprintf(`{
+	"message": "Something is not valid",
+	"%s": [
 		{
-  		"message": "Bean is not valid",
-			"errors": [
-				{
-  				"attribute": "upgradeStrategy.minimumHealthCapacity",
-    			"error": "is greater than 1"
-  			},
-				{
-  				"attribute": "foobar",
-    			"error": "foo does not have enough bar"
-  			}
-			]
+			"attribute": "upgradeStrategy.minimumHealthCapacity",
+			"error": "is greater than 1"
+		},
+		{
+			"attribute": "foobar",
+			"error": "foo does not have enough bar"
 		}
-	`)
+	]
+}
+`, detailsPropKey))
 
-	e := validatedAPIError(t, 422, content, false)
+		e := validatedAPIError(t, 422, content, false)
 
-	assert.Equal(t, ErrCodeInvalidBean, e.ErrCode)
-	assert.Contains(t, e.Error(), "Bean is not valid (attribute 'upgradeStrategy.minimumHealthCapacity': is greater than 1; attribute 'foobar': foo does not have enough bar)")
+		assert.Equal(t, ErrCodeInvalidBean, e.ErrCode)
+		assert.Contains(t, e.Error(), "Something is not valid (attribute 'upgradeStrategy.minimumHealthCapacity': is greater than 1; attribute 'foobar': foo does not have enough bar)")
+	}
 }
 
 func TestServerError(t *testing.T) {
