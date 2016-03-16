@@ -359,7 +359,8 @@ func (r *marathonClient) Application(name string) (*Application, error) {
 func (r *marathonClient) ApplicationByVersion(name, version string) (*Application, error) {
 	var app *Application
 
-	if err := r.apiGet(fmt.Sprintf("%s/%s/versions/%s", marathonAPIApps, trimRootPath(name), version), nil, &app); err != nil {
+	uri := fmt.Sprintf("%s/versions/%s", buildURI(name), version)
+	if err := r.apiGet(uri, nil, &app); err != nil {
 		return nil, err
 	}
 
