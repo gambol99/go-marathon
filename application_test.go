@@ -265,18 +265,22 @@ func TestApplicationOK(t *testing.T) {
 	assert.False(t, ok)
 }
 
-func TestApplication(t *testing.T) {
-	endpoint := newFakeMarathonEndpoint(t, nil)
-	defer endpoint.Close()
-
-	application, err := endpoint.Client.Application(fakeAppName)
-	assert.NoError(t, err)
+func verifyApplication(application *Application, t *testing.T) {
 	assert.NotNil(t, application)
 	assert.Equal(t, application.ID, fakeAppName)
 	assert.NotNil(t, application.HealthChecks)
 	assert.NotNil(t, application.Tasks)
 	assert.Equal(t, len(application.HealthChecks), 1)
 	assert.Equal(t, len(application.Tasks), 2)
+}
+
+func TestApplication(t *testing.T) {
+	endpoint := newFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	application, err := endpoint.Client.Application(fakeAppName)
+	assert.NoError(t, err)
+	verifyApplication(application, t)
 
 	_, err = endpoint.Client.Application("no_such_app")
 	assert.Error(t, err)
@@ -293,4 +297,25 @@ func TestApplication(t *testing.T) {
 	assert.Error(t, err)
 	_, ok = err.(*APIError)
 	assert.False(t, ok)
+}
+
+func TestApplicationConfiguration(t *testing.T) {
+	endpoint := newFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	application, err := endpoint.Client.ApplicationByVersion(fakeAppName, "2014-09-12T23:28:21.737Z")
+	assert.NoError(t, err)
+	verifyApplication(application, t)
+
+	_, err = endpoint.Client.ApplicationByVersion(fakeAppName, "no_such_version")
+	assert.Error(t, err)
+	apiErr, ok := err.(*APIError)
+	assert.True(t, ok)
+	assert.Equal(t, ErrCodeNotFound, apiErr.ErrCode)
+
+	_, err = endpoint.Client.ApplicationByVersion("no_such_app", "latest")
+	assert.Error(t, err)
+	apiErr, ok = err.(*APIError)
+	assert.True(t, ok)
+	assert.Equal(t, ErrCodeNotFound, apiErr.ErrCode)
 }

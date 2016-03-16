@@ -353,6 +353,20 @@ func (r *marathonClient) Application(name string) (*Application, error) {
 	return wrapper.Application, nil
 }
 
+// ApplicationByVersion retrieves the application configuration from marathon
+// 		name: 		the id used to identify the application
+// 		version:  the version of the configuration you would like to receive
+func (r *marathonClient) ApplicationByVersion(name, version string) (*Application, error) {
+	var app *Application
+
+	uri := fmt.Sprintf("%s/versions/%s", buildURI(name), version)
+	if err := r.apiGet(uri, nil, &app); err != nil {
+		return nil, err
+	}
+
+	return app, nil
+}
+
 // ApplicationOK validates that the application, or more appropriately it's tasks have passed all the health checks.
 // If no health checks exist, we simply return true
 // 		name: 		the id used to identify the application
