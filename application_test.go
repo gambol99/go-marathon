@@ -299,7 +299,7 @@ func TestApplicationConfiguration(t *testing.T) {
 	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
-	application, err := endpoint.Client.ApplicationConfiguration(fakeAppName, "2014-09-12T23:28:21.737Z")
+	application, err := endpoint.Client.ApplicationByVersion(fakeAppName, "2014-09-12T23:28:21.737Z")
 	assert.NoError(t, err)
 	assert.NotNil(t, application)
 	assert.Equal(t, application.ID, fakeAppName)

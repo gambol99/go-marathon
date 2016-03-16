@@ -353,10 +353,10 @@ func (r *marathonClient) Application(name string) (*Application, error) {
 	return wrapper.Application, nil
 }
 
-// ApplicationConfiguration retrieves the application configuration from marathon
+// ApplicationByVersion retrieves the application configuration from marathon
 // 		name: 		the id used to identify the application
 // 		version:  the version of the configuration you would like to receive
-func (r *marathonClient) ApplicationConfiguration(name, version string) (*Application, error) {
+func (r *marathonClient) ApplicationByVersion(name, version string) (*Application, error) {
 	var app *Application
 
 	if err := r.apiGet(fmt.Sprintf("%s/%s/versions/%s", marathonAPIApps, trimRootPath(name), version), nil, &app); err != nil {

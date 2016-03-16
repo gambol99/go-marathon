@@ -61,7 +61,7 @@ type Marathon interface {
 	// get an application by name
 	Application(name string) (*Application, error)
 	// get an application by name and version
-	ApplicationConfiguration(name, version string) (*Application, error)
+	ApplicationByVersion(name, version string) (*Application, error)
 	// wait of application
 	WaitOnApplication(name string, timeout time.Duration) error
 
