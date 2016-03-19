@@ -56,7 +56,7 @@ func main() {
 		assert(err)
 		if details.Tasks != nil && len(details.Tasks) > 0 {
 			for _, task := range details.Tasks {
-				log.Printf("task: %s", task)
+				log.Printf("task: %v", task)
 			}
 			health, err := client.ApplicationOK(details.ID)
 			assert(err)
