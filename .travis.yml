@@ -8,4 +8,4 @@ language: go
 go:
   - 1.5
 install:
-  - make test
+  - make test examples

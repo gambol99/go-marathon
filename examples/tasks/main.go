@@ -19,8 +19,8 @@ func main() {
 
 	app := marathon.Application{}
 	app.ID = "tasks-test"
-	app.Cmd = "sleep 60"
-	app.Instances = 3
+	app.Command("sleep 60")
+	app.Count(3)
 	fmt.Println("Creating app.")
 	// Update application will either create or update the app.
 	_, err = client.UpdateApplication(&app, false)
