@@ -155,22 +155,33 @@ func (def *conflictDef) errCode() int {
 	return ErrCodeAppLocked
 }
 
+type unprocessableEntityDetails []struct {
+	Attribute string `json:"attribute"`
+	Error     string `json:"error"`
+}
+
 type unprocessableEntityDef struct {
 	Message string `json:"message"`
-	Errors  []struct {
-		Attribute string `json:"attribute"`
-		Error     string `json:"error"`
-	} `json:"errors"`
+	// Name used in Marathon 0.15.0+.
+	Details unprocessableEntityDetails `json:"details"`
+	// Name used in Marathon < 0.15.0.
+	Errors unprocessableEntityDetails `json:"errors"`
 }
 
 func (def *unprocessableEntityDef) message() string {
-	var errs []string
-	for _, err := range def.Errors {
-		errs = append(errs,
-			fmt.Sprintf("attribute '%s': %s", err.Attribute, err.Error))
+	joinDetails := func(details unprocessableEntityDetails) []string {
+		var res []string
+		for _, detail := range details {
+			res = append(res,
+				fmt.Sprintf("attribute '%s': %s", detail.Attribute, detail.Error))
+		}
+		return res
 	}
 
-	return fmt.Sprintf("%s (%s)", def.Message, strings.Join(errs, "; "))
+	details := joinDetails(def.Details)
+	details = append(details, joinDetails(def.Errors)...)
+
+	return fmt.Sprintf("%s (%s)", def.Message, strings.Join(details, "; "))
 }
 
 func (def *unprocessableEntityDef) errCode() int {
