@@ -177,12 +177,17 @@ func NewClient(config Config) (Marathon, error) {
 		return nil, err
 	}
 
+	debugLogOutput := config.LogOutput
+	if debugLogOutput == nil {
+		debugLogOutput = ioutil.Discard
+	}
+
 	return &marathonClient{
 		config:     config,
 		listeners:  make(map[EventsChannel]int, 0),
 		cluster:    cluster,
 		httpClient: config.HTTPClient,
-		debugLog:   log.New(config.LogOutput, "", 0),
+		debugLog:   log.New(debugLogOutput, "", 0),
 	}, nil
 }
 
