@@ -85,7 +85,6 @@ func (container *Container) Volume(hostPath, containerPath, mode string) *Contai
 // keep the current value)
 func (container *Container) EmptyVolumes() *Container {
 	container.Volumes = &[]Volume{}
-
 	return container
 }
 
@@ -172,8 +171,7 @@ func (docker *Docker) ExposePort(containerPort, hostPort, servicePort int, proto
 // port mappings of an application that already has port mappings set (setting port mappings to nil will
 // keep the current value)
 func (docker *Docker) EmptyPortMappings() *Docker {
-	empty := []PortMapping{}
-	docker.PortMappings = &empty
+	docker.PortMappings = &[]PortMapping{}
 	return docker
 }
 
@@ -199,15 +197,14 @@ func (docker *Docker) AddParameter(key string, value string) *Docker {
 // parameters of an application that already has parameters set (setting parameters to nil will
 // keep the current value)
 func (docker *Docker) EmptyParameters() *Docker {
-	empty := []Parameters{}
-	docker.Parameters = &empty
+	docker.Parameters = &[]Parameters{}
 	return docker
 }
 
 // ServicePortIndex finds the service port index of the exposed port
 //		port:			the port you are looking for
 func (docker *Docker) ServicePortIndex(port int) (int, error) {
-	if docker.PortMappings == nil || len(*docker.PortMappings) <= 0 {
+	if docker.PortMappings == nil || len(*docker.PortMappings) == 0 {
 		return 0, errors.New("The docker does not contain any port mappings to search")
 	}
 

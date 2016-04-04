@@ -142,7 +142,7 @@ func TestApplicationLabels(t *testing.T) {
 	assert.Equal(t, "world", (*app.Labels)["hello"])
 	assert.Equal(t, "bar", (*app.Labels)["foo"])
 
-	app.EmptyLabel()
+	app.EmptyLabels()
 	assert.NotNil(t, app.Labels)
 	assert.Equal(t, 0, len(*app.Labels))
 }
@@ -156,7 +156,7 @@ func TestApplicationEnvs(t *testing.T) {
 	assert.Equal(t, "world", (*app.Env)["hello"])
 	assert.Equal(t, "bar", (*app.Env)["foo"])
 
-	app.EmptyEnv()
+	app.EmptyEnvs()
 	assert.NotNil(t, app.Env)
 	assert.Equal(t, 0, len(*app.Env))
 }

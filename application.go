@@ -197,15 +197,15 @@ func (r *Application) EmptyArgs() *Application {
 }
 
 // AddConstraint adds a new constraint
-//		arguments:	the constraint definition, one argument per array element
-func (r *Application) AddConstraint(arguments ...string) *Application {
+//		constraints:	the constraint definition, one constraint per array element
+func (r *Application) AddConstraint(constraints ...string) *Application {
 	if r.Constraints == nil {
 		r.EmptyConstraints()
 	}
 
-	constraints := *r.Constraints
-	constraints = append(constraints, arguments)
-	r.Constraints = &constraints
+	c := *r.Constraints
+	c = append(c, constraints)
+	r.Constraints = &c
 
 	return r
 }
@@ -224,17 +224,17 @@ func (r *Application) EmptyConstraints() *Application {
 //		value: value for this label
 func (r *Application) AddLabel(name, value string) *Application {
 	if r.Labels == nil {
-		r.EmptyLabel()
+		r.EmptyLabels()
 	}
 	(*r.Labels)[name] = value
 
 	return r
 }
 
-// EmptyLabel explicitly empties the labels -- use this if you need to empty
+// EmptyLabels explicitly empties the labels -- use this if you need to empty
 // the labels of an application that already has labels set (setting labels to nil will
 // keep the current value)
-func (r *Application) EmptyLabel() *Application {
+func (r *Application) EmptyLabels() *Application {
 	r.Labels = &map[string]string{}
 
 	return r
@@ -245,17 +245,17 @@ func (r *Application) EmptyLabel() *Application {
 //		value:	go figure, the value associated to the above
 func (r *Application) AddEnv(name, value string) *Application {
 	if r.Env == nil {
-		r.EmptyEnv()
+		r.EmptyEnvs()
 	}
 	(*r.Env)[name] = value
 
 	return r
 }
 
-// EmptyEnv explicitly empties the env -- use this if you need to empty
-// the environment of an application that already has an environment set (setting env to nil will
+// EmptyEnvs explicitly empties the envs -- use this if you need to empty
+// the environments of an application that already has environments set (setting env to nil will
 // keep the current value)
-func (r *Application) EmptyEnv() *Application {
+func (r *Application) EmptyEnvs() *Application {
 	r.Env = &map[string]string{}
 
 	return r
@@ -269,7 +269,7 @@ func (r *Application) SetExecutor(executor string) *Application {
 }
 
 // AddHealthCheck adds a health check
-// 	healtchecks the health check that should be added
+// 	healthCheck the health check that should be added
 func (r *Application) AddHealthCheck(healthCheck HealthCheck) *Application {
 	if r.HealthChecks == nil {
 		r.EmptyHealthChecks()
@@ -282,8 +282,8 @@ func (r *Application) AddHealthCheck(healthCheck HealthCheck) *Application {
 	return r
 }
 
-// EmptyHealthChecks explicitly empties healthChecks -- use this if you need to empty
-// healthChecks of an application that already has healthChecks set (setting healthChecks to nil will
+// EmptyHealthChecks explicitly empties health checks -- use this if you need to empty
+// health checks of an application that already has health checks set (setting health checks to nil will
 // keep the current value)
 func (r *Application) EmptyHealthChecks() *Application {
 	r.HealthChecks = &[]HealthCheck{}
@@ -291,7 +291,7 @@ func (r *Application) EmptyHealthChecks() *Application {
 	return r
 }
 
-// HasHealthChecks is a helper method, used to check if an application has healtchecks
+// HasHealthChecks is a helper method, used to check if an application has health checks
 func (r *Application) HasHealthChecks() bool {
 	return r.HealthChecks != nil && len(*r.HealthChecks) > 0
 }
@@ -299,9 +299,11 @@ func (r *Application) HasHealthChecks() bool {
 // DeploymentIDs retrieves the application deployments IDs
 func (r *Application) DeploymentIDs() []*DeploymentID {
 	var deployments []*DeploymentID
-	if r.Deployments == nil || len(r.Deployments) <= 0 {
+
+	if r.Deployments == nil {
 		return deployments
 	}
+
 	// step: extract the deployment id from the result
 	for _, deploy := range r.Deployments {
 		if id, found := deploy["id"]; found {
@@ -500,18 +502,16 @@ func (r *marathonClient) ApplicationOK(name string) (bool, error) {
 	}
 
 	// step: if the application has not health checks, just return true
-	if application.HealthChecks == nil || len(*application.HealthChecks) <= 0 {
+	if application.HealthChecks == nil || len(*application.HealthChecks) == 0 {
 		return true, nil
 	}
 
 	// step: iterate the application checks and look for false
 	for _, task := range application.Tasks {
-		if task.HealthCheckResults != nil {
-			for _, check := range task.HealthCheckResults {
-				//When a task is flapping in Marathon, this is sometimes nil
-				if check == nil || !check.Alive {
-					return false, nil
-				}
+		for _, check := range task.HealthCheckResults {
+			//When a task is flapping in Marathon, this is sometimes nil
+			if check == nil || !check.Alive {
+				return false, nil
 			}
 		}
 	}
