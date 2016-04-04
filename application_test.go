@@ -100,14 +100,14 @@ func TestApplicationArgs(t *testing.T) {
 	app := NewDockerApplication()
 	assert.Nil(t, app.Args)
 	app.AddArgs("-p").AddArgs("option", "-v")
-	assert.Equal(t, 3, len(app.Args))
-	assert.Equal(t, "-p", app.Args[0])
-	assert.Equal(t, "option", app.Args[1])
-	assert.Equal(t, "-v", app.Args[2])
+	assert.Equal(t, 3, len(*app.Args))
+	assert.Equal(t, "-p", (*app.Args)[0])
+	assert.Equal(t, "option", (*app.Args)[1])
+	assert.Equal(t, "-v", (*app.Args)[2])
 
 	app.EmptyArgs()
 	assert.NotNil(t, app.Args)
-	assert.Equal(t, 0, len(app.Args))
+	assert.Equal(t, 0, len(*app.Args))
 }
 
 func ExampleApplication_AddConstraint() {
@@ -124,13 +124,13 @@ func TestApplicationConstraints(t *testing.T) {
 	app.AddConstraint("hostname", "UNIQUE").
 		AddConstraint("rack_id", "CLUSTER", "rack-1")
 
-	assert.Equal(t, 2, len(app.Constraints))
-	assert.Equal(t, []string{"hostname", "UNIQUE"}, app.Constraints[0])
-	assert.Equal(t, []string{"rack_id", "CLUSTER", "rack-1"}, app.Constraints[1])
+	assert.Equal(t, 2, len(*app.Constraints))
+	assert.Equal(t, []string{"hostname", "UNIQUE"}, (*app.Constraints)[0])
+	assert.Equal(t, []string{"rack_id", "CLUSTER", "rack-1"}, (*app.Constraints)[1])
 
 	app.EmptyConstraints()
 	assert.NotNil(t, app.Constraints)
-	assert.Equal(t, 0, len(app.Constraints))
+	assert.Equal(t, 0, len(*app.Constraints))
 }
 
 func TestApplicationLabels(t *testing.T) {
@@ -138,13 +138,13 @@ func TestApplicationLabels(t *testing.T) {
 	assert.Nil(t, app.Labels)
 
 	app.AddLabel("hello", "world").AddLabel("foo", "bar")
-	assert.Equal(t, 2, len(app.Labels))
-	assert.Equal(t, "world", app.Labels["hello"])
-	assert.Equal(t, "bar", app.Labels["foo"])
+	assert.Equal(t, 2, len(*app.Labels))
+	assert.Equal(t, "world", (*app.Labels)["hello"])
+	assert.Equal(t, "bar", (*app.Labels)["foo"])
 
 	app.EmptyLabels()
 	assert.NotNil(t, app.Labels)
-	assert.Equal(t, 0, len(app.Labels))
+	assert.Equal(t, 0, len(*app.Labels))
 }
 
 func TestApplicationEnvs(t *testing.T) {
@@ -152,13 +152,13 @@ func TestApplicationEnvs(t *testing.T) {
 	assert.Nil(t, app.Env)
 
 	app.AddEnv("hello", "world").AddEnv("foo", "bar")
-	assert.Equal(t, 2, len(app.Env))
-	assert.Equal(t, "world", (app.Env)["hello"])
-	assert.Equal(t, "bar", (app.Env)["foo"])
+	assert.Equal(t, 2, len(*app.Env))
+	assert.Equal(t, "world", (*app.Env)["hello"])
+	assert.Equal(t, "bar", (*app.Env)["foo"])
 
 	app.EmptyEnvs()
 	assert.NotNil(t, app.Env)
-	assert.Equal(t, 0, len(app.Env))
+	assert.Equal(t, 0, len(*app.Env))
 }
 
 func TestApplicationSetExecutor(t *testing.T) {
@@ -178,13 +178,13 @@ func TestApplicationHealthChecks(t *testing.T) {
 	app.AddHealthCheck(HealthCheck{}.SetPath("/check1")).
 		AddHealthCheck(HealthCheck{}.SetPath("/check2"))
 
-	assert.Equal(t, 2, len(app.HealthChecks))
-	assert.Equal(t, HealthCheck{}.SetPath("/check1"), app.HealthChecks[0])
-	assert.Equal(t, HealthCheck{}.SetPath("/check2"), app.HealthChecks[1])
+	assert.Equal(t, 2, len(*app.HealthChecks))
+	assert.Equal(t, HealthCheck{}.SetPath("/check1"), (*app.HealthChecks)[0])
+	assert.Equal(t, HealthCheck{}.SetPath("/check2"), (*app.HealthChecks)[1])
 
 	app.EmptyHealthChecks()
 	assert.NotNil(t, app.HealthChecks)
-	assert.Equal(t, 0, len(app.HealthChecks))
+	assert.Equal(t, 0, len(*app.HealthChecks))
 }
 
 func TestHasHealthChecks(t *testing.T) {
@@ -206,7 +206,7 @@ func TestApplicationCheckTCP(t *testing.T) {
 	_, err = app.CheckTCP(80, 10)
 	assert.NoError(t, err)
 	assert.True(t, app.HasHealthChecks())
-	check := app.HealthChecks[0]
+	check := (*app.HealthChecks)[0]
 	assert.Equal(t, "TCP", check.Protocol)
 	assert.Equal(t, 10, check.IntervalSeconds)
 	assert.Equal(t, 0, *check.PortIndex)
@@ -222,7 +222,7 @@ func TestApplicationCheckHTTP(t *testing.T) {
 	_, err = app.CheckHTTP("/health", 80, 10)
 	assert.NoError(t, err)
 	assert.True(t, app.HasHealthChecks())
-	check := app.HealthChecks[0]
+	check := (*app.HealthChecks)[0]
 	assert.Equal(t, "HTTP", check.Protocol)
 	assert.Equal(t, 10, check.IntervalSeconds)
 	assert.Equal(t, "/health", *check.Path)
@@ -311,14 +311,14 @@ func TestApplicationUris(t *testing.T) {
 	app := NewDockerApplication()
 	assert.Nil(t, app.Uris)
 	app.AddUris("file://uri1.tar.gz").AddUris("file://uri2.tar.gz", "file://uri3.tar.gz")
-	assert.Equal(t, 3, len(app.Uris))
-	assert.Equal(t, "file://uri1.tar.gz", app.Uris[0])
-	assert.Equal(t, "file://uri2.tar.gz", app.Uris[1])
-	assert.Equal(t, "file://uri3.tar.gz", app.Uris[2])
+	assert.Equal(t, 3, len(*app.Uris))
+	assert.Equal(t, "file://uri1.tar.gz", (*app.Uris)[0])
+	assert.Equal(t, "file://uri2.tar.gz", (*app.Uris)[1])
+	assert.Equal(t, "file://uri3.tar.gz", (*app.Uris)[2])
 
 	app.EmptyUris()
 	assert.NotNil(t, app.Uris)
-	assert.Equal(t, 0, len(app.Uris))
+	assert.Equal(t, 0, len(*app.Uris))
 }
 
 func TestSetApplicationVersion(t *testing.T) {
@@ -378,7 +378,7 @@ func verifyApplication(application *Application, t *testing.T) {
 	assert.Equal(t, application.ID, fakeAppName)
 	assert.NotNil(t, application.HealthChecks)
 	assert.NotNil(t, application.Tasks)
-	assert.Equal(t, len(application.HealthChecks), 1)
+	assert.Equal(t, len(*application.HealthChecks), 1)
 	assert.Equal(t, len(application.Tasks), 2)
 }
 

@@ -176,7 +176,7 @@ func (r *marathonClient) TaskEndpoints(name string, port int, healthCheck bool) 
 	}
 
 	// step: do we have any tasks?
-	if application.Tasks == nil || len(application.Tasks) <= 0 {
+	if application.Tasks == nil || len(application.Tasks) == 0 {
 		return nil, nil
 	}
 
