@@ -23,9 +23,9 @@ import (
 
 // Container is the definition for a container type in marathon
 type Container struct {
-	Type    string   `json:"type,omitempty"`
-	Docker  *Docker  `json:"docker,omitempty"`
-	Volumes []Volume `json:"volumes,omitempty"`
+	Type    string    `json:"type,omitempty"`
+	Docker  *Docker   `json:"docker,omitempty"`
+	Volumes *[]Volume `json:"volumes,omitempty"`
 }
 
 // PortMapping is the portmapping structure between container and mesos
@@ -51,12 +51,12 @@ type Volume struct {
 
 // Docker is the docker definition from a marathon application
 type Docker struct {
-	ForcePullImage *bool         `json:"forcePullImage,omitempty"`
-	Image          string        `json:"image,omitempty"`
-	Network        string        `json:"network,omitempty"`
-	Parameters     []Parameters  `json:"parameters,omitempty"`
-	PortMappings   []PortMapping `json:"portMappings,omitempty"`
-	Privileged     *bool         `json:"privileged,omitempty"`
+	ForcePullImage *bool          `json:"forcePullImage,omitempty"`
+	Image          string         `json:"image,omitempty"`
+	Network        string         `json:"network,omitempty"`
+	Parameters     *[]Parameters  `json:"parameters,omitempty"`
+	PortMappings   *[]PortMapping `json:"portMappings,omitempty"`
+	Privileged     *bool          `json:"privileged,omitempty"`
 }
 
 // Volume attachs a volume to the container
@@ -64,11 +64,18 @@ type Docker struct {
 //		container_path:		the path inside the container to map the host volume
 //		mode:				the mode to map the container
 func (container *Container) Volume(hostPath, containerPath, mode string) *Container {
-	container.Volumes = append(container.Volumes, Volume{
+	if container.Volumes == nil {
+		container.EmptyVolumes()
+	}
+
+	volumes := *container.Volumes
+	volumes = append(volumes, Volume{
 		ContainerPath: containerPath,
 		HostPath:      hostPath,
 		Mode:          mode,
 	})
+
+	container.Volumes = &volumes
 
 	return container
 }
@@ -77,7 +84,7 @@ func (container *Container) Volume(hostPath, containerPath, mode string) *Contai
 // volumes of an application that already has volumes set (setting volumes to nil will
 // keep the current value)
 func (container *Container) EmptyVolumes() *Container {
-	container.Volumes = []Volume{}
+	container.Volumes = &[]Volume{}
 
 	return container
 }
@@ -146,11 +153,17 @@ func (docker *Docker) ExposeUDP(ports ...int) *Docker {
 //		servicePort:				check the marathon documentation
 //		protocol:						the protocol to use TCP, UDP
 func (docker *Docker) ExposePort(containerPort, hostPort, servicePort int, protocol string) *Docker {
-	docker.PortMappings = append(docker.PortMappings, PortMapping{
+	if docker.PortMappings == nil {
+		docker.EmptyPortMappings()
+	}
+
+	portMappings := *docker.PortMappings
+	portMappings = append(portMappings, PortMapping{
 		ContainerPort: containerPort,
 		HostPort:      hostPort,
 		ServicePort:   servicePort,
 		Protocol:      protocol})
+	docker.PortMappings = &portMappings
 
 	return docker
 }
@@ -159,7 +172,8 @@ func (docker *Docker) ExposePort(containerPort, hostPort, servicePort int, proto
 // port mappings of an application that already has port mappings set (setting port mappings to nil will
 // keep the current value)
 func (docker *Docker) EmptyPortMappings() *Docker {
-	docker.PortMappings = []PortMapping{}
+	empty := []PortMapping{}
+	docker.PortMappings = &empty
 	return docker
 }
 
@@ -167,9 +181,16 @@ func (docker *Docker) EmptyPortMappings() *Docker {
 //		key:			the name of the option to add
 //		value:		the value of the option
 func (docker *Docker) AddParameter(key string, value string) *Docker {
-	docker.Parameters = append(docker.Parameters, Parameters{
+	if docker.Parameters == nil {
+		docker.EmptyParameters()
+	}
+
+	parameters := *docker.Parameters
+	parameters = append(parameters, Parameters{
 		Key:   key,
 		Value: value})
+
+	docker.Parameters = &parameters
 
 	return docker
 }
@@ -178,19 +199,20 @@ func (docker *Docker) AddParameter(key string, value string) *Docker {
 // parameters of an application that already has parameters set (setting parameters to nil will
 // keep the current value)
 func (docker *Docker) EmptyParameters() *Docker {
-	docker.Parameters = []Parameters{}
+	empty := []Parameters{}
+	docker.Parameters = &empty
 	return docker
 }
 
 // ServicePortIndex finds the service port index of the exposed port
 //		port:			the port you are looking for
 func (docker *Docker) ServicePortIndex(port int) (int, error) {
-	if len(docker.PortMappings) == 0 {
+	if docker.PortMappings == nil || len(*docker.PortMappings) <= 0 {
 		return 0, errors.New("The docker does not contain any port mappings to search")
 	}
 
 	// step: iterate and find the port
-	for index, containerPort := range docker.PortMappings {
+	for index, containerPort := range *docker.PortMappings {
 		if containerPort.ContainerPort == port {
 			return index, nil
 		}

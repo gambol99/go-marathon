@@ -38,14 +38,14 @@ type Applications struct {
 type Application struct {
 	ID                    string              `json:"id,omitempty"`
 	Cmd                   *string             `json:"cmd,omitempty"`
-	Args                  []string            `json:"args,omitempty"`
-	Constraints           [][]string          `json:"constraints,omitempty"`
+	Args                  *[]string           `json:"args,omitempty"`
+	Constraints           *[][]string         `json:"constraints,omitempty"`
 	Container             *Container          `json:"container,omitempty"`
 	CPUs                  float64             `json:"cpus,omitempty"`
 	Disk                  *float64            `json:"disk,omitempty"`
-	Env                   map[string]string   `json:"env,omitempty"`
+	Env                   *map[string]string  `json:"env,omitempty"`
 	Executor              *string             `json:"executor,omitempty"`
-	HealthChecks          []HealthCheck       `json:"healthChecks,omitempty"`
+	HealthChecks          *[]HealthCheck      `json:"healthChecks,omitempty"`
 	Instances             *int                `json:"instances,omitempty"`
 	Mem                   *float64            `json:"mem,omitempty"`
 	Tasks                 []*Task             `json:"tasks,omitempty"`
@@ -62,10 +62,10 @@ type Application struct {
 	TasksUnhealthy        int                 `json:"tasksUnhealthy,omitempty"`
 	User                  string              `json:"user,omitempty"`
 	UpgradeStrategy       *UpgradeStrategy    `json:"upgradeStrategy,omitempty"`
-	Uris                  []string            `json:"uris"`
+	Uris                  *[]string           `json:"uris"`
 	Version               string              `json:"version,omitempty"`
 	VersionInfo           *VersionInfo        `json:"versionInfo,omitempty"`
-	Labels                map[string]string   `json:"labels,omitempty"`
+	Labels                *map[string]string  `json:"labels,omitempty"`
 	AcceptedResourceRoles []string            `json:"acceptedResourceRoles,omitempty"`
 	LastTaskFailure       *LastTaskFailure    `json:"lastTaskFailure,omitempty"`
 	Fetch                 []Fetch             `json:"fetch"`
@@ -176,7 +176,13 @@ func (r *Application) Count(count int) *Application {
 // AddArgs adds one or more arguments to the applications
 //		arguments:	the argument(s) you are adding
 func (r *Application) AddArgs(arguments ...string) *Application {
-	r.Args = append(r.Args, arguments...)
+	if r.Args == nil {
+		r.EmptyArgs()
+	}
+
+	args := *r.Args
+	args = append(args, arguments...)
+	r.Args = &args
 
 	return r
 }
@@ -185,15 +191,21 @@ func (r *Application) AddArgs(arguments ...string) *Application {
 // arguments of an application that already has arguments set (setting args to nil will
 // keep the current value)
 func (r *Application) EmptyArgs() *Application {
-	r.Args = []string{}
+	r.Args = &[]string{}
 
 	return r
 }
 
 // AddConstraint adds a new constraint
-//		constraints:	the constraint definition, one constraint per array element
-func (r *Application) AddConstraint(constraints ...string) *Application {
-	r.Constraints = append(r.Constraints, constraints)
+//		arguments:	the constraint definition, one argument per array element
+func (r *Application) AddConstraint(arguments ...string) *Application {
+	if r.Constraints == nil {
+		r.EmptyConstraints()
+	}
+
+	constraints := *r.Constraints
+	constraints = append(constraints, arguments)
+	r.Constraints = &constraints
 
 	return r
 }
@@ -202,7 +214,7 @@ func (r *Application) AddConstraint(constraints ...string) *Application {
 // constraints of an application that already has constraints set (setting constraints to nil will
 // keep the current value)
 func (r *Application) EmptyConstraints() *Application {
-	r.Constraints = [][]string{}
+	r.Constraints = &[][]string{}
 
 	return r
 }
@@ -212,18 +224,18 @@ func (r *Application) EmptyConstraints() *Application {
 //		value: value for this label
 func (r *Application) AddLabel(name, value string) *Application {
 	if r.Labels == nil {
-		r.EmptyLabels()
+		r.EmptyLabel()
 	}
-	r.Labels[name] = value
+	(*r.Labels)[name] = value
 
 	return r
 }
 
-// EmptyLabels explicitly empties the labels -- use this if you need to empty
+// EmptyLabel explicitly empties the labels -- use this if you need to empty
 // the labels of an application that already has labels set (setting labels to nil will
 // keep the current value)
-func (r *Application) EmptyLabels() *Application {
-	r.Labels = map[string]string{}
+func (r *Application) EmptyLabel() *Application {
+	r.Labels = &map[string]string{}
 
 	return r
 }
@@ -233,18 +245,18 @@ func (r *Application) EmptyLabels() *Application {
 //		value:	go figure, the value associated to the above
 func (r *Application) AddEnv(name, value string) *Application {
 	if r.Env == nil {
-		r.EmptyEnvs()
+		r.EmptyEnv()
 	}
-	r.Env[name] = value
+	(*r.Env)[name] = value
 
 	return r
 }
 
-// EmptyEnvs explicitly empties the envs -- use this if you need to empty
-// the environments of an application that already has environments set (setting env to nil will
+// EmptyEnv explicitly empties the env -- use this if you need to empty
+// the environment of an application that already has an environment set (setting env to nil will
 // keep the current value)
-func (r *Application) EmptyEnvs() *Application {
-	r.Env = map[string]string{}
+func (r *Application) EmptyEnv() *Application {
+	r.Env = &map[string]string{}
 
 	return r
 }
@@ -257,31 +269,39 @@ func (r *Application) SetExecutor(executor string) *Application {
 }
 
 // AddHealthCheck adds a health check
-// 	healtCheck the health check that should be added
+// 	healtchecks the health check that should be added
 func (r *Application) AddHealthCheck(healthCheck HealthCheck) *Application {
-	r.HealthChecks = append(r.HealthChecks, healthCheck)
+	if r.HealthChecks == nil {
+		r.EmptyHealthChecks()
+	}
+
+	healthChecks := *r.HealthChecks
+	healthChecks = append(healthChecks, healthCheck)
+	r.HealthChecks = &healthChecks
 
 	return r
 }
 
-// EmptyHealthChecks explicitly empties health checks -- use this if you need to empty
-// health checks of an application that already has health checks set (setting health checks to nil will
+// EmptyHealthChecks explicitly empties healthChecks -- use this if you need to empty
+// healthChecks of an application that already has healthChecks set (setting healthChecks to nil will
 // keep the current value)
 func (r *Application) EmptyHealthChecks() *Application {
-	r.HealthChecks = []HealthCheck{}
+	r.HealthChecks = &[]HealthCheck{}
 
 	return r
 }
 
-// HasHealthChecks is a helper method, used to check if an application has health checks
+// HasHealthChecks is a helper method, used to check if an application has healtchecks
 func (r *Application) HasHealthChecks() bool {
-	return len(r.HealthChecks) > 0
+	return r.HealthChecks != nil && len(*r.HealthChecks) > 0
 }
 
 // DeploymentIDs retrieves the application deployments IDs
 func (r *Application) DeploymentIDs() []*DeploymentID {
 	var deployments []*DeploymentID
-
+	if r.Deployments == nil || len(r.Deployments) <= 0 {
+		return deployments
+	}
 	// step: extract the deployment id from the result
 	for _, deploy := range r.Deployments {
 		if id, found := deploy["id"]; found {
@@ -344,7 +364,13 @@ func (r *Application) CheckTCP(port, interval int) (*Application, error) {
 // AddUris adds one or more uris to the applications
 //		arguments:	the uri(s) you are adding
 func (r *Application) AddUris(newUris ...string) *Application {
-	r.Uris = append(r.Uris, newUris...)
+	if r.Uris == nil {
+		r.EmptyUris()
+	}
+
+	uris := *r.Uris
+	uris = append(uris, newUris...)
+	r.Uris = &uris
 
 	return r
 }
@@ -353,7 +379,7 @@ func (r *Application) AddUris(newUris ...string) *Application {
 // uris of an application that already has uris set (setting uris to nil will
 // keep the current value)
 func (r *Application) EmptyUris() *Application {
-	r.Uris = []string{}
+	r.Uris = &[]string{}
 
 	return r
 }
@@ -474,16 +500,18 @@ func (r *marathonClient) ApplicationOK(name string) (bool, error) {
 	}
 
 	// step: if the application has not health checks, just return true
-	if len(application.HealthChecks) == 0 {
+	if application.HealthChecks == nil || len(*application.HealthChecks) <= 0 {
 		return true, nil
 	}
 
 	// step: iterate the application checks and look for false
 	for _, task := range application.Tasks {
-		for _, check := range task.HealthCheckResults {
-			//When a task is flapping in Marathon, this is sometimes nil
-			if check == nil || !check.Alive {
-				return false, nil
+		if task.HealthCheckResults != nil {
+			for _, check := range task.HealthCheckResults {
+				//When a task is flapping in Marathon, this is sometimes nil
+				if check == nil || !check.Alive {
+					return false, nil
+				}
 			}
 		}
 	}
