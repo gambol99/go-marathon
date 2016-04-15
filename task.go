@@ -34,6 +34,7 @@ type Task struct {
 	HealthCheckResults []*HealthCheckResult `json:"healthCheckResults"`
 	Ports              []int                `json:"ports"`
 	ServicePorts       []int                `json:"servicePorts"`
+	SlaveID            string               `json:"slaveId"`
 	StagedAt           string               `json:"stagedAt"`
 	StartedAt          string               `json:"startedAt"`
 	Version            string               `json:"version"`
