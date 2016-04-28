@@ -89,7 +89,7 @@ var testCases = map[string]*testCase{
 		&EventFailedHealthCheck{
 			EventType: "failed_health_check_event",
 			Timestamp: "2014-03-01T23:29:30.158Z",
-			AppId:     "/my-app",
+			AppID:     "/my-app",
 			HealthCheck: struct {
 				GracePeriodSeconds     float64 `json:"gracePeriodSeconds"`
 				IntervalSeconds        float64 `json:"intervalSeconds"`
@@ -130,7 +130,7 @@ func TestEventStreamConnectionErrorsForwarded(t *testing.T) {
 	defer endpoint.Close()
 
 	events := make(EventsChannel)
-	err := endpoint.Client.AddEventsListener(events, EVENTS_APPLICATIONS)
+	err := endpoint.Client.AddEventsListener(events, EventIDApplications)
 	assert.Error(t, err)
 }
 
@@ -141,7 +141,7 @@ func TestEventStreamEventsReceived(t *testing.T) {
 	defer endpoint.Close()
 
 	events := make(EventsChannel)
-	err := endpoint.Client.AddEventsListener(events, EVENTS_APPLICATIONS)
+	err := endpoint.Client.AddEventsListener(events, EventIDApplications)
 	assert.NoError(t, err)
 
 	// Publish test events

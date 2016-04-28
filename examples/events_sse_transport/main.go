@@ -51,8 +51,8 @@ func main() {
 	// Register for events
 	events := make(marathon.EventsChannel, 5)
 	deployments := make(marathon.EventsChannel, 5)
-	assert(client.AddEventsListener(events, marathon.EVENTS_APPLICATIONS))
-	assert(client.AddEventsListener(deployments, marathon.EVENT_DEPLOYMENT_STEP_SUCCESS))
+	assert(client.AddEventsListener(events, marathon.EventIDApplications))
+	assert(client.AddEventsListener(deployments, marathon.EventIDDeploymentStepSuccess))
 
 	// Listen for x seconds and then split
 	timer := time.After(time.Duration(timeout) * time.Second)
