@@ -24,57 +24,75 @@ type EventType struct {
 }
 
 const (
-	EVENT_API_REQUEST = 1 << iota
-	EVENT_STATUS_UPDATE
-	EVENT_FRAMEWORK_MESSAGE
-	EVENT_SUBSCRIPTION
-	EVENT_UNSUBSCRIBED
-	EVENT_STREAM_ATTACHED
-	EVENT_STREAM_DETACHED
-	EVENT_ADD_HEALTH_CHECK
-	EVENT_REMOVE_HEALTH_CHECK
-	EVENT_FAILED_HEALTH_CHECK
-	EVENT_CHANGED_HEALTH_CHECK
-	EVENT_GROUP_CHANGE_SUCCESS
-	EVENT_GROUP_CHANGE_FAILED
-	EVENT_DEPLOYMENT_SUCCESS
-	EVENT_DEPLOYMENT_FAILED
-	EVENT_DEPLOYMENT_INFO
-	EVENT_DEPLOYMENT_STEP_SUCCESS
-	EVENT_DEPLOYMENT_STEP_FAILED
-	EVENT_APP_TERMINATED
-)
-
-const (
-	EVENTS_APPLICATIONS  = EVENT_STATUS_UPDATE | EVENT_CHANGED_HEALTH_CHECK | EVENT_FAILED_HEALTH_CHECK | EVENT_APP_TERMINATED
-	EVENTS_SUBSCRIPTIONS = EVENT_SUBSCRIPTION | EVENT_UNSUBSCRIBED | EVENT_STREAM_ATTACHED | EVENT_STREAM_DETACHED
+	// EventIDAPIRequest is the event listener ID for the corresponding event.
+	EventIDAPIRequest = 1 << iota
+	// EventIDStatusUpdate is the event listener ID for the corresponding event.
+	EventIDStatusUpdate
+	// EventIDFrameworkMessage is the event listener ID for the corresponding event.
+	EventIDFrameworkMessage
+	// EventIDSubscription is the event listener ID for the corresponding event.
+	EventIDSubscription
+	// EventIDUnsubscribed is the event listener ID for the corresponding event.
+	EventIDUnsubscribed
+	// EventIDStreamAttached is the event listener ID for the corresponding event.
+	EventIDStreamAttached
+	// EventIDStreamDetached is the event listener ID for the corresponding event.
+	EventIDStreamDetached
+	// EventIDAddHealthCheck is the event listener ID for the corresponding event.
+	EventIDAddHealthCheck
+	// EventIDRemoveHealthCheck is the event listener ID for the corresponding event.
+	EventIDRemoveHealthCheck
+	// EventIDFailedHealthCheck is the event listener ID for the corresponding event.
+	EventIDFailedHealthCheck
+	// EventIDChangedHealthCheck is the event listener ID for the corresponding event.
+	EventIDChangedHealthCheck
+	// EventIDGroupChangeSuccess is the event listener ID for the corresponding event.
+	EventIDGroupChangeSuccess
+	// EventIDGroupChangeFailed is the event listener ID for the corresponding event.
+	EventIDGroupChangeFailed
+	// EventIDDeploymentSuccess is the event listener ID for the corresponding event.
+	EventIDDeploymentSuccess
+	// EventIDDeploymentFailed is the event listener ID for the corresponding event.
+	EventIDDeploymentFailed
+	// EventIDDeploymentInfo is the event listener ID for the corresponding event.
+	EventIDDeploymentInfo
+	// EventIDDeploymentStepSuccess is the event listener ID for the corresponding event.
+	EventIDDeploymentStepSuccess
+	// EventIDDeploymentStepFailed is the event listener ID for the corresponding event.
+	EventIDDeploymentStepFailed
+	// EventIDAppTerminated is the event listener ID for the corresponding event.
+	EventIDAppTerminated
+	//EventIDApplications comprises all listener IDs for application events.
+	EventIDApplications = EventIDStatusUpdate | EventIDChangedHealthCheck | EventIDFailedHealthCheck | EventIDAppTerminated
+	//EventIDSubscriptions comprises all listener IDs for subscription events.
+	EventIDSubscriptions = EventIDSubscription | EventIDUnsubscribed | EventIDStreamAttached | EventIDStreamDetached
 )
 
 var (
-	Events map[string]int
+	eventTypesMap map[string]int
 )
 
 func init() {
-	Events = map[string]int{
-		"api_post_event":              EVENT_API_REQUEST,
-		"status_update_event":         EVENT_STATUS_UPDATE,
-		"framework_message_event":     EVENT_FRAMEWORK_MESSAGE,
-		"subscribe_event":             EVENT_SUBSCRIPTION,
-		"unsubscribe_event":           EVENT_UNSUBSCRIBED,
-		"event_stream_attached":       EVENT_STREAM_ATTACHED,
-		"event_stream_detached":       EVENT_STREAM_DETACHED,
-		"add_health_check_event":      EVENT_ADD_HEALTH_CHECK,
-		"remove_health_check_event":   EVENT_REMOVE_HEALTH_CHECK,
-		"failed_health_check_event":   EVENT_FAILED_HEALTH_CHECK,
-		"health_status_changed_event": EVENT_CHANGED_HEALTH_CHECK,
-		"group_change_success":        EVENT_GROUP_CHANGE_SUCCESS,
-		"group_change_failed":         EVENT_GROUP_CHANGE_FAILED,
-		"deployment_success":          EVENT_DEPLOYMENT_SUCCESS,
-		"deployment_failed":           EVENT_DEPLOYMENT_FAILED,
-		"deployment_info":             EVENT_DEPLOYMENT_INFO,
-		"deployment_step_success":     EVENT_DEPLOYMENT_STEP_SUCCESS,
-		"deployment_step_failure":     EVENT_DEPLOYMENT_STEP_FAILED,
-		"app_terminated_event":        EVENT_APP_TERMINATED,
+	eventTypesMap = map[string]int{
+		"api_post_event":              EventIDAPIRequest,
+		"status_update_event":         EventIDStatusUpdate,
+		"framework_message_event":     EventIDFrameworkMessage,
+		"subscribe_event":             EventIDSubscription,
+		"unsubscribe_event":           EventIDUnsubscribed,
+		"event_stream_attached":       EventIDStreamAttached,
+		"event_stream_detached":       EventIDStreamDetached,
+		"add_health_check_event":      EventIDAddHealthCheck,
+		"remove_health_check_event":   EventIDRemoveHealthCheck,
+		"failed_health_check_event":   EventIDFailedHealthCheck,
+		"health_status_changed_event": EventIDChangedHealthCheck,
+		"group_change_success":        EventIDGroupChangeSuccess,
+		"group_change_failed":         EventIDGroupChangeFailed,
+		"deployment_success":          EventIDDeploymentSuccess,
+		"deployment_failed":           EventIDDeploymentFailed,
+		"deployment_info":             EventIDDeploymentInfo,
+		"deployment_step_success":     EventIDDeploymentStepSuccess,
+		"deployment_step_failure":     EventIDDeploymentStepFailed,
+		"app_terminated_event":        EventIDAppTerminated,
 	}
 }
 
@@ -98,16 +116,18 @@ type EventsChannel chan *Event
 
 /* --- API Request --- */
 
+// EventAPIRequest describes an 'api_post_event' event.
 type EventAPIRequest struct {
 	EventType     string       `json:"eventType"`
-	ClientIp      string       `json:"clientIp"`
+	ClientIP      string       `json:"clientIp"`
 	Timestamp     string       `json:"timestamp"`
-	Uri           string       `json:"uri"`
+	URI           string       `json:"uri"`
 	AppDefinition *Application `json:"appDefinition"`
 }
 
 /* --- Status Update --- */
 
+// EventStatusUpdate describes a 'status_update_event' event.
 type EventStatusUpdate struct {
 	EventType  string `json:"eventType"`
 	Timestamp  string `json:"timestamp,omitempty"`
@@ -120,6 +140,7 @@ type EventStatusUpdate struct {
 	Version    string `json:"version,omitempty"`
 }
 
+// EventAppTerminated describes an 'app_terminated_event' event.
 type EventAppTerminated struct {
 	EventType string `json:"eventType"`
 	Timestamp string `json:"timestamp,omitempty"`
@@ -128,40 +149,41 @@ type EventAppTerminated struct {
 
 /* --- Framework Message --- */
 
+// EventFrameworkMessage describes a 'framework_message_event' event.
 type EventFrameworkMessage struct {
 	EventType  string `json:"eventType"`
-	ExecutorId string `json:"executorId"`
+	ExecutorID string `json:"executorId"`
 	Message    string `json:"message"`
-	SlaveId    string `json:"slaveId"`
+	SlaveID    string `json:"slaveId"`
 	Timestamp  string `json:"timestamp"`
 }
 
 /* --- Event Subscription --- */
 
-// EventSubscription describes 'subscribe_event' Marathon event
+// EventSubscription describes a 'subscribe_event' event.
 type EventSubscription struct {
-	CallbackUrl string `json:"callbackUrl"`
-	ClientIp    string `json:"clientIp"`
+	CallbackURL string `json:"callbackUrl"`
+	ClientIP    string `json:"clientIp"`
 	EventType   string `json:"eventType"`
 	Timestamp   string `json:"timestamp"`
 }
 
-// EventUnsubscription describes 'unsubscribe_event' Marathon event
+// EventUnsubscription describes an 'unsubscribe_event' event.
 type EventUnsubscription struct {
-	CallbackUrl string `json:"callbackUrl"`
-	ClientIp    string `json:"clientIp"`
+	CallbackURL string `json:"callbackUrl"`
+	ClientIP    string `json:"clientIp"`
 	EventType   string `json:"eventType"`
 	Timestamp   string `json:"timestamp"`
 }
 
-// EventStreamAttached describes 'event_stream_attached' Marathon event
+// EventStreamAttached describes an 'event_stream_attached' event.
 type EventStreamAttached struct {
 	RemoteAddress string `json:"remoteAddress"`
 	EventType     string `json:"eventType"`
 	Timestamp     string `json:"timestamp"`
 }
 
-// EventStreamDetached describes 'event_stream_detached' Marathon event
+// EventStreamDetached describes an 'event_stream_detached' event.
 type EventStreamDetached struct {
 	RemoteAddress string `json:"remoteAddress"`
 	EventType     string `json:"eventType"`
@@ -170,8 +192,9 @@ type EventStreamDetached struct {
 
 /* --- Health Checks --- */
 
+// EventAddHealthCheck describes an 'add_health_check_event' event.
 type EventAddHealthCheck struct {
-	AppId       string `json:"appId"`
+	AppID       string `json:"appId"`
 	EventType   string `json:"eventType"`
 	HealthCheck struct {
 		GracePeriodSeconds     float64 `json:"gracePeriodSeconds"`
@@ -185,8 +208,9 @@ type EventAddHealthCheck struct {
 	Timestamp string `json:"timestamp"`
 }
 
+// EventRemoveHealthCheck describes a 'remove_health_check_event' event.
 type EventRemoveHealthCheck struct {
-	AppId       string `json:"appId"`
+	AppID       string `json:"appId"`
 	EventType   string `json:"eventType"`
 	HealthCheck struct {
 		GracePeriodSeconds     float64 `json:"gracePeriodSeconds"`
@@ -200,8 +224,9 @@ type EventRemoveHealthCheck struct {
 	Timestamp string `json:"timestamp"`
 }
 
+// EventFailedHealthCheck describes a 'failed_health_check_event' event.
 type EventFailedHealthCheck struct {
-	AppId       string `json:"appId"`
+	AppID       string `json:"appId"`
 	EventType   string `json:"eventType"`
 	HealthCheck struct {
 		GracePeriodSeconds     float64 `json:"gracePeriodSeconds"`
@@ -215,6 +240,7 @@ type EventFailedHealthCheck struct {
 	Timestamp string `json:"timestamp"`
 }
 
+// EventHealthCheckChanged describes a 'health_status_changed_event' event.
 type EventHealthCheckChanged struct {
 	EventType string `json:"eventType"`
 	Timestamp string `json:"timestamp,omitempty"`
@@ -226,33 +252,38 @@ type EventHealthCheckChanged struct {
 
 /* --- Deployments --- */
 
+// EventGroupChangeSuccess describes a 'group_change_success' event.
 type EventGroupChangeSuccess struct {
 	EventType string `json:"eventType"`
-	GroupId   string `json:"groupId"`
+	GroupID   string `json:"groupId"`
 	Timestamp string `json:"timestamp"`
 	Version   string `json:"version"`
 }
 
+// EventGroupChangeFailed describes a 'group_change_failed' event.
 type EventGroupChangeFailed struct {
 	EventType string `json:"eventType"`
-	GroupId   string `json:"groupId"`
+	GroupID   string `json:"groupId"`
 	Timestamp string `json:"timestamp"`
 	Version   string `json:"version"`
 	Reason    string `json:"reason"`
 }
 
+// EventDeploymentSuccess describes a 'deployment_success' event.
 type EventDeploymentSuccess struct {
 	ID        string `json:"id"`
 	EventType string `json:"eventType"`
 	Timestamp string `json:"timestamp"`
 }
 
+// EventDeploymentFailed describes a 'deployment_failed' event.
 type EventDeploymentFailed struct {
 	ID        string `json:"id"`
 	EventType string `json:"eventType"`
 	Timestamp string `json:"timestamp"`
 }
 
+// EventDeploymentInfo describes a 'deployment_info' event.
 type EventDeploymentInfo struct {
 	EventType   string          `json:"eventType"`
 	CurrentStep *DeploymentStep `json:"currentStep"`
@@ -260,6 +291,7 @@ type EventDeploymentInfo struct {
 	Plan        *DeploymentPlan `json:"plan"`
 }
 
+// EventDeploymentStepSuccess describes a 'deployment_step_success' event.
 type EventDeploymentStepSuccess struct {
 	EventType   string          `json:"eventType"`
 	CurrentStep *DeploymentStep `json:"currentStep"`
@@ -267,6 +299,7 @@ type EventDeploymentStepSuccess struct {
 	Plan        *DeploymentPlan `json:"plan"`
 }
 
+// EventDeploymentStepFailure describes a 'deployment_step_failure' event.
 type EventDeploymentStepFailure struct {
 	EventType   string          `json:"eventType"`
 	CurrentStep *DeploymentStep `json:"currentStep"`
@@ -278,7 +311,7 @@ type EventDeploymentStepFailure struct {
 //		eventType:			the type of Marathon event
 func GetEvent(eventType string) (*Event, error) {
 	// step: check it's supported
-	id, found := Events[eventType]
+	id, found := eventTypesMap[eventType]
 	if found {
 		event := new(Event)
 		event.ID = id

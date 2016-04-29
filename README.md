@@ -165,7 +165,7 @@ if err != nil {
 
 // Register for events
 events := make(marathon.EventsChannel, 5)
-err = client.AddEventsListener(events, marathon.EVENTS_APPLICATIONS)
+err = client.AddEventsListener(events, marathon.EventIDApplications)
 if err != nil {
 	log.Fatalf("Failed to register for events, %s", err)
 }
@@ -214,7 +214,7 @@ if err != nil {
 
 // Register for events
 events := make(marathon.EventsChannel, 5)
-err = client.AddEventsListener(events, marathon.EVENTS_APPLICATIONS)
+err = client.AddEventsListener(events, marathon.EventIDApplications)
 if err != nil {
 	log.Fatalf("Failed to register for events, %s", err)
 }
@@ -240,36 +240,7 @@ for {
 client.RemoveEventsListener(events)
 ```
 
-A full list of the events:
-
-```Go
-const (
-	EVENT_API_REQUEST = 1 << iota
-	EVENT_STATUS_UPDATE
-	EVENT_FRAMEWORK_MESSAGE
-	EVENT_SUBSCRIPTION
-	EVENT_UNSUBSCRIBED
-	EVENT_STREAM_ATTACHED
-	EVENT_STREAM_DETACHED
-	EVENT_ADD_HEALTH_CHECK
-	EVENT_REMOVE_HEALTH_CHECK
-	EVENT_FAILED_HEALTH_CHECK
-	EVENT_CHANGED_HEALTH_CHECK
-	EVENT_GROUP_CHANGE_SUCCESS
-	EVENT_GROUP_CHANGE_FAILED
-	EVENT_DEPLOYMENT_SUCCESS
-	EVENT_DEPLOYMENT_FAILED
-	EVENT_DEPLOYMENT_INFO
-	EVENT_DEPLOYMENT_STEP_SUCCESS
-	EVENT_DEPLOYMENT_STEP_FAILED
-	EVENT_APP_TERMINATED
-)
-
-const (
-	EVENTS_APPLICATIONS  = EVENT_STATUS_UPDATE | EVENT_CHANGED_HEALTH_CHECK | EVENT_FAILED_HEALTH_CHECK | EVENT_APP_TERMINATED
-	EVENTS_SUBSCRIPTIONS = EVENT_SUBSCRIPTION | EVENT_UNSUBSCRIBED | EVENT_STREAM_ATTACHED | EVENT_STREAM_DETACHED
-)
-```
+See [events.go](events.go) for a full list of event IDs.
 
 ## Contributing
 
