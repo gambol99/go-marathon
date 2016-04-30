@@ -33,7 +33,7 @@ type PortMapping struct {
 	ContainerPort int    `json:"containerPort,omitempty"`
 	HostPort      int    `json:"hostPort"`
 	ServicePort   int    `json:"servicePort,omitempty"`
-	Protocol      string `json:"protocol"`
+	Protocol      string `json:"protocol,omitempty"`
 }
 
 // Parameters is the parameters to pass to the docker client when creating the container
