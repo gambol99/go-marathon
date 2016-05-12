@@ -129,15 +129,16 @@ type EventAPIRequest struct {
 
 // EventStatusUpdate describes a 'status_update_event' event.
 type EventStatusUpdate struct {
-	EventType  string `json:"eventType"`
-	Timestamp  string `json:"timestamp,omitempty"`
-	SlaveID    string `json:"slaveId,omitempty"`
-	TaskID     string `json:"taskId"`
-	TaskStatus string `json:"taskStatus"`
-	AppID      string `json:"appId"`
-	Host       string `json:"host"`
-	Ports      []int  `json:"ports,omitempty"`
-	Version    string `json:"version,omitempty"`
+	EventType   string       `json:"eventType"`
+	Timestamp   string       `json:"timestamp,omitempty"`
+	SlaveID     string       `json:"slaveId,omitempty"`
+	TaskID      string       `json:"taskId"`
+	TaskStatus  string       `json:"taskStatus"`
+	AppID       string       `json:"appId"`
+	Host        string       `json:"host"`
+	Ports       []int        `json:"ports,omitempty"`
+	IPAddresses []*IPAddress `json:"ipAddresses"`
+	Version     string       `json:"version,omitempty"`
 }
 
 // EventAppTerminated describes an 'app_terminated_event' event.
