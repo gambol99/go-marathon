@@ -2,7 +2,7 @@
   method: GET
   content: |
     pong
-- uri: /v2/apps/fake_app/versions
+- uri: /v2/apps/fake-app/versions
   method: GET
   content: |
     {
@@ -54,7 +54,7 @@
               "timeoutSeconds": 5
           }
       ],
-      "id": "/fake_app",
+      "id": "/fake-app",
       "instances": 2,
       "mem": 50.0,
       "ports": [
@@ -120,7 +120,7 @@
                     "timeoutSeconds": 20
                 }
             ],
-            "id": "/fake_app",
+            "id": "/fake-app",
             "instances": 2,
             "mem": 64.0,
             "ports": [
@@ -183,7 +183,7 @@
                     "timeoutSeconds": 20
                 }
             ],
-            "id": "/fake_app_broken",
+            "id": "/fake-app-broken",
             "instances": 2,
             "mem": 64.0,
             "ports": [
@@ -203,39 +203,45 @@
         }
     ]
     }
-- uri: /v2/apps/fake_app/restart
+- uri: /v2/apps/fake-app/restart
   method: POST
   content: |
     {
       "deploymentId": "83b215a6-4e26-4e44-9333-5c385eda6438",
       "version": "2014-08-26T07:37:50.462Z"
     }
-- uri: /v2/apps/fake_app
+- uri: /v2/apps/fake-app
   method: DELETE
   content: |
     {
       "deploymentId": "83b215a6-4e26-4e44-9333-5c385eda6438",
       "version": "2014-08-26T07:37:50.462Z"
     }
-- uri: /v2/apps/fake_app/tasks
+- uri: /v2/apps/fake-app/tasks
   method: GET
   content: |
     {
         "tasks": [{"id": "1"},{"id": "2"}]
     }
-- uri: /v2/apps/fake_app/tasks
+- uri: /v2/apps/fake-app/tasks
   method: DELETE
   content: |
     {
         "tasks": []
     }
-- uri: /v2/apps/fake_app/tasks/fake_app.12345
+- uri: /v2/apps/fake-app/tasks/fake-app.fake-task
   method: DELETE
   content: |
     {
-        "task": {"id": "fake_app.12345"}
+        "task": {"id": "fake-app.fake-task"}
     }
-- uri: /v2/apps/fake_app/versions/2014-09-12T23:28:21.737Z
+- uri: /v2/apps/fake-group/fake-app/tasks/fake-group_fake-app.fake-task
+  method: DELETE
+  content: |
+    {
+        "task": {"id": "fake-group_fake-app.fake-task"}
+    }
+- uri: /v2/apps/fake-app/versions/2014-09-12T23:28:21.737Z
   method: GET
   content: |
     {
@@ -278,7 +284,7 @@
                 "timeoutSeconds": 10
             }
         ],
-        "id": "/fake_app",
+        "id": "/fake-app",
         "instances": 2,
         "lastTaskFailure": {
             "appId": "/toggle",
@@ -350,7 +356,7 @@
         "user": null,
         "version": "2014-09-12T23:28:21.737Z"
     }
-- uri: /v2/apps/fake_app
+- uri: /v2/apps/fake-app
   method: GET
   content: |
     {
@@ -394,7 +400,7 @@
                 "timeoutSeconds": 10
             }
         ],
-        "id": "/fake_app",
+        "id": "/fake-app",
         "instances": 2,
         "lastTaskFailure": {
             "appId": "/toggle",
@@ -467,7 +473,7 @@
         "version": "2014-09-12T23:28:21.737Z"
     }
     }
-- uri: /v2/apps/fake_app_broken
+- uri: /v2/apps/fake-app-broken
   method: GET
   content: |
     {
@@ -511,7 +517,7 @@
                 "timeoutSeconds": 10
             }
         ],
-        "id": "/fake_app_broken",
+        "id": "/fake-app-broken",
         "instances": 2,
         "lastTaskFailure": {
             "appId": "/toggle",
@@ -584,7 +590,7 @@
         "version": "2014-09-12T23:28:21.737Z"
     }
     }
-- uri: /v2/apps/fake_app/versions
+- uri: /v2/apps/fake-app/versions
   method: GET
   content: |
     {
@@ -592,14 +598,14 @@
             "2014-04-04T06:25:31.399Z"
         ]
     }
-- uri: /v2/apps/fake_app
+- uri: /v2/apps/fake-app
   method: PUT
   content: |
     {
       "deploymentId": "83b215a6-4e26-4e44-9333-5c385eda6438",
       "version": "2014-08-26T07:37:50.462Z"
     }
-- uri: /v2/apps/fake_app?force=true
+- uri: /v2/apps/fake-app?force=true
   method: PUT
   content: |
     {

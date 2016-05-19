@@ -67,13 +67,21 @@ func TestKillApplicationTasks(t *testing.T) {
 }
 
 func TestKillTask(t *testing.T) {
+	cases := map[string]struct {
+		TaskID string
+		Result string
+	}{
+		"CommonApp":           {fakeTaskID, fakeTaskID},
+		"GroupApp":            {"fake-group_fake-app.fake-task", "fake-group_fake-app.fake-task"},
+		"GroupAppWithSlashes": {"fake-group/fake-app.fake-task", "fake-group_fake-app.fake-task"},
+	}
 	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
-	task, err := endpoint.Client.KillTask(fakeTaskID, nil)
-	assert.NoError(t, err)
-	if assert.NotNil(t, task) {
-		assert.Equal(t, fakeTaskID, task.ID)
+	for k, tc := range cases {
+		task, err := endpoint.Client.KillTask(tc.TaskID, nil)
+		assert.NoError(t, err, "TestCase: %s", k)
+		assert.Equal(t, tc.Result, task.ID, "TestCase: %s", k)
 	}
 }
 

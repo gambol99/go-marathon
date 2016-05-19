@@ -24,8 +24,8 @@ import (
 
 func TestApplicationDependsOn(t *testing.T) {
 	app := NewDockerApplication()
-	app.DependsOn("fake_app")
-	app.DependsOn("fake_app1", "fake_app2")
+	app.DependsOn("fake-app")
+	app.DependsOn("fake-app1", "fake-app2")
 	assert.Equal(t, 3, len(app.Dependencies))
 }
 
@@ -234,11 +234,11 @@ func TestCreateApplication(t *testing.T) {
 	defer endpoint.Close()
 
 	application := NewDockerApplication()
-	application.Name("/fake_app")
+	application.Name(fakeAppName)
 	app, err := endpoint.Client.CreateApplication(application)
 	assert.NoError(t, err)
 	assert.NotNil(t, app)
-	assert.Equal(t, application.ID, "/fake_app")
+	assert.Equal(t, application.ID, fakeAppName)
 	assert.Equal(t, app.Deployments[0]["id"], "f44fd4fc-4330-4600-a68b-99c7bd33014a")
 }
 
@@ -248,7 +248,7 @@ func TestUpdateApplication(t *testing.T) {
 		defer endpoint.Close()
 
 		application := NewDockerApplication()
-		application.Name("/fake_app")
+		application.Name(fakeAppName)
 		id, err := endpoint.Client.UpdateApplication(application, force)
 		assert.NoError(t, err)
 		assert.Equal(t, id.DeploymentID, "83b215a6-4e26-4e44-9333-5c385eda6438")
