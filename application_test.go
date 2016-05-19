@@ -18,6 +18,7 @@ package marathon
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -426,4 +427,23 @@ func TestApplicationConfiguration(t *testing.T) {
 	apiErr, ok = err.(*APIError)
 	assert.True(t, ok)
 	assert.Equal(t, ErrCodeNotFound, apiErr.ErrCode)
+}
+
+func TestWaitOnApplication(t *testing.T) {
+	endpoint := newFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	var err error
+	err = endpoint.Client.WaitOnApplication(fakeAppName, 1*time.Second)
+	assert.NoError(t, err)
+
+	err = endpoint.Client.WaitOnApplication("no_such_app", 1*time.Millisecond)
+	assert.IsType(t, err, ErrTimeoutError)
+}
+func TestAppExistAndRunning(t *testing.T) {
+	endpoint := newFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+	client := endpoint.Client.(*marathonClient)
+	assert.True(t, client.appExistAndRunning(fakeAppName))
+	assert.False(t, client.appExistAndRunning("no_such_app"))
 }
