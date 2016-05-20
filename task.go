@@ -37,7 +37,13 @@ type Task struct {
 	SlaveID            string               `json:"slaveId"`
 	StagedAt           string               `json:"stagedAt"`
 	StartedAt          string               `json:"startedAt"`
+	IPAddresses        []*IPAddress         `json:"ipAddresses"`
 	Version            string               `json:"version"`
+}
+
+type IPAddress struct {
+	IPAddress string `json:"ipAddress"`
+	Protocol  string `json:"protocol"`
 }
 
 // AllTasksOpts contains a payload for AllTasks method
