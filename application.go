@@ -545,31 +545,35 @@ func (r *marathonClient) CreateApplication(application *Application) (*Applicati
 //		name:		the id of the application
 //		timeout:	a duration of time to wait for an application to deploy
 func (r *marathonClient) WaitOnApplication(name string, timeout time.Duration) error {
-	// step: this is very naive approach - the problem with using deployment id's is
-	// one) from > 0.8.0 you can be handed a deployment Id on creation, but it may or may not exist in /v2/deployments
-	// two) there is NO WAY of checking if a deployment Id was successful (i.e. no history). So i poll /deployments
-	// as it's not there, was it successful? has it not been scheduled yet? should i wait for a second to see if the
-	// deployment starts? or have i missed it? ...
-	err := deadline(timeout, func(stop_channel chan bool) error {
-		var flick atomicSwitch
-		go func() {
-			<-stop_channel
-			close(stop_channel)
-			flick.SwitchOn()
-		}()
-		for !flick.IsSwitched() {
-			app, err := r.Application(name)
-			if apiErr, ok := err.(*APIError); ok && apiErr.ErrCode == ErrCodeNotFound {
-				continue
-			}
-			if err == nil && app.AllTaskRunning() {
+	if r.appExistAndRunning(name) {
+		return nil
+	}
+
+	ticker := time.NewTicker(time.Millisecond * 500)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-time.After(timeout):
+			return ErrTimeoutError
+		case <-ticker.C:
+			if r.appExistAndRunning(name) {
 				return nil
 			}
-			time.Sleep(time.Duration(500) * time.Millisecond)
 		}
-		return nil
-	})
-	return err
+	}
+	return nil
+}
+
+func (r *marathonClient) appExistAndRunning(name string) bool {
+	app, err := r.Application(name)
+	if apiErr, ok := err.(*APIError); ok && apiErr.ErrCode == ErrCodeNotFound {
+		return false
+	}
+	if err == nil && app.AllTaskRunning() {
+		return true
+	}
+	return false
 }
 
 // DeleteApplication deletes an application from marathon
