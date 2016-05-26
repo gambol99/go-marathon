@@ -35,9 +35,9 @@ const (
 	fakeMarathonURL   = "http://127.0.0.1:3000,127.0.0.1:3000,127.0.0.1:3000"
 	fakeGroupName     = "/test"
 	fakeGroupName1    = "/qa/product/1"
-	fakeAppName       = "/fake_app"
-	fakeTaskID        = "fake_app.12345"
-	fakeAppNameBroken = "/fake_app_broken"
+	fakeAppName       = "/fake-app"
+	fakeTaskID        = "fake-app.fake-task"
+	fakeAppNameBroken = "/fake-app-broken"
 	fakeDeploymentID  = "867ed450-f6a8-4d33-9b0e-e11c5513990b"
 	fakeAPIFilename   = "./tests/rest-api/methods.yml"
 	fakeAPIPort       = 3000

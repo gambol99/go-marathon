@@ -122,6 +122,9 @@ func (r *marathonClient) KillApplicationTasks(id string, opts *KillApplicationTa
 //	opts:		KillTaskOpts request payload
 func (r *marathonClient) KillTask(taskID string, opts *KillTaskOpts) (*Task, error) {
 	appName := taskID[0:strings.LastIndex(taskID, ".")]
+	appName = strings.Replace(appName, "_", "/", -1)
+	taskID = strings.Replace(taskID, "/", "_", -1)
+
 	u := fmt.Sprintf("%s/%s/tasks/%s", marathonAPIApps, appName, taskID)
 	u, err := addOptions(u, opts)
 	if err != nil {
