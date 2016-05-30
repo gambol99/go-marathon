@@ -30,7 +30,7 @@ const (
 	marathonAPIQueue        = marathonAPIVersion + "/queue"
 	marathonAPIInfo         = marathonAPIVersion + "/info"
 	marathonAPILeader       = marathonAPIVersion + "/leader"
-	marathonAPIPing         = "/ping"
+	marathonAPIPing         = "ping"
 )
 
 const (
