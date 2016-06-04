@@ -56,7 +56,7 @@ func (e *APIError) Error() string {
 }
 
 // NewAPIError creates a new APIError instance from the given response code and content.
-func NewAPIError(code int, content []byte) (*APIError, error) {
+func NewAPIError(code int, content []byte) error {
 	switch {
 	case code == http.StatusBadRequest:
 		return parseContent(&badRequestDef{}, content)
@@ -73,7 +73,7 @@ func NewAPIError(code int, content []byte) (*APIError, error) {
 	case code >= http.StatusInternalServerError:
 		return parseContent(&simpleErrDef{code: ErrCodeServer}, content)
 	default:
-		return &APIError{ErrCodeUnknown, "unknown error"}, nil
+		return parseContent(&simpleErrDef{code: ErrCodeUnknown}, content)
 	}
 }
 
@@ -82,12 +82,15 @@ type errorDefinition interface {
 	errCode() int
 }
 
-func parseContent(errDef errorDefinition, content []byte) (*APIError, error) {
-	if err := json.Unmarshal(content, errDef); err != nil {
-		return nil, err
+func parseContent(errDef errorDefinition, content []byte) error {
+	// If the content cannot be JSON-unmarshalled, we assume that it's not JSON
+	// and encode it into the APIError instance as-is.
+	errMessage := string(content)
+	if err := json.Unmarshal(content, errDef); err == nil {
+		errMessage = errDef.message()
 	}
 
-	return &APIError{message: errDef.message(), ErrCode: errDef.errCode()}, nil
+	return &APIError{message: errMessage, ErrCode: errDef.errCode()}
 }
 
 type simpleErrDef struct {
