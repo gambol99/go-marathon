@@ -19,80 +19,136 @@ package marathon
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func Test400Error(t *testing.T) {
-	content := []byte(`{
+func TestErrors(t *testing.T) {
+	tests := []struct {
+		httpCode   int
+		nameSuffix string
+		errCode    int
+		errText    string
+		content    string
+	}{
+		// 400
+		{
+			httpCode: http.StatusBadRequest,
+			errCode:  ErrCodeBadRequest,
+			errText:  "Invalid JSON (path: '/id' errors: error.expected.jsstring, error.something.else; path: '/name' errors: error.not.inventive)",
+			content:  content400(),
+		},
+		// 401
+		{
+			httpCode: http.StatusUnauthorized,
+			errCode:  ErrCodeUnauthorized,
+			errText:  "invalid username or password.",
+			content:  `{"message": "invalid username or password."}`,
+		},
+		// 403
+		{
+			httpCode: http.StatusForbidden,
+			errCode:  ErrCodeForbidden,
+			errText:  "Not Authorized to perform this action!",
+			content:  `{"message": "Not Authorized to perform this action!"}`,
+		},
+		// 404
+		{
+			httpCode: http.StatusNotFound,
+			errCode:  ErrCodeNotFound,
+			errText:  "App '/not_existent' does not exist",
+			content:  `{"message": "App '/not_existent' does not exist"}`,
+		},
+		// 409 POST
+		{
+			httpCode:   http.StatusConflict,
+			nameSuffix: "POST",
+			errCode:    ErrCodeDuplicateID,
+			errText:    "An app with id [/existing_app] already exists.",
+			content:    `{"message": "An app with id [/existing_app] already exists."}`,
+		},
+		// 409 PUT
+		{
+			httpCode:   http.StatusConflict,
+			nameSuffix: "PUT",
+			errCode:    ErrCodeAppLocked,
+			errText:    "App is locked (locking deployment IDs: 97c136bf-5a28-4821-9d94-480d9fbb01c8)",
+			content:    `{"message":"App is locked", "deployments": [ { "id": "97c136bf-5a28-4821-9d94-480d9fbb01c8" } ] }`,
+		},
+		// 422 "details" key
+		{
+			httpCode:   422,
+			nameSuffix: "details key",
+			errCode:    ErrCodeInvalidBean,
+			errText:    "Something is not valid (attribute 'upgradeStrategy.minimumHealthCapacity': is greater than 1; attribute 'foobar': foo does not have enough bar)",
+			content:    content422("details"),
+		},
+		// 422 "errors" key
+		{
+			httpCode:   422,
+			nameSuffix: "errors key",
+			errCode:    ErrCodeInvalidBean,
+			errText:    "Something is not valid (attribute 'upgradeStrategy.minimumHealthCapacity': is greater than 1; attribute 'foobar': foo does not have enough bar)",
+			content:    content422("errors"),
+		},
+		// 499 unknown error
+		{
+			httpCode:   499,
+			nameSuffix: "unknown error",
+			errCode:    ErrCodeUnknown,
+			errText:    "unknown error",
+			content:    `{"message": "unknown error"}`,
+		},
+		// 500
+		{
+			httpCode: http.StatusInternalServerError,
+			errCode:  ErrCodeServer,
+			errText:  "internal server error",
+			content:  `{"message": "internal server error"}`,
+		},
+		// 503 (no JSON)
+		{
+			httpCode:   http.StatusServiceUnavailable,
+			nameSuffix: "no JSON",
+			errCode:    ErrCodeServer,
+			errText:    "No server is available to handle this request.",
+			content:    `No server is available to handle this request.`,
+		},
+	}
+
+	for _, test := range tests {
+		name := fmt.Sprintf("%d", test.httpCode)
+		if len(test.nameSuffix) > 0 {
+			name = fmt.Sprintf("%s (%s)", name, test.nameSuffix)
+		}
+		apiErr := NewAPIError(test.httpCode, []byte(test.content))
+		gotErrCode := apiErr.(*APIError).ErrCode
+		assert.Equal(t, test.errCode, gotErrCode, fmt.Sprintf("HTTP code %s (error code): got %d, want %d", name, gotErrCode, test.errCode))
+		pureErrText := strings.TrimPrefix(apiErr.Error(), "Marathon API error: ")
+		assert.Equal(t, pureErrText, test.errText, fmt.Sprintf("HTTP code %s (error text)", name))
+	}
+}
+
+func content400() string {
+	return `{
 	"message": "Invalid JSON",
 	"details": [
-		{
-			"path": "/id",
-		 	"errors": ["error.expected.jsstring", "error.something.else"]
-		},
-		{
-			"path": "/name",
-		 	"errors": ["error.not.inventive"]
-		}
+	{
+		"path": "/id",
+		"errors": ["error.expected.jsstring", "error.something.else"]
+	},
+	{
+		"path": "/name",
+		"errors": ["error.not.inventive"]
+	}
 	]
-}`)
-
-	e := validatedAPIError(t, http.StatusBadRequest, content, false)
-
-	assert.Equal(t, ErrCodeBadRequest, e.ErrCode)
-	assert.Contains(t, e.Error(), "Invalid JSON (path: '/id' errors: error.expected.jsstring, error.something.else; path: '/name' errors: error.not.inventive)")
+}`
 }
 
-func Test401Error(t *testing.T) {
-	content := []byte(`{"message": "invalid username or password."}`)
-
-	e := validatedAPIError(t, http.StatusUnauthorized, content, false)
-
-	assert.Equal(t, ErrCodeUnauthorized, e.ErrCode)
-	assert.Contains(t, e.Error(), "invalid username or password")
-}
-
-func Test403Error(t *testing.T) {
-	content := []byte(`{"message": "Not Authorized to perform this action!"}`)
-
-	e := validatedAPIError(t, http.StatusForbidden, content, false)
-
-	assert.Equal(t, ErrCodeForbidden, e.ErrCode)
-	assert.Contains(t, e.Error(), "Not Authorized to perform this action!")
-}
-
-func Test404Error(t *testing.T) {
-	content := []byte(`{"message": "App '/not_existent' does not exist"}`)
-
-	e := validatedAPIError(t, http.StatusNotFound, content, false)
-
-	assert.Equal(t, ErrCodeNotFound, e.ErrCode)
-	assert.Contains(t, e.Error(), "App '/not_existent' does not exist")
-}
-
-func Test409POSTError(t *testing.T) {
-	content := []byte(`{"message": "An app with id [/existing_app] already exists."}`)
-
-	e := validatedAPIError(t, http.StatusConflict, content, false)
-
-	assert.Equal(t, ErrCodeDuplicateID, e.ErrCode)
-	assert.Contains(t, e.Error(), "An app with id [/existing_app] already exists.")
-}
-
-func Test409PUTError(t *testing.T) {
-	content := []byte(`{"message":"App is locked", "deployments": [ { "id": "97c136bf-5a28-4821-9d94-480d9fbb01c8" } ] }`)
-
-	e := validatedAPIError(t, http.StatusConflict, content, false)
-
-	assert.Equal(t, ErrCodeAppLocked, e.ErrCode)
-	assert.Contains(t, e.Error(), "App is locked (locking deployment IDs: 97c136bf-5a28-4821-9d94-480d9fbb01c8)")
-}
-
-func Test422Error(t *testing.T) {
-	for _, detailsPropKey := range []string{"details", "errors"} {
-		content := []byte(fmt.Sprintf(`{
+func content422(detailsPropKey string) string {
+	return fmt.Sprintf(`{
 	"message": "Something is not valid",
 	"%s": [
 		{
@@ -104,50 +160,5 @@ func Test422Error(t *testing.T) {
 			"error": "foo does not have enough bar"
 		}
 	]
-}
-`, detailsPropKey))
-
-		e := validatedAPIError(t, 422, content, false)
-
-		assert.Equal(t, ErrCodeInvalidBean, e.ErrCode)
-		assert.Contains(t, e.Error(), "Something is not valid (attribute 'upgradeStrategy.minimumHealthCapacity': is greater than 1; attribute 'foobar': foo does not have enough bar)")
-	}
-}
-
-func TestServerError(t *testing.T) {
-	content := []byte(`{"message": "internal server error"}`)
-
-	for _, code := range []int{500, 501} {
-		e := validatedAPIError(t, code, content, false)
-
-		assert.Equal(t, ErrCodeServer, e.ErrCode, "code: %d", code)
-		assert.Contains(t, e.Error(), "internal server error")
-	}
-}
-
-func TestUnknownError(t *testing.T) {
-	content := []byte("unknown error")
-
-	e := validatedAPIError(t, 499, content, false)
-
-	assert.Equal(t, ErrCodeUnknown, e.ErrCode)
-	assert.Contains(t, e.Error(), "unknown error")
-}
-
-func TestInvalidJSON(t *testing.T) {
-	content := []byte{}
-	for _, code := range []int{400, 401, 403, 404, 409, 422, 500, 501} {
-		validatedAPIError(t, code, content, true)
-	}
-}
-
-func validatedAPIError(t *testing.T, code int, content []byte, parseErr bool) *APIError {
-	e, err := NewAPIError(code, content)
-	if parseErr {
-		assert.Error(t, err, "code: %d", code)
-	} else {
-		assert.NoError(t, err, "code: %d", code)
-	}
-
-	return e
+}`, detailsPropKey)
 }

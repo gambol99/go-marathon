@@ -277,12 +277,7 @@ func (r *marathonClient) apiCall(method, uri string, body, result interface{}) e
 		return nil
 	}
 
-	apiErr, err := NewAPIError(response.StatusCode, respBody)
-	if err != nil {
-		r.debugLog.Printf("apiCall(): failed to parse error response '%s' with status code %d, error: %s", respBody, response.StatusCode, err)
-	}
-
-	return apiErr
+	return NewAPIError(response.StatusCode, respBody)
 }
 
 var oneLogLineRegex = regexp.MustCompile(`(?m)^\s*`)

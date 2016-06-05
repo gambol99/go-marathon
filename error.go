@@ -56,25 +56,28 @@ func (e *APIError) Error() string {
 }
 
 // NewAPIError creates a new APIError instance from the given response code and content.
-func NewAPIError(code int, content []byte) (*APIError, error) {
+func NewAPIError(code int, content []byte) error {
+	var errDef errorDefinition
 	switch {
 	case code == http.StatusBadRequest:
-		return parseContent(&badRequestDef{}, content)
+		errDef = &badRequestDef{}
 	case code == http.StatusUnauthorized:
-		return parseContent(&simpleErrDef{code: ErrCodeUnauthorized}, content)
+		errDef = &simpleErrDef{code: ErrCodeUnauthorized}
 	case code == http.StatusForbidden:
-		return parseContent(&simpleErrDef{code: ErrCodeForbidden}, content)
+		errDef = &simpleErrDef{code: ErrCodeForbidden}
 	case code == http.StatusNotFound:
-		return parseContent(&simpleErrDef{code: ErrCodeNotFound}, content)
+		errDef = &simpleErrDef{code: ErrCodeNotFound}
 	case code == http.StatusConflict:
-		return parseContent(&conflictDef{}, content)
+		errDef = &conflictDef{}
 	case code == 422:
-		return parseContent(&unprocessableEntityDef{}, content)
+		errDef = &unprocessableEntityDef{}
 	case code >= http.StatusInternalServerError:
-		return parseContent(&simpleErrDef{code: ErrCodeServer}, content)
+		errDef = &simpleErrDef{code: ErrCodeServer}
 	default:
-		return &APIError{ErrCodeUnknown, "unknown error"}, nil
+		errDef = &simpleErrDef{code: ErrCodeUnknown}
 	}
+
+	return parseContent(errDef, content)
 }
 
 type errorDefinition interface {
@@ -82,12 +85,15 @@ type errorDefinition interface {
 	errCode() int
 }
 
-func parseContent(errDef errorDefinition, content []byte) (*APIError, error) {
-	if err := json.Unmarshal(content, errDef); err != nil {
-		return nil, err
+func parseContent(errDef errorDefinition, content []byte) error {
+	// If the content cannot be JSON-unmarshalled, we assume that it's not JSON
+	// and encode it into the APIError instance as-is.
+	errMessage := string(content)
+	if err := json.Unmarshal(content, errDef); err == nil {
+		errMessage = errDef.message()
 	}
 
-	return &APIError{message: errDef.message(), ErrCode: errDef.errCode()}, nil
+	return &APIError{message: errMessage, ErrCode: errDef.errCode()}
 }
 
 type simpleErrDef struct {
