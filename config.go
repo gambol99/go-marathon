@@ -47,19 +47,6 @@ type Config struct {
 	HTTPClient *http.Client
 }
 
-// ServerConfig holds the Marathon server configuration
-type ServerConfig struct {
-	// The version of Marathon
-	Version string
-}
-
-// ConfigContainer holds both server and client Marathon configuration
-type ConfigContainer struct {
-	client *Config
-	server *ServerConfig
-}
-
-
 // NewDefaultConfig create a default client config
 func NewDefaultConfig() Config {
 	return Config{

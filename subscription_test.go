@@ -124,7 +124,7 @@ func TestSubscriptions(t *testing.T) {
 
 func TestEventStreamConnectionErrorsForwarded(t *testing.T) {
 	clientCfg := NewDefaultConfig()
-	config := &ConfigContainer{
+	config := &configContainer{
 		client: &clientCfg,
 	}
 	config.client.EventsTransport = EventsTransportSSE
@@ -139,7 +139,7 @@ func TestEventStreamConnectionErrorsForwarded(t *testing.T) {
 
 func TestEventStreamEventsReceived(t *testing.T) {
 	clientCfg := NewDefaultConfig()
-	config := ConfigContainer{
+	config := configContainer{
 		client: &clientCfg,
 	}
 	config.client.EventsTransport = EventsTransportSSE

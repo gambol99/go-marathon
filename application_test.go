@@ -399,7 +399,7 @@ func TestApplication(t *testing.T) {
 
 	config := NewDefaultConfig()
 	config.URL = "http://non-existing-marathon-host.local:5555"
-	endpoint = newFakeMarathonEndpoint(t, &ConfigContainer{
+	endpoint = newFakeMarathonEndpoint(t, &configContainer{
 		client: &config,
 	})
 	defer endpoint.Close()

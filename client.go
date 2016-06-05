@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -152,7 +153,7 @@ type marathonClient struct {
 	subscribedToSSE bool
 	// the ip address of the client
 	ipAddress string
-	// the http server */
+	// the http server
 	eventsHTTP *http.Server
 	// the http client use for making requests
 	httpClient *http.Client
@@ -226,7 +227,6 @@ func (r *marathonClient) apiCall(method, uri string, body, result interface{}) e
 	if err != nil {
 		return err
 	}
-
 	url := fmt.Sprintf("%s/%s", marathon, uri)
 
 	var jsonBody []byte
@@ -237,18 +237,11 @@ func (r *marathonClient) apiCall(method, uri string, body, result interface{}) e
 		}
 	}
 
-	// Make the http request to Marathon
-	request, err := http.NewRequest(method, url, bytes.NewReader(jsonBody))
+	// step: create an API request
+	request, err := r.apiRequest(method, url, bytes.NewReader(jsonBody))
 	if err != nil {
 		return err
 	}
-
-	// Add any basic auth and the content headers
-	if r.config.HTTPBasicAuthUser != "" {
-		request.SetBasicAuth(r.config.HTTPBasicAuthUser, r.config.HTTPBasicPassword)
-	}
-	request.Header.Add("Content-Type", "application/json")
-	request.Header.Add("Accept", "application/json")
 
 	response, err := r.httpClient.Do(request)
 	if err != nil {
@@ -278,6 +271,25 @@ func (r *marathonClient) apiCall(method, uri string, body, result interface{}) e
 	}
 
 	return NewAPIError(response.StatusCode, respBody)
+}
+
+// apiRequest creates a default API request
+func (r *marathonClient) apiRequest(method, url string, reader io.Reader) (*http.Request, error) {
+	// Make the http request to Marathon
+	request, err := http.NewRequest(method, url, reader)
+	if err != nil {
+		return nil, err
+	}
+
+	// Add any basic auth and the content headers
+	if r.config.HTTPBasicAuthUser != "" && r.config.HTTPBasicPassword != "" {
+		request.SetBasicAuth(r.config.HTTPBasicAuthUser, r.config.HTTPBasicPassword)
+	}
+
+	request.Header.Add("Content-Type", "application/json")
+	request.Header.Add("Accept", "application/json")
+
+	return request, nil
 }
 
 var oneLogLineRegex = regexp.MustCompile(`(?m)^\s*`)
