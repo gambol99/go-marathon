@@ -244,9 +244,4 @@ See [events.go](events.go) for a full list of event IDs.
 
 ## Contributing
 
- - Fork it
- - Create your feature branch (git checkout -b my-new-feature)
- - Commit your changes (git commit -am 'Add some feature')
- - Push to the branch (git push origin my-new-feature)
- - Create new Pull Request
- - If applicable, update the README.md
+See the [contribution guidelines](CONTRIBUTING.md).
