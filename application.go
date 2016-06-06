@@ -562,7 +562,6 @@ func (r *marathonClient) WaitOnApplication(name string, timeout time.Duration) e
 			}
 		}
 	}
-	return nil
 }
 
 func (r *marathonClient) appExistAndRunning(name string) bool {

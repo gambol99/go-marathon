@@ -110,6 +110,6 @@ func TestTaskEndpoints(t *testing.T) {
 	assert.Equal(t, endpoints[0], "10.141.141.10:31045", t)
 	assert.Equal(t, endpoints[1], "10.141.141.10:31234", t)
 
-	endpoints, err = endpoint.Client.TaskEndpoints(fakeAppNameBroken, 80, true)
+	_, err = endpoint.Client.TaskEndpoints(fakeAppNameBroken, 80, true)
 	assert.Error(t, err)
 }

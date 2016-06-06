@@ -28,22 +28,25 @@ type HealthCheck struct {
 	TimeoutSeconds         int      `json:"timeoutSeconds,omitempty"`
 }
 
-//
+// SetCommand sets the given command on the health check.
 func (h HealthCheck) SetCommand(c Command) HealthCheck {
 	h.Command = &c
 	return h
 }
 
+// SetPortIndex sets the given port index on the health check.
 func (h HealthCheck) SetPortIndex(i int) HealthCheck {
 	h.PortIndex = &i
 	return h
 }
 
+// SetPath sets the given path on the health check.
 func (h HealthCheck) SetPath(p string) HealthCheck {
 	h.Path = &p
 	return h
 }
 
+// SetMaxConsecutiveFailures sets the maximum consecutive failures on the health check.
 func (h HealthCheck) SetMaxConsecutiveFailures(i int) HealthCheck {
 	h.MaxConsecutiveFailures = &i
 	return h

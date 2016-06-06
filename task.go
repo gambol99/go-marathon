@@ -41,6 +41,7 @@ type Task struct {
 	Version            string               `json:"version"`
 }
 
+// IPAddress represents a task's IP address and protocol.
 type IPAddress struct {
 	IPAddress string `json:"ipAddress"`
 	Protocol  string `json:"protocol"`
