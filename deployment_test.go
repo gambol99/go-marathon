@@ -37,10 +37,27 @@ func TestDeployments(t *testing.T) {
 	assert.Equal(t, len(deployment.Steps), 1)
 }
 
+func TestDeploymentsV1(t *testing.T) {
+	endpoint := newFakeMarathonEndpoint(t, &ConfigContainer{
+		server: &ServerConfig{
+			Version: "1.1.1",
+		},
+	})
+	defer endpoint.Close()
+	deployments, err := endpoint.Client.Deployments()
+	assert.NoError(t, err)
+	assert.NotNil(t, deployments)
+	assert.Equal(t, len(deployments), 1)
+	deployment := deployments[0]
+	assert.NotNil(t, deployment)
+	assert.Equal(t, deployment.ID, "2620aa06-1001-4eea-8861-a51957d4fd80")
+	assert.NotNil(t, deployment.Steps)
+	assert.Equal(t, len(deployment.Steps), 2)
+}
+
 func TestDeleteDeployment(t *testing.T) {
 	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
-
 	id, err := endpoint.Client.DeleteDeployment(fakeDeploymentID, false)
 	assert.NoError(t, err)
 	assert.NotNil(t, t)

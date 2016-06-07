@@ -17,6 +17,7 @@ limitations under the License.
 package marathon
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 )
@@ -28,7 +29,8 @@ type Deployment struct {
 	CurrentStep    int                 `json:"currentStep"`
 	TotalSteps     int                 `json:"totalSteps"`
 	AffectedApps   []string            `json:"affectedApps"`
-	Steps          [][]*DeploymentStep `json:"steps"`
+	Steps          [][]*DeploymentStep `json:"-"`
+	XXStepsRaw     json.RawMessage     `json:"steps"` // Holds raw steps JSON to unmarshal later
 	CurrentActions []*DeploymentStep   `json:"currentActions"`
 }
 
@@ -42,6 +44,14 @@ type DeploymentID struct {
 type DeploymentStep struct {
 	Action string `json:"action"`
 	App    string `json:"app"`
+}
+
+// DeploymentStepV1 is a Marathon v1.X-compatible DeploymentStep
+type DeploymentStepV1 struct {
+	Actions []struct {
+		Type string `json:"type"`
+		App  string `json:"app"`
+	}
 }
 
 // DeploymentPlan is a collection of steps for application deployment
@@ -72,7 +82,28 @@ func (r *marathonClient) Deployments() ([]*Deployment, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	// Allows loading of deployment steps from the Marathon v1.X API
+	// Implements a fix for issue https://github.com/gambol99/go-marathon/issues/153
+	for _, deployment := range deployments {
+		// Unmarshal pre-v1.X step
+		if err := json.Unmarshal(deployment.XXStepsRaw, &deployment.Steps); err != nil {
+			deployment.Steps = make([][]*DeploymentStep, 0)
+			var steps []*DeploymentStepV1
+			// Unmarshal v1.X Marathon step
+			if err := json.Unmarshal(deployment.XXStepsRaw, &steps); err != nil {
+				return nil, err
+			}
+			for stepIndex, step := range steps {
+				deployment.Steps = append(deployment.Steps, make([]*DeploymentStep, len(step.Actions)))
+				for actionIndex, action := range step.Actions {
+					deployment.Steps[stepIndex][actionIndex] = &DeploymentStep{
+						Action: action.Type,
+						App:    action.App,
+					}
+				}
+			}
+		}
+	}
 	return deployments, nil
 }
 

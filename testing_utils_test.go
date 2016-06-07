@@ -50,6 +50,8 @@ type restMethod struct {
 	Method string `yaml:"method,omitempty"`
 	// the content i.e. response
 	Content string `yaml:"content,omitempty"`
+	// the Marathon Version
+	Version string `yaml:"version,omitempty"`
 }
 
 type fakeServer struct {
@@ -79,7 +81,7 @@ func getTestURL(urlString string) string {
 	return fmt.Sprintf("%s://%s", parsedURL.Scheme, strings.Join([]string{parsedURL.Host, parsedURL.Host, parsedURL.Host}, ","))
 }
 
-func newFakeMarathonEndpoint(t *testing.T, config *Config) *endpoint {
+func newFakeMarathonEndpoint(t *testing.T, configs *ConfigContainer) *endpoint {
 	once.Do(func() {
 		// step: open and read in the methods yaml
 		contents, err := ioutil.ReadFile(fakeAPIFilename)
@@ -96,40 +98,61 @@ func newFakeMarathonEndpoint(t *testing.T, config *Config) *endpoint {
 		// step: construct a hash from the methods
 		uris = make(map[string]*string, 0)
 		for _, method := range methods {
-			uris[fmt.Sprintf("%s:%s", method.Method, method.URI)] = &method.Content
+			key := fmt.Sprintf("%s:%s", method.Method, method.URI)
+			if method.Version != "" {
+				key += fmt.Sprintf(":%s", method.Version)
+			}
+			uris[key] = &method.Content
 		}
 	})
 
 	eventSrv := eventsource.NewServer()
 
+	defaultConfig := NewDefaultConfig()
+
+	if configs == nil {
+		configs = &ConfigContainer{
+			client: &defaultConfig,
+			server: &ServerConfig{
+				Version: "",
+			},
+
+		}
+	}
+	if configs.client == nil {
+		configs.client = &defaultConfig
+	}
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v2/events", eventSrv.Handler("event"))
 	mux.HandleFunc("/", func(writer http.ResponseWriter, reader *http.Request) {
 		key := fmt.Sprintf("%s:%s", reader.Method, reader.RequestURI)
-		content, found := uris[key]
-		if found {
+		var content *string
+		// First search for a default URI with no version specified
+		if response, found := uris[key]; found {
+			content = response
+		}
+		// If a URI with a matching version is found use that instead
+		if response, found := uris[fmt.Sprintf("%s:%s", key, configs.server.Version)]; found {
+			content = response
+		}
+		if content != nil {
 			writer.Header().Add("Content-Type", "application/json")
 			writer.Write([]byte(*content))
 			return
 		}
-
 		http.Error(writer, `{"message": "not found"}`, 404)
 	})
 
 	httpSrv := httptest.NewServer(mux)
 
-	defaultConfig := NewDefaultConfig()
-	if config == nil {
-		config = &defaultConfig
+	if configs.client.URL == defaultConfig.URL {
+		configs.client.URL = getTestURL(httpSrv.URL)
 	}
 
-	if config.URL == defaultConfig.URL {
-		config.URL = getTestURL(httpSrv.URL)
-	}
-
-	client, err := NewClient(*config)
+	client, err := NewClient(*configs.client)
 	if err != nil {
-		t.Fatalf("Failed to create the fake client, %s, error: %s", config.URL, err)
+		t.Fatalf("Failed to create the fake client, %s, error: %s", configs.client.URL, err)
 	}
 
 	return &endpoint{
@@ -138,7 +161,7 @@ func newFakeMarathonEndpoint(t *testing.T, config *Config) *endpoint {
 			httpSrv:  httpSrv,
 		},
 		Client: client,
-		URL:    config.URL,
+		URL:    configs.client.URL,
 	}
 }
 

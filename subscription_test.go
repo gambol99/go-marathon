@@ -123,10 +123,13 @@ func TestSubscriptions(t *testing.T) {
 }
 
 func TestEventStreamConnectionErrorsForwarded(t *testing.T) {
-	config := NewDefaultConfig()
-	config.EventsTransport = EventsTransportSSE
-	config.URL = "http://non-existing-marathon-host.local:5555"
-	endpoint := newFakeMarathonEndpoint(t, &config)
+	clientCfg := NewDefaultConfig()
+	config := &ConfigContainer{
+		client: &clientCfg,
+	}
+	config.client.EventsTransport = EventsTransportSSE
+	config.client.URL = "http://non-existing-marathon-host.local:5555"
+	endpoint := newFakeMarathonEndpoint(t, config)
 	defer endpoint.Close()
 
 	events := make(EventsChannel)
@@ -135,8 +138,11 @@ func TestEventStreamConnectionErrorsForwarded(t *testing.T) {
 }
 
 func TestEventStreamEventsReceived(t *testing.T) {
-	config := NewDefaultConfig()
-	config.EventsTransport = EventsTransportSSE
+	clientCfg := NewDefaultConfig()
+	config := ConfigContainer{
+		client: &clientCfg,
+	}
+	config.client.EventsTransport = EventsTransportSSE
 	endpoint := newFakeMarathonEndpoint(t, &config)
 	defer endpoint.Close()
 
