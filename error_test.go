@@ -143,14 +143,14 @@ func content400() string {
 	return `{
 	"message": "Invalid JSON",
 	"details": [
-	{
-		"path": "/id",
-		"errors": ["error.expected.jsstring", "error.something.else"]
-	},
-	{
-		"path": "/name",
-		"errors": ["error.not.inventive"]
-	}
+		{
+			"path": "/id",
+			"errors": ["error.expected.jsstring", "error.something.else"]
+		},
+		{
+			"path": "/name",
+			"errors": ["error.not.inventive"]
+		}
 	]
 }`
 }
