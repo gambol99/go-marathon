@@ -109,20 +109,24 @@ func (def *simpleErrDef) errCode() int {
 	return def.code
 }
 
+type detailDescription struct {
+	Path   string   `json:"path"`
+	Errors []string `json:"errors"`
+}
+
+func (d detailDescription) String() string {
+	return fmt.Sprintf("path: '%s' errors: %s", d.Path, strings.Join(d.Errors, ", "))
+}
+
 type badRequestDef struct {
-	Message string `json:"message"`
-	Details []struct {
-		Path   string   `json:"path"`
-		Errors []string `json:"errors"`
-	} `json:"details"`
+	Message string              `json:"message"`
+	Details []detailDescription `json:"details"`
 }
 
 func (def *badRequestDef) message() string {
 	var details []string
 	for _, detail := range def.Details {
-		errDesc := fmt.Sprintf("path: '%s' errors: %s", detail.Path,
-			strings.Join(detail.Errors, ", "))
-		details = append(details, errDesc)
+		details = append(details, detail.String())
 	}
 
 	return fmt.Sprintf("%s (%s)", def.Message, strings.Join(details, "; "))
@@ -162,13 +166,16 @@ func (def *conflictDef) errCode() int {
 }
 
 type unprocessableEntityDetails []struct {
+	// Used in Marathon >= 1.0.0-RC1.
+	detailDescription
+	// Used in Marathon < 1.0.0-RC1.
 	Attribute string `json:"attribute"`
 	Error     string `json:"error"`
 }
 
 type unprocessableEntityDef struct {
 	Message string `json:"message"`
-	// Name used in Marathon 0.15.0+.
+	// Name used in Marathon >= 0.15.0.
 	Details unprocessableEntityDetails `json:"details"`
 	// Name used in Marathon < 0.15.0.
 	Errors unprocessableEntityDetails `json:"errors"`
@@ -178,14 +185,22 @@ func (def *unprocessableEntityDef) message() string {
 	joinDetails := func(details unprocessableEntityDetails) []string {
 		var res []string
 		for _, detail := range details {
-			res = append(res,
-				fmt.Sprintf("attribute '%s': %s", detail.Attribute, detail.Error))
+			res = append(res, fmt.Sprintf("attribute '%s': %s", detail.Attribute, detail.Error))
 		}
 		return res
 	}
 
-	details := joinDetails(def.Details)
-	details = append(details, joinDetails(def.Errors)...)
+	var details []string
+	switch {
+	case len(def.Errors) > 0:
+		details = joinDetails(def.Errors)
+	case len(def.Details) > 0 && len(def.Details[0].Attribute) > 0:
+		details = joinDetails(def.Details)
+	default:
+		for _, detail := range def.Details {
+			details = append(details, detail.detailDescription.String())
+		}
+	}
 
 	return fmt.Sprintf("%s (%s)", def.Message, strings.Join(details, "; "))
 }

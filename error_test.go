@@ -77,21 +77,29 @@ func TestErrors(t *testing.T) {
 			errText:    "App is locked (locking deployment IDs: 97c136bf-5a28-4821-9d94-480d9fbb01c8)",
 			content:    `{"message":"App is locked", "deployments": [ { "id": "97c136bf-5a28-4821-9d94-480d9fbb01c8" } ] }`,
 		},
-		// 422 "details" key
+		// 422 pre-1.0 "details" key
 		{
 			httpCode:   422,
-			nameSuffix: "details key",
+			nameSuffix: "pre-1.0 details key",
 			errCode:    ErrCodeInvalidBean,
 			errText:    "Something is not valid (attribute 'upgradeStrategy.minimumHealthCapacity': is greater than 1; attribute 'foobar': foo does not have enough bar)",
 			content:    content422("details"),
 		},
-		// 422 "errors" key
+		// 422 pre-1.0 "errors" key
 		{
 			httpCode:   422,
-			nameSuffix: "errors key",
+			nameSuffix: "pre-1.0 errors key",
 			errCode:    ErrCodeInvalidBean,
 			errText:    "Something is not valid (attribute 'upgradeStrategy.minimumHealthCapacity': is greater than 1; attribute 'foobar': foo does not have enough bar)",
 			content:    content422("errors"),
+		},
+		// 422 1.0 "invalid object"
+		{
+			httpCode:   422,
+			nameSuffix: "invalid object",
+			errCode:    ErrCodeInvalidBean,
+			errText:    "Object is not valid (path: 'upgradeStrategy.minimumHealthCapacity' errors: is greater than 1; path: '/value' errors: service port conflict app /app1, service port conflict app /app2)",
+			content:    content422V1(),
 		},
 		// 499 unknown error
 		{
@@ -135,14 +143,14 @@ func content400() string {
 	return `{
 	"message": "Invalid JSON",
 	"details": [
-	{
-		"path": "/id",
-		"errors": ["error.expected.jsstring", "error.something.else"]
-	},
-	{
-		"path": "/name",
-		"errors": ["error.not.inventive"]
-	}
+		{
+			"path": "/id",
+			"errors": ["error.expected.jsstring", "error.something.else"]
+		},
+		{
+			"path": "/name",
+			"errors": ["error.not.inventive"]
+		}
 	]
 }`
 }
@@ -161,4 +169,20 @@ func content422(detailsPropKey string) string {
 		}
 	]
 }`, detailsPropKey)
+}
+
+func content422V1() string {
+	return `{
+	"message": "Object is not valid",
+	"details": [
+		{
+			"path": "upgradeStrategy.minimumHealthCapacity",
+			"errors": ["is greater than 1"]
+		},
+		{
+			"path": "/value",
+			"errors": ["service port conflict app /app1", "service port conflict app /app2"]
+		}
+	]
+}`
 }
