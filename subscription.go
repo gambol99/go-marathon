@@ -86,7 +86,7 @@ func (r *marathonClient) SubscriptionURL() string {
 	return fmt.Sprintf("http://%s:%d%s", r.ipAddress, r.config.EventsPort, defaultEventsURL)
 }
 
-// RegisterSubscription registers ourselves with Marathon to receive events from configured transport facility
+// registerSubscription registers ourselves with Marathon to receive events from configured transport facility
 func (r *marathonClient) registerSubscription() error {
 	switch r.config.EventsTransport {
 	case EventsTransportCallback:
@@ -157,16 +157,19 @@ func (r *marathonClient) registerSSESubscription() error {
 	if r.subscribedToSSE {
 		return nil
 	}
-
 	// Get a member from the cluster
 	marathon, err := r.cluster.GetMember()
 	if err != nil {
 		return err
 	}
-	url := fmt.Sprintf("%s/%s", marathon, marathonAPIEventStream)
 
-	// Try to connect to stream
-	stream, err := eventsource.Subscribe(url, "")
+	request, err := r.apiRequest("GET", fmt.Sprintf("%s/%s", marathon, marathonAPIEventStream), nil)
+	if err != nil {
+		return err
+	}
+
+	// Try to connect to stream, reusing the http client settings
+	stream, err := eventsource.SubscribeWith("", r.httpClient, request)
 	if err != nil {
 		return err
 	}

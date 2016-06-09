@@ -39,10 +39,14 @@ const (
 	fakeTaskID        = "fake-app.fake-task"
 	fakeAppNameBroken = "/fake-app-broken"
 	fakeDeploymentID  = "867ed450-f6a8-4d33-9b0e-e11c5513990b"
-	fakeAPIFilename   = "./tests/rest-api/methods.yml"
-	fakeAPIPort       = 3000
 )
 
+var (
+	fakeResponses map[string]string
+	once          sync.Once
+)
+
+// restMethod represents an expected HTTP method and an associated fake response
 type restMethod struct {
 	// the uri of the method
 	URI string `yaml:"uri,omitempty"`
@@ -52,6 +56,22 @@ type restMethod struct {
 	Content string `yaml:"content,omitempty"`
 	// the Marathon Version
 	Version string `yaml:"version,omitempty"`
+}
+
+// serverConfig holds the Marathon server configuration
+type serverConfig struct {
+	// The version of Marathon
+	version string
+	// Username for basic auth
+	username string
+	// Password for basic auth
+	password string
+}
+
+// configContainer holds both server and client Marathon configuration
+type configContainer struct {
+	client *Config
+	server *serverConfig
 }
 
 type fakeServer struct {
@@ -73,83 +93,51 @@ type fakeEvent struct {
 	data string
 }
 
-var uris map[string]*string
-var once sync.Once
-
 func getTestURL(urlString string) string {
 	parsedURL, _ := url.Parse(urlString)
 	return fmt.Sprintf("%s://%s", parsedURL.Scheme, strings.Join([]string{parsedURL.Host, parsedURL.Host, parsedURL.Host}, ","))
 }
 
-func newFakeMarathonEndpoint(t *testing.T, configs *ConfigContainer) *endpoint {
-	once.Do(func() {
-		// step: open and read in the methods yaml
-		contents, err := ioutil.ReadFile(fakeAPIFilename)
-		if err != nil {
-			t.Fatalf("unable to read in the methods yaml file: %s", fakeAPIFilename)
-		}
-		// step: unmarshal the yaml
-		var methods []*restMethod
-		err = yaml.Unmarshal([]byte(contents), &methods)
-		if err != nil {
-			t.Fatalf("Unable to unmarshal the methods yaml, error: %s", err)
-		}
+func newFakeMarathonEndpoint(t *testing.T, configs *configContainer) *endpoint {
+	// step: read in the fake responses if required
+	initFakeMarathonResponses(t)
 
-		// step: construct a hash from the methods
-		uris = make(map[string]*string, 0)
-		for _, method := range methods {
-			key := fmt.Sprintf("%s:%s", method.Method, method.URI)
-			if method.Version != "" {
-				key += fmt.Sprintf(":%s", method.Version)
-			}
-			uris[key] = &method.Content
-		}
-	})
-
+	// step: create a fake SSE event service
 	eventSrv := eventsource.NewServer()
 
+	// step: fill in the default if required
 	defaultConfig := NewDefaultConfig()
-
 	if configs == nil {
-		configs = &ConfigContainer{
-			client: &defaultConfig,
-			server: &ServerConfig{
-				Version: "",
-			},
-
-		}
+		configs = &configContainer{}
 	}
 	if configs.client == nil {
 		configs.client = &defaultConfig
 	}
+	if configs.server == nil {
+		configs.server = &serverConfig{}
+	}
 
+	// step: create the HTTP router
 	mux := http.NewServeMux()
-	mux.HandleFunc("/v2/events", eventSrv.Handler("event"))
-	mux.HandleFunc("/", func(writer http.ResponseWriter, reader *http.Request) {
-		key := fmt.Sprintf("%s:%s", reader.Method, reader.RequestURI)
-		var content *string
-		// First search for a default URI with no version specified
-		if response, found := uris[key]; found {
-			content = response
-		}
-		// If a URI with a matching version is found use that instead
-		if response, found := uris[fmt.Sprintf("%s:%s", key, configs.server.Version)]; found {
-			content = response
-		}
-		if content != nil {
-			writer.Header().Add("Content-Type", "application/json")
-			writer.Write([]byte(*content))
+	mux.HandleFunc("/v2/events", basicAuthMiddleware(configs.server, eventSrv.Handler("event")))
+	mux.HandleFunc("/", basicAuthMiddleware(configs.server, func(writer http.ResponseWriter, reader *http.Request) {
+		content, found := fakeResponses[fmt.Sprintf("%s:%s:%s", reader.Method, reader.RequestURI, configs.server.version)]
+		if !found {
+			http.Error(writer, `{"message": "not found"}`, 404)
 			return
 		}
-		http.Error(writer, `{"message": "not found"}`, 404)
-	})
+		writer.Header().Add("Content-Type", "application/json")
+		writer.Write([]byte(content))
+	}))
 
+	// step: create HTTP test server
 	httpSrv := httptest.NewServer(mux)
 
 	if configs.client.URL == defaultConfig.URL {
 		configs.client.URL = getTestURL(httpSrv.URL)
 	}
 
+	// step: create the client for the service
 	client, err := NewClient(*configs.client)
 	if err != nil {
 		t.Fatalf("Failed to create the fake client, %s, error: %s", configs.client.URL, err)
@@ -163,6 +151,52 @@ func newFakeMarathonEndpoint(t *testing.T, configs *ConfigContainer) *endpoint {
 		Client: client,
 		URL:    configs.client.URL,
 	}
+}
+
+// basicAuthMiddleware handles basic auth
+func basicAuthMiddleware(server *serverConfig, next http.HandlerFunc) func(http.ResponseWriter, *http.Request) {
+	unauthorized := `{"message": "invalid username or password"}`
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		// step: is authentication required?
+		if server.username != "" && server.password != "" {
+			u, p, found := r.BasicAuth()
+			// step: if no auth found, error it
+			if !found {
+				http.Error(w, unauthorized, 401)
+				return
+			}
+			// step: if username and password don't match, error it
+			if server.username != u || server.password != p {
+				http.Error(w, unauthorized, 401)
+				return
+			}
+		}
+
+		next(w, r)
+	}
+}
+
+// initFakeMarathonResponses reads in the marathon fake responses from the yaml file
+func initFakeMarathonResponses(t *testing.T) {
+	once.Do(func() {
+		fakeResponses = make(map[string]string, 0)
+		var methods []*restMethod
+
+		// step: read in the content
+		contents, err := ioutil.ReadFile("./tests/rest-api/methods.yml")
+		if err != nil {
+			t.Fatalf("failed to read in the fake yaml responses")
+		}
+
+		err = yaml.Unmarshal([]byte(contents), &methods)
+		if err != nil {
+			t.Fatalf("failed to unmarshal the response")
+		}
+		for _, method := range methods {
+			fakeResponses[fmt.Sprintf("%s:%s:%s", method.Method, method.URI, method.Version)] = method.Content
+		}
+	})
 }
 
 func (t fakeEvent) Id() string {
