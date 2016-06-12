@@ -124,3 +124,61 @@ func TestOneLogLine(t *testing.T) {
 	`
 	assert.Equal(t, `a\n b    c\n d\n\n efgh\n i\r\n\n j\t\n {"json":  "works",\n "f o o": "ba    r"\n }\n `, string(oneLogLine([]byte(in))))
 }
+
+func TestAPIRequestDCOS(t *testing.T) {
+	cases := []struct {
+		DCOSToken       string
+		ServerDCOSToken string
+		ServerUsername  string
+		ServerPassword  string
+		Ok              bool
+	}{
+		{
+			DCOSToken:       "should_pass",
+			ServerDCOSToken: "should_pass",
+			ServerUsername:  "",
+			ServerPassword:  "",
+			Ok:              true,
+		},
+		{
+			DCOSToken:       "should_pass",
+			ServerDCOSToken: "",
+			ServerUsername:  "",
+			ServerPassword:  "",
+			Ok:              true,
+		},
+		{
+			DCOSToken:       "should_not_pass",
+			ServerDCOSToken: "different_token",
+			ServerUsername:  "",
+			ServerPassword:  "",
+			Ok:              false,
+		},
+	}
+	for i, x := range cases {
+		var endpoint *endpoint
+
+		config := NewDefaultConfig()
+		config.DCOSToken = x.DCOSToken
+
+		endpoint = newFakeMarathonEndpoint(t, &configContainer{
+			client: &config,
+			server: &serverConfig{
+				dcosToken: x.ServerDCOSToken,
+				username:  x.ServerUsername,
+				password:  x.ServerPassword,
+			},
+		})
+
+		_, err := endpoint.Client.Applications(nil)
+
+		if x.Ok && err != nil {
+			t.Errorf("case %d, did not expect an error: %s", i, err)
+		}
+		if !x.Ok && err == nil {
+			t.Errorf("case %d, expected to received an error", i)
+		}
+
+		endpoint.Close()
+	}
+}

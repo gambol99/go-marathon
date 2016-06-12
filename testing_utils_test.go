@@ -66,6 +66,8 @@ type serverConfig struct {
 	username string
 	// Password for basic auth
 	password string
+	// Token for authorization in case of DCOS environment
+	dcosToken string
 }
 
 // configContainer holds both server and client Marathon configuration
@@ -119,8 +121,8 @@ func newFakeMarathonEndpoint(t *testing.T, configs *configContainer) *endpoint {
 
 	// step: create the HTTP router
 	mux := http.NewServeMux()
-	mux.HandleFunc("/v2/events", basicAuthMiddleware(configs.server, eventSrv.Handler("event")))
-	mux.HandleFunc("/", basicAuthMiddleware(configs.server, func(writer http.ResponseWriter, reader *http.Request) {
+	mux.HandleFunc("/v2/events", authMiddleware(configs.server, eventSrv.Handler("event")))
+	mux.HandleFunc("/", authMiddleware(configs.server, func(writer http.ResponseWriter, reader *http.Request) {
 		content, found := fakeResponses[fmt.Sprintf("%s:%s:%s", reader.Method, reader.RequestURI, configs.server.version)]
 		if !found {
 			http.Error(writer, `{"message": "not found"}`, 404)
@@ -160,6 +162,45 @@ func basicAuthMiddleware(server *serverConfig, next http.HandlerFunc) func(http.
 	return func(w http.ResponseWriter, r *http.Request) {
 		// step: is authentication required?
 		if server.username != "" && server.password != "" {
+			u, p, found := r.BasicAuth()
+			// step: if no auth found, error it
+			if !found {
+				http.Error(w, unauthorized, 401)
+				return
+			}
+			// step: if username and password don't match, error it
+			if server.username != u || server.password != p {
+				http.Error(w, unauthorized, 401)
+				return
+			}
+		}
+
+		next(w, r)
+	}
+}
+
+// authMiddleware handles basic auth and dcos_acs_token
+func authMiddleware(server *serverConfig, next http.HandlerFunc) func(http.ResponseWriter, *http.Request) {
+	unauthorized := `{"message": "invalid username or password"}`
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		// step: is authentication required?
+
+		if server.dcosToken != "" {
+			headerValue := r.Header.Get("Authorization")
+			// step: if no auth found, error it
+			if headerValue == "" {
+				http.Error(w, unauthorized, 401)
+				return
+			}
+
+			s := strings.Split(headerValue, "=")
+
+			if s[1] != server.dcosToken {
+				http.Error(w, unauthorized, 401)
+				return
+			}
+		} else if server.username != "" && server.password != "" {
 			u, p, found := r.BasicAuth()
 			// step: if no auth found, error it
 			if !found {

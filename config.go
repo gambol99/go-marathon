@@ -41,6 +41,8 @@ type Config struct {
 	HTTPBasicPassword string
 	// CallbackURL custom callback url
 	CallbackURL string
+	// DCOSToken for DCOS environment, This will override the Authorization header
+	DCOSToken string
 	// LogOutput the output for debug log messages
 	LogOutput io.Writer
 	// HTTPClient is the http client

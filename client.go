@@ -222,12 +222,20 @@ func (r *marathonClient) apiDelete(uri string, post, result interface{}) error {
 }
 
 func (r *marathonClient) apiCall(method, uri string, body, result interface{}) error {
+
 	// Get a member from the cluster
 	marathon, err := r.cluster.GetMember()
 	if err != nil {
 		return err
 	}
-	url := fmt.Sprintf("%s/%s", marathon, uri)
+
+	var url string
+
+	if r.config.DCOSToken != "" {
+		url = fmt.Sprintf("%s/%s", marathon+"/marathon", uri)
+	} else {
+		url = fmt.Sprintf("%s/%s", marathon, uri)
+	}
 
 	var jsonBody []byte
 	if body != nil {
@@ -269,7 +277,6 @@ func (r *marathonClient) apiCall(method, uri string, body, result interface{}) e
 		}
 		return nil
 	}
-
 	return NewAPIError(response.StatusCode, respBody)
 }
 
@@ -284,6 +291,10 @@ func (r *marathonClient) apiRequest(method, url string, reader io.Reader) (*http
 	// Add any basic auth and the content headers
 	if r.config.HTTPBasicAuthUser != "" && r.config.HTTPBasicPassword != "" {
 		request.SetBasicAuth(r.config.HTTPBasicAuthUser, r.config.HTTPBasicPassword)
+	}
+
+	if r.config.DCOSToken != "" {
+		request.Header.Add("Authorization", "token="+r.config.DCOSToken)
 	}
 
 	request.Header.Add("Content-Type", "application/json")
