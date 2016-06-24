@@ -37,6 +37,25 @@ type Groups struct {
 	Groups       []*Group       `json:"groups"`
 }
 
+// GetGroupOpts contains a payload for Group and Groups method
+//		embed:		Embeds nested resources that match the supplied path.
+// 					You can specify this parameter multiple times with different values
+type GetGroupOpts struct {
+	Embed []string `url:"embed,omitempty"`
+}
+
+// DeleteGroupOpts contains a payload for DeleteGroup method
+//		force:		overrides a currently running deployment.
+type DeleteGroupOpts struct {
+	Force bool `url:"force,omitempty"`
+}
+
+// UpdateGroupOpts contains a payload for UpdateGroup method
+//		force:		overrides a currently running deployment.
+type UpdateGroupOpts struct {
+	Force bool `url:"force,omitempty"`
+}
+
 // NewApplicationGroup create a new application group
 //		name:			the name of the group
 func NewApplicationGroup(name string) *Group {
@@ -79,6 +98,35 @@ func (r *marathonClient) Groups() (*Groups, error) {
 func (r *marathonClient) Group(name string) (*Group, error) {
 	group := new(Group)
 	if err := r.apiGet(fmt.Sprintf("%s/%s", marathonAPIGroups, trimRootPath(name)), nil, group); err != nil {
+		return nil, err
+	}
+	return group, nil
+}
+
+// GroupsBy retrieves a list of all the groups from marathon by embed options
+//		opts:		GetGroupOpts request payload
+func (r *marathonClient) GroupsBy(opts *GetGroupOpts) (*Groups, error) {
+	u, err := addOptions(marathonAPIGroups, opts)
+	if err != nil {
+		return nil, err
+	}
+	groups := new(Groups)
+	if err := r.apiGet(u, "", groups); err != nil {
+		return nil, err
+	}
+	return groups, nil
+}
+
+// GroupBy retrieves the configuration of a specific group from marathon
+//		name:			the identifier for the group
+//		opts:			GetGroupOpts request payload
+func (r *marathonClient) GroupBy(name string, opts *GetGroupOpts) (*Group, error) {
+	u, err := addOptions(fmt.Sprintf("%s/%s", marathonAPIGroups, trimRootPath(name)), opts)
+	if err != nil {
+		return nil, err
+	}
+	group := new(Group)
+	if err := r.apiGet(u, nil, group); err != nil {
 		return nil, err
 	}
 	return group, nil
@@ -157,9 +205,13 @@ func (r *marathonClient) WaitOnGroup(name string, timeout time.Duration) error {
 
 // DeleteGroup deletes a group from marathon
 //		name:			the identifier for the group
-func (r *marathonClient) DeleteGroup(name string) (*DeploymentID, error) {
+//		force:			used to force the delete operation in case of blocked deployment
+func (r *marathonClient) DeleteGroup(name string, force bool) (*DeploymentID, error) {
 	version := new(DeploymentID)
 	uri := fmt.Sprintf("%s/%s", marathonAPIGroups, trimRootPath(name))
+	if force {
+		uri = uri + "?force=true"
+	}
 	if err := r.apiDelete(uri, nil, version); err != nil {
 		return nil, err
 	}
@@ -170,9 +222,13 @@ func (r *marathonClient) DeleteGroup(name string) (*DeploymentID, error) {
 // UpdateGroup updates the parameters of a groups
 //		name:			the identifier for the group
 //		group:  		the group structure with the new params
-func (r *marathonClient) UpdateGroup(name string, group *Group) (*DeploymentID, error) {
+//		force:			used to force the update operation in case of blocked deployment
+func (r *marathonClient) UpdateGroup(name string, group *Group, force bool) (*DeploymentID, error) {
 	deploymentID := new(DeploymentID)
 	uri := fmt.Sprintf("%s/%s", marathonAPIGroups, trimRootPath(name))
+	if force {
+		uri = uri + "?force=true"
+	}
 	if err := r.apiPut(uri, group, deploymentID); err != nil {
 		return nil, err
 	}

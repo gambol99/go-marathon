@@ -217,6 +217,13 @@
       "deploymentId": "83b215a6-4e26-4e44-9333-5c385eda6438",
       "version": "2014-08-26T07:37:50.462Z"
     }
+- uri: /v2/apps/fake-app?force=true
+  method: DELETE
+  content: |
+    {
+      "deploymentId": "83b215a6-4e26-4e44-9333-5c385eda6438",
+      "version": "2014-08-26T07:37:50.462Z"
+    }
 - uri: /v2/apps/fake-app/tasks
   method: GET
   content: |

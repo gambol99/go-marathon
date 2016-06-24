@@ -95,6 +95,19 @@ type Fetch struct {
 	Cache      bool   `json:"cache"`
 }
 
+// GetAppOpts contains a payload for Application method
+//		embed:	Embeds nested resources that match the supplied path.
+// 				You can specify this parameter multiple times with different values
+type GetAppOpts struct {
+	Embed []string `url:"embed,omitempty"`
+}
+
+// DeleteAppOpts contains a payload for DeleteApplication method
+//		force:		overrides a currently running deployment.
+type DeleteAppOpts struct {
+	Force bool `url:"force,omitempty"`
+}
+
 // NewDockerApplication creates a default docker application
 func NewDockerApplication() *Application {
 	application := new(Application)
@@ -472,6 +485,25 @@ func (r *marathonClient) Application(name string) (*Application, error) {
 	return wrapper.Application, nil
 }
 
+// ApplicationBy retrieves the application configuration from marathon
+// 		name: 		the id used to identify the application
+//		opts:		GetAppOpts request payload
+func (r *marathonClient) ApplicationBy(name string, opts *GetAppOpts) (*Application, error) {
+	u, err := addOptions(buildURI(name), opts)
+	if err != nil {
+		return nil, err
+	}
+	var wrapper struct {
+		Application *Application `json:"app"`
+	}
+
+	if err := r.apiGet(u, nil, &wrapper); err != nil {
+		return nil, err
+	}
+
+	return wrapper.Application, nil
+}
+
 // ApplicationByVersion retrieves the application configuration from marathon
 // 		name: 		the id used to identify the application
 // 		version:  the version of the configuration you would like to receive
@@ -577,10 +609,12 @@ func (r *marathonClient) appExistAndRunning(name string) bool {
 
 // DeleteApplication deletes an application from marathon
 // 		name: 		the id used to identify the application
-func (r *marathonClient) DeleteApplication(name string) (*DeploymentID, error) {
+//		force:		used to force the delete operation in case of blocked deployment
+func (r *marathonClient) DeleteApplication(name string, force bool) (*DeploymentID, error) {
+	uri := buildURIWithForceParam(name, force)
 	// step: check of the application already exists
 	deployID := new(DeploymentID)
-	if err := r.apiDelete(buildURI(name), nil, deployID); err != nil {
+	if err := r.apiDelete(uri, nil, deployID); err != nil {
 		return nil, err
 	}
 

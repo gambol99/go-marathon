@@ -60,7 +60,7 @@ func main() {
 	assert(err)
 	if found {
 		log.Printf("Deleting the group: %s, as it already exists", groupName)
-		id, err := client.DeleteGroup(groupName)
+		id, err := client.DeleteGroup(groupName, true)
 		assert(err)
 		err = client.WaitOnDeployment(id.DeploymentID, 0)
 		assert(err)
@@ -110,7 +110,7 @@ func main() {
 	log.Printf("Updating the group paramaters")
 	frontend.Count(4)
 
-	id, err := client.UpdateGroup(groupName, group)
+	id, err := client.UpdateGroup(groupName, group, true)
 	assert(err)
 	log.Printf("Successfully updated the group: %s, version: %s", group.ID, id.DeploymentID)
 	assert(client.WaitOnGroup(groupName, 500*time.Second))

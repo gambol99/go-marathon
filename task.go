@@ -60,12 +60,14 @@ type AllTasksOpts struct {
 type KillApplicationTasksOpts struct {
 	Host  string `url:"host,omitempty"`
 	Scale bool   `url:"scale,omitempty"`
+	Force bool   `url:"force,omitempty"`
 }
 
 // KillTaskOpts contains a payload for task killing methods
 //		scale:		Scale the app down
 type KillTaskOpts struct {
 	Scale bool `url:"scale,omitempty"`
+	Force bool `url:"force,omitempty"`
 }
 
 // HasHealthCheckResults checks if the task has any health checks

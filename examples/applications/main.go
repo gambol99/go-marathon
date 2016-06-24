@@ -67,7 +67,7 @@ func main() {
 	applicationName := "/my/product"
 
 	if _, err := client.Application(applicationName); err == nil {
-		deployID, err := client.DeleteApplication(applicationName)
+		deployID, err := client.DeleteApplication(applicationName, false)
 		assert(err)
 		waitOnDeployment(client, deployID)
 	}
@@ -101,7 +101,7 @@ func main() {
 	log.Printf("Successfully scaled the application, deployID: %s", deployID.DeploymentID)
 
 	log.Printf("Deleting the application: %s", applicationName)
-	deployID, err = client.DeleteApplication(application.ID)
+	deployID, err = client.DeleteApplication(application.ID, true)
 	assert(err)
 	waitOnDeployment(client, deployID)
 	log.Printf("Successfully deleted the application")
