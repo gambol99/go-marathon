@@ -62,13 +62,13 @@ type Application struct {
 	TasksUnhealthy        int                 `json:"tasksUnhealthy,omitempty"`
 	User                  string              `json:"user,omitempty"`
 	UpgradeStrategy       *UpgradeStrategy    `json:"upgradeStrategy,omitempty"`
-	Uris                  *[]string           `json:"uris"`
+	Uris                  *[]string           `json:"uris,omitempty"`
 	Version               string              `json:"version,omitempty"`
 	VersionInfo           *VersionInfo        `json:"versionInfo,omitempty"`
 	Labels                *map[string]string  `json:"labels,omitempty"`
 	AcceptedResourceRoles []string            `json:"acceptedResourceRoles,omitempty"`
 	LastTaskFailure       *LastTaskFailure    `json:"lastTaskFailure,omitempty"`
-	Fetch                 []Fetch             `json:"fetch"`
+	Fetch                 *[]Fetch            `json:"fetch,omitempty"`
 }
 
 // ApplicationVersions is a collection of application versions for a specific app in marathon
@@ -395,6 +395,29 @@ func (r *Application) AddUris(newUris ...string) *Application {
 // keep the current value)
 func (r *Application) EmptyUris() *Application {
 	r.Uris = &[]string{}
+
+	return r
+}
+
+// AddFetchURIs adds one or more fetch URIs to the application.
+//		fetchURIs:	the fetch URI(s) to add.
+func (r *Application) AddFetchURIs(fetchURIs ...Fetch) *Application {
+	if r.Fetch == nil {
+		r.EmptyFetchURIs()
+	}
+
+	fetch := *r.Fetch
+	fetch = append(fetch, fetchURIs...)
+	r.Fetch = &fetch
+
+	return r
+}
+
+// EmptyFetchURIs explicitly empties fetch URIs -- use this if you need to empty
+// fetch URIs of an application that already has fetch URIs set.
+// Setting fetch URIs to nil will keep the current value.
+func (r *Application) EmptyFetchURIs() *Application {
+	r.Fetch = &[]Fetch{}
 
 	return r
 }

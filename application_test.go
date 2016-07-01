@@ -322,6 +322,21 @@ func TestApplicationUris(t *testing.T) {
 	assert.Equal(t, 0, len(*app.Uris))
 }
 
+func TestApplicationFetchURIs(t *testing.T) {
+	app := NewDockerApplication()
+	assert.Nil(t, app.Fetch)
+	app.AddFetchURIs(Fetch{URI: "file://uri1.tar.gz"}).
+		AddFetchURIs(Fetch{URI: "file://uri2.tar.gz"}, Fetch{URI: "file://uri3.tar.gz"})
+	assert.Equal(t, 3, len(*app.Fetch))
+	assert.Equal(t, Fetch{URI: "file://uri1.tar.gz"}, (*app.Fetch)[0])
+	assert.Equal(t, Fetch{URI: "file://uri2.tar.gz"}, (*app.Fetch)[1])
+	assert.Equal(t, Fetch{URI: "file://uri3.tar.gz"}, (*app.Fetch)[2])
+
+	app.EmptyUris()
+	assert.NotNil(t, app.Uris)
+	assert.Equal(t, 0, len(*app.Uris))
+}
+
 func TestSetApplicationVersion(t *testing.T) {
 	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
