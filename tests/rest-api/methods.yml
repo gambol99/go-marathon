@@ -1012,6 +1012,11 @@
     {
         "queue": [
             {
+                "count": 10,
+                "delay": {
+                  "overdue": true,
+                  "timeLeftSeconds": 784
+                },
                 "app": {
                     "args": null,
                     "backoffFactor": 1.15,
@@ -1039,11 +1044,14 @@
                     ],
                     "user": null,
                     "version": "2014-08-26T05:04:49.766Z"
-                },
-                "delay": { "overdue": true }
+                }
             }
         ]
     }
+
+- uri: /v2/queue/fake-app/delay
+  method: DELETE
+
 - uri: /v2/leader
   method: GET
   content: |
@@ -1238,5 +1246,3 @@
         }
     ]
     }
-
-

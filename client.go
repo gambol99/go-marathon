@@ -126,6 +126,12 @@ type Marathon interface {
 	// remove our self from subscriptions
 	Unsubscribe(string) error
 
+	// --- QUEUE ---
+	// get marathon lanuch queue
+	Queue() (*Queue, error)
+	// resets task launch delay of the specific application
+	DeleteQueueDelay(appID string) error
+
 	// --- MISC ---
 
 	// get the marathon url
