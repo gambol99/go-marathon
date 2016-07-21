@@ -563,6 +563,12 @@ func (r *marathonClient) ApplicationOK(name string) (bool, error) {
 
 	// step: iterate the application checks and look for false
 	for _, task := range application.Tasks {
+		// Health check results may not be available immediately. Assume
+		// non-healthiness if they are missing for any task.
+		if task.HealthCheckResults == nil {
+			return false, nil
+		}
+
 		for _, check := range task.HealthCheckResults {
 			//When a task is flapping in Marathon, this is sometimes nil
 			if check == nil || !check.Alive {

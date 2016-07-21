@@ -1246,3 +1246,51 @@
         }
     ]
     }
+- uri: /v2/apps/no-health-check-results-app
+  method: GET
+  content: |
+    {
+    "app": {
+        "healthChecks": [
+            {
+                "command": null,
+                "gracePeriodSeconds": 5,
+                "intervalSeconds": 10,
+                "maxConsecutiveFailures": 3,
+                "path": "/health",
+                "portIndex": 0,
+                "protocol": "HTTP",
+                "timeoutSeconds": 10
+            }
+        ],
+        "id": "/no-health-check-results-app",
+        "instances": 2,
+        "mem": 32.0,
+        "ports": [
+            10000
+        ],
+        "tasks": [
+            {
+                "appId": "/no-health-check-results-app",
+                "healthCheckResults": [
+                    {
+                        "alive": true,
+                        "consecutiveFailures": 0,
+                        "firstSuccess": "2014-09-13T00:20:28.101Z",
+                        "lastFailure": null,
+                        "lastSuccess": "2014-09-13T00:25:07.506Z",
+                        "taskId": "toggle.802df2ae-3ad4-11e4-a400-56847afe9799"
+                    }
+                ],
+                "id": "task1.802df2ae-3ad4-11e4-a400-56847afe9799"
+            },
+            {
+                "appId": "/no-health-check-results-app",
+                "id": "task2.7c99814d-3ad4-11e4-a400-56847afe9799"
+            }
+        ],
+        "tasksRunning": 2,
+        "tasksStaged": 0,
+        "version": "2014-09-12T23:28:21.737Z"
+    }
+    }
