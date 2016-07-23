@@ -388,6 +388,9 @@ func TestApplicationOK(t *testing.T) {
 	ok, err = endpoint.Client.ApplicationOK(fakeAppNameBroken)
 	assert.NoError(t, err)
 	assert.False(t, ok)
+	ok, err = endpoint.Client.ApplicationOK(fakeAppNameUnhealthy)
+	assert.NoError(t, err)
+	assert.False(t, ok)
 }
 
 func verifyApplication(application *Application, t *testing.T) {
