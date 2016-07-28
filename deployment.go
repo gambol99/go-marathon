@@ -56,23 +56,11 @@ type DeploymentStepV1 struct {
 
 // DeploymentPlan is a collection of steps for application deployment
 type DeploymentPlan struct {
-	ID       string `json:"id"`
-	Version  string `json:"version"`
-	Original struct {
-		Apps         []*Application `json:"apps"`
-		Dependencies []string       `json:"dependencies"`
-		Groups       []*Group       `json:"groups"`
-		ID           string         `json:"id"`
-		Version      string         `json:"version"`
-	} `json:"original"`
-	Steps  []*DeploymentStep `json:"steps"`
-	Target struct {
-		Apps         []*Application `json:"apps"`
-		Dependencies []string       `json:"dependencies"`
-		Groups       []*Group       `json:"groups"`
-		ID           string         `json:"id"`
-		Version      string         `json:"version"`
-	} `json:"target"`
+	ID       string            `json:"id"`
+	Version  string            `json:"version"`
+	Original *Group            `json:"original"`
+	Target   *Group            `json:"target"`
+	Steps    []*DeploymentStep `json:"steps"`
 }
 
 // Deployments retrieves a list of current deployments
