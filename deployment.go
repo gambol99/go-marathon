@@ -46,8 +46,8 @@ type DeploymentStep struct {
 	App    string `json:"app"`
 }
 
-// DeploymentStepV1 is a Marathon v1.X-compatible DeploymentStep
-type DeploymentStepV1 struct {
+// StepActions is a series of deployment steps
+type StepActions struct {
 	Actions []struct {
 		Type string `json:"type"`
 		App  string `json:"app"`
@@ -76,7 +76,7 @@ func (r *marathonClient) Deployments() ([]*Deployment, error) {
 		// Unmarshal pre-v1.X step
 		if err := json.Unmarshal(deployment.XXStepsRaw, &deployment.Steps); err != nil {
 			deployment.Steps = make([][]*DeploymentStep, 0)
-			var steps []*DeploymentStepV1
+			var steps []*StepActions
 			// Unmarshal v1.X Marathon step
 			if err := json.Unmarshal(deployment.XXStepsRaw, &steps); err != nil {
 				return nil, err

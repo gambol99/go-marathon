@@ -109,6 +109,37 @@ var testCases = map[string]*testCase{
 			},
 		},
 	},
+	"deployment_info": &testCase{
+		`{
+			"eventType": "deployment_info",
+			"timestamp": "2016-07-29T08:03:52.542Z",
+			"plan": {},
+			"currentStep": {
+				"actions": [
+					{
+						"type": "ScaleApplication",
+						"app": "/my-app"
+					}
+				]
+			}
+		}`,
+		&EventDeploymentInfo{
+			EventType: "deployment_info",
+			Timestamp: "2016-07-29T08:03:52.542Z",
+			Plan:      &DeploymentPlan{},
+			CurrentStep: &StepActions{
+				Actions: []struct {
+					Type string `json:"type"`
+					App  string `json:"app"`
+				}{
+					{
+						Type: "ScaleApplication",
+						App:  "/my-app",
+					},
+				},
+			},
+		},
+	},
 }
 
 func TestSubscriptions(t *testing.T) {
@@ -147,7 +178,7 @@ func TestEventStreamEventsReceived(t *testing.T) {
 	defer endpoint.Close()
 
 	events := make(EventsChannel)
-	err := endpoint.Client.AddEventsListener(events, EventIDApplications)
+	err := endpoint.Client.AddEventsListener(events, EventIDApplications|EventIDDeploymentInfo)
 	assert.NoError(t, err)
 
 	// Publish test events
