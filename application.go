@@ -654,11 +654,9 @@ func (r *marathonClient) DeleteApplication(name string, force bool) (*Deployment
 // 		name: 		the id used to identify the application
 func (r *marathonClient) RestartApplication(name string, force bool) (*DeploymentID, error) {
 	deployment := new(DeploymentID)
-	var options struct {
-		Force bool `json:"force"`
-	}
-	options.Force = force
-	if err := r.apiPost(fmt.Sprintf("%s/restart", buildURI(name)), &options, deployment); err != nil {
+	var options struct{}
+	uri := buildURIWithForceParam(fmt.Sprintf("%s/restart", name), force)
+	if err := r.apiPost(uri, &options, deployment); err != nil {
 		return nil, err
 	}
 
