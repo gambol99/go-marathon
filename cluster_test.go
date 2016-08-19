@@ -51,6 +51,13 @@ func TestGetMember(t *testing.T) {
 	assert.Equal(t, member, "http://127.0.0.1:3000")
 }
 
+func TestGetMemberWithPath(t *testing.T) {
+	cluster, _ := newCluster(http.DefaultClient, fakeMarathonURLWithPath)
+	member, err := cluster.GetMember()
+	assert.NoError(t, err)
+	assert.Equal(t, member, "http://127.0.0.1:3000/path")
+}
+
 func TestMarkDown(t *testing.T) {
 	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()

@@ -32,14 +32,15 @@ import (
 )
 
 const (
-	fakeMarathonURL      = "http://127.0.0.1:3000,127.0.0.1:3000,127.0.0.1:3000"
-	fakeGroupName        = "/test"
-	fakeGroupName1       = "/qa/product/1"
-	fakeAppName          = "/fake-app"
-	fakeTaskID           = "fake-app.fake-task"
-	fakeAppNameBroken    = "/fake-app-broken"
-	fakeDeploymentID     = "867ed450-f6a8-4d33-9b0e-e11c5513990b"
-	fakeAppNameUnhealthy = "/no-health-check-results-app"
+	fakeMarathonURL         = "http://127.0.0.1:3000,127.0.0.1:3000,127.0.0.1:3000"
+	fakeMarathonURLWithPath = "http://127.0.0.1:3000/path,127.0.0.1:3000/path,127.0.0.1:3000/path"
+	fakeGroupName           = "/test"
+	fakeGroupName1          = "/qa/product/1"
+	fakeAppName             = "/fake-app"
+	fakeTaskID              = "fake-app.fake-task"
+	fakeAppNameBroken       = "/fake-app-broken"
+	fakeDeploymentID        = "867ed450-f6a8-4d33-9b0e-e11c5513990b"
+	fakeAppNameUnhealthy    = "/no-health-check-results-app"
 )
 
 var (
