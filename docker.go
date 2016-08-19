@@ -128,6 +128,12 @@ func (docker *Docker) Bridged() *Docker {
 	return docker
 }
 
+// Host sets the networking mode to host
+func (docker *Docker) Host() *Docker {
+	docker.Network = "HOST"
+	return docker
+}
+
 // Expose sets the container to expose the following TCP ports
 //		ports:			the TCP ports the container is exposing
 func (docker *Docker) Expose(ports ...int) *Docker {
