@@ -183,7 +183,7 @@ for {
 		log.Printf("Exiting the loop")
 		done = true
 	case event := <-events:
-		log.Printf("Recieved event: %s", event)
+		log.Printf("Received event: %s", event)
 	}
 }
 
@@ -232,7 +232,7 @@ for {
 		log.Printf("Exiting the loop")
 		done = true
 	case event := <-events:
-		log.Printf("Recieved event: %s", event)
+		log.Printf("Received event: %s", event)
 	}
 }
 
