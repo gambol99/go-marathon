@@ -203,6 +203,17 @@
         }
     ]
     }
+- uri: /v2/apps?cmd=nginx
+  method: GET
+  content: |
+    {
+    "apps": [
+        {
+            "args": null,
+            "cmd": "nginx"
+        }
+    ]
+    }
 - uri: /v2/apps/fake-app/restart
   method: POST
   content: |

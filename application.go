@@ -434,8 +434,13 @@ func (r *Application) String() string {
 
 // Applications retrieves an array of all the applications which are running in marathon
 func (r *marathonClient) Applications(v url.Values) (*Applications, error) {
+	query := v.Encode()
+	if query != "" {
+		query = "?" + query
+	}
+
 	applications := new(Applications)
-	err := r.apiGet(marathonAPIApps+"?"+v.Encode(), nil, applications)
+	err := r.apiGet(marathonAPIApps+query, nil, applications)
 	if err != nil {
 		return nil, err
 	}
