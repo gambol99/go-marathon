@@ -17,6 +17,7 @@ limitations under the License.
 package marathon
 
 import (
+	"net/url"
 	"testing"
 	"time"
 
@@ -265,6 +266,13 @@ func TestApplications(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, applications)
 	assert.Equal(t, len(applications.Apps), 2)
+
+	v := url.Values{}
+	v.Set("cmd", "nginx")
+	applications, err = endpoint.Client.Applications(v)
+	assert.NoError(t, err)
+	assert.NotNil(t, applications)
+	assert.Equal(t, len(applications.Apps), 1)
 }
 
 func TestListApplications(t *testing.T) {
