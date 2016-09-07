@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.1] - 2016-09-07
+### Fixed
+- Drop question mark-only query parameter in Applications(url.Values) manually
+  due to changed behavior in Go 1.7's net/url.Parse.
+
 ## [0.1.0] - 2016-08-01
 ### Added
 - Field `message` to the EventStatusUpdate struct.
@@ -43,5 +48,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial SemVer release.
 
-[Unreleased]: https://github.com/gambol99/go-marathon/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/gambol99/go-marathon/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/gambol99/go-marathon/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/gambol99/go-marathon/compare/v0.0.1...v0.1.0
