@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- name and labels to portMappings.
+
+### Changed
+- ExposePort() now takes a portMapping instance.
 
 ## [0.1.1] - 2016-09-07
 ### Fixed
