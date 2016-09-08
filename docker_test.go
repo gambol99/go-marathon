@@ -68,3 +68,18 @@ func TestDockerExposeUDP(t *testing.T) {
 	assert.Equal(t, *createPortMapping(5060, "udp"), (*portMappings)[1])
 	assert.Equal(t, *createPortMapping(6881, "udp"), (*portMappings)[2])
 }
+
+func TestPortMappingLabels(t *testing.T) {
+	pm := createPortMapping(80, "tcp")
+
+	pm.AddLabel("hello", "world").AddLabel("foo", "bar")
+
+	assert.Equal(t, 2, len(*pm.Labels))
+	assert.Equal(t, "world", (*pm.Labels)["hello"])
+	assert.Equal(t, "bar", (*pm.Labels)["foo"])
+
+	pm.EmptyLabels()
+
+	assert.NotNil(t, pm.Labels)
+	assert.Equal(t, 0, len(*pm.Labels))
+}
