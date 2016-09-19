@@ -189,6 +189,27 @@ func TestApplicationHealthChecks(t *testing.T) {
 	assert.Equal(t, 0, len(*app.HealthChecks))
 }
 
+func TestApplicationPortDefinitions(t *testing.T) {
+	app := NewDockerApplication()
+	assert.Nil(t, app.PortDefinitions)
+	app.AddPortDefinition(PortDefinition{Protocol: "tcp", Name: "es"}.SetPort(9201).AddLabel("foo", "bar")).
+		AddPortDefinition(PortDefinition{Protocol: "udp,tcp", Name: "syslog"}.SetPort(514))
+
+	assert.Equal(t, 2, len(*app.PortDefinitions))
+	assert.Equal(t, PortDefinition{Protocol: "tcp", Name: "es"}.SetPort(9201).AddLabel("foo", "bar"), (*app.PortDefinitions)[0])
+	assert.Equal(t, 1, len(*(*app.PortDefinitions)[0].Labels))
+	assert.Equal(t, PortDefinition{Protocol: "udp,tcp", Name: "syslog"}.SetPort(514), (*app.PortDefinitions)[1])
+	assert.Nil(t, (*app.PortDefinitions)[1].Labels)
+
+	(*app.PortDefinitions)[0].EmptyLabels()
+	assert.NotNil(t, (*app.PortDefinitions)[0].Labels)
+	assert.Equal(t, 0, len(*(*app.PortDefinitions)[0].Labels))
+
+	app.EmptyPortDefinitions()
+	assert.NotNil(t, app.PortDefinitions)
+	assert.Equal(t, 0, len(*app.PortDefinitions))
+}
+
 func TestHasHealthChecks(t *testing.T) {
 	app := NewDockerApplication()
 	assert.False(t, app.HasHealthChecks())

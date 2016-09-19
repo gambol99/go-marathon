@@ -50,6 +50,7 @@ type Application struct {
 	Mem                   *float64            `json:"mem,omitempty"`
 	Tasks                 []*Task             `json:"tasks,omitempty"`
 	Ports                 []int               `json:"ports"`
+	PortDefinitions       *[]PortDefinition   `json:"portDefinitions,omitempty"`
 	RequirePorts          *bool               `json:"requirePorts,omitempty"`
 	BackoffSeconds        *float64            `json:"backoffSeconds,omitempty"`
 	BackoffFactor         *float64            `json:"backoffFactor,omitempty"`
@@ -174,6 +175,29 @@ func (r *Application) DependsOn(names ...string) *Application {
 //		memory:	the amount of MB to assign
 func (r *Application) Memory(memory float64) *Application {
 	r.Mem = &memory
+
+	return r
+}
+
+// AddPortDefinition adds a port definition. Port definitions are used to define ports that
+// should be considered part of a resource. They are necessary when you are using HOST
+// networking and no port mappings are specified.
+func (r *Application) AddPortDefinition(portDefinition PortDefinition) *Application {
+	if r.PortDefinitions == nil {
+		r.EmptyPortDefinitions()
+	}
+
+	portDefinitions := *r.PortDefinitions
+	portDefinitions = append(portDefinitions, portDefinition)
+	r.PortDefinitions = &portDefinitions
+	return r
+}
+
+// EmptyPortDefinitions explicitly empties port definitions -- use this if you need to empty
+// port definitions of an application that already has port definitions set (setting port definitions to nil will
+// keep the current value)
+func (r *Application) EmptyPortDefinitions() *Application {
+	r.PortDefinitions = &[]PortDefinition{}
 
 	return r
 }
