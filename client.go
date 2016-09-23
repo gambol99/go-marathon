@@ -175,6 +175,8 @@ type marathonClient struct {
 	listeners map[EventsChannel]int
 	// a custom logger for debug log messages
 	debugLog *log.Logger
+	// wait time between repetitive requests to the API during polling
+	pollingWaitTime time.Duration
 }
 
 // NewClient creates a new marathon client
@@ -196,11 +198,12 @@ func NewClient(config Config) (Marathon, error) {
 	}
 
 	return &marathonClient{
-		config:     config,
-		listeners:  make(map[EventsChannel]int, 0),
-		cluster:    cluster,
-		httpClient: config.HTTPClient,
-		debugLog:   log.New(debugLogOutput, "", 0),
+		config:          config,
+		listeners:       make(map[EventsChannel]int, 0),
+		cluster:         cluster,
+		httpClient:      config.HTTPClient,
+		debugLog:        log.New(debugLogOutput, "", 0),
+		pollingWaitTime: time.Duration(config.PollingWaitTime) * time.Millisecond,
 	}, nil
 }
 

@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - ExposePort() now takes a portMapping instance.
 
+### Fixed
+- [#202][PR202]: Timeout error in WaitOnApplication.
+
 ## [0.1.1] - 2016-09-07
 ### Fixed
 - Drop question mark-only query parameter in Applications(url.Values) manually
@@ -56,3 +59,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 [Unreleased]: https://github.com/gambol99/go-marathon/compare/v0.1.1...HEAD
 [0.1.1]: https://github.com/gambol99/go-marathon/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/gambol99/go-marathon/compare/v0.0.1...v0.1.0
+
+[PR202]: https://github.com/gambol99/go-marathon/pull/202

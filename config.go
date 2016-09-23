@@ -20,6 +20,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 // EventsTransport describes which transport should be used to deliver Marathon events
@@ -47,6 +48,8 @@ type Config struct {
 	LogOutput io.Writer
 	// HTTPClient is the http client
 	HTTPClient *http.Client
+	// wait time (in milliseconds) between repetitive requests to the API during polling
+	PollingWaitTime time.Duration
 }
 
 // NewDefaultConfig create a default client config
@@ -57,5 +60,6 @@ func NewDefaultConfig() Config {
 		EventsPort:      10001,
 		EventsInterface: "eth0",
 		LogOutput:       ioutil.Discard,
+		PollingWaitTime: 500 * time.Millisecond,
 	}
 }
