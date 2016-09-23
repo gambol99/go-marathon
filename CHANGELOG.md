@@ -5,11 +5,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.2.0] - 2016-09-23
 ### Added
-- name and labels to portMappings.
+- [#196][PR196]: Port definitions.
+- [#191][PR191]: name and labels to portMappings.
 
 ### Changed
-- ExposePort() now takes a portMapping instance.
+- [#191][PR191] ExposePort() now takes a portMapping instance.
 
 ### Fixed
 - [#202][PR202]: Timeout error in WaitOnApplication.
@@ -56,8 +59,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial SemVer release.
 
-[Unreleased]: https://github.com/gambol99/go-marathon/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/gambol99/go-marathon/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/gambol99/go-marathon/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/gambol99/go-marathon/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/gambol99/go-marathon/compare/v0.0.1...v0.1.0
 
 [PR202]: https://github.com/gambol99/go-marathon/pull/202
+[PR196]: https://github.com/gambol99/go-marathon/pull/196
+[PR191]: https://github.com/gambol99/go-marathon/pull/191
