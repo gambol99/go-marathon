@@ -166,8 +166,7 @@ if err != nil {
 }
 
 // Register for events
-events := make(marathon.EventsChannel, 5)
-err = client.AddEventsListener(events, marathon.EventIDApplications)
+events, err = client.AddEventsListener(marathon.EventIDApplications)
 if err != nil {
 	log.Fatalf("Failed to register for events, %s", err)
 }
@@ -215,8 +214,7 @@ if err != nil {
 }
 
 // Register for events
-events := make(marathon.EventsChannel, 5)
-err = client.AddEventsListener(events, marathon.EventIDApplications)
+events, err = client.AddEventsListener(marathon.EventIDApplications)
 if err != nil {
 	log.Fatalf("Failed to register for events, %s", err)
 }

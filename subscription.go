@@ -45,20 +45,22 @@ func (r *marathonClient) Subscriptions() (*Subscriptions, error) {
 
 // AddEventsListener adds your self as a listener to events from Marathon
 //		channel:	a EventsChannel used to receive event on
-func (r *marathonClient) AddEventsListener(channel EventsChannel, filter int) error {
+func (r *marathonClient) AddEventsListener(filter int) (EventsChannel, error) {
 	r.Lock()
 	defer r.Unlock()
 
 	// step: someone has asked to start listening to event, we need to register for events
 	// if we haven't done so already
 	if err := r.registerSubscription(); err != nil {
-		return err
+		return nil, err
 	}
 
-	if _, found := r.listeners[channel]; !found {
-		r.listeners[channel] = filter
+	channel := make(EventsChannel)
+	r.listeners[channel] = EventsChannelContext{
+		filter: filter,
+		done:   make(chan struct{}, 1),
 	}
-	return nil
+	return channel, nil
 }
 
 // RemoveEventsListener removes the channel from the events listeners
@@ -67,7 +69,8 @@ func (r *marathonClient) RemoveEventsListener(channel EventsChannel) {
 	r.Lock()
 	defer r.Unlock()
 
-	if _, found := r.listeners[channel]; found {
+	if context, found := r.listeners[channel]; found {
+		close(context.done)
 		delete(r.listeners, channel)
 		// step: if there is no one else listening, let's remove ourselves
 		// from the events callback
@@ -249,12 +252,16 @@ func (r *marathonClient) handleEvent(content string) error {
 	defer r.RUnlock()
 
 	// step: check if anyone is listen for this event
-	for channel, filter := range r.listeners {
+	for channel, context := range r.listeners {
 		// step: check if this listener wants this event type
-		if event.ID&filter != 0 {
-			go func(ch EventsChannel, e *Event) {
-				ch <- e
-			}(channel, event)
+		if event.ID&context.filter != 0 {
+			go func(ch EventsChannel, done <-chan struct{}, e *Event) {
+				select {
+				case ch <- e:
+				case <-done:
+					// Terminates goroutine.
+				}
+			}(channel, context.done, event)
 		}
 	}
 
