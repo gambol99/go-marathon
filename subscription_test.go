@@ -17,7 +17,9 @@ limitations under the License.
 package marathon
 
 import (
+	"net/http"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -176,6 +178,10 @@ func TestEventStreamConnectionErrorsForwarded(t *testing.T) {
 	}
 	config.client.EventsTransport = EventsTransportSSE
 	config.client.URL = "http://non-existing-marathon-host.local:5555"
+	// Reduce timeout to speed up test execution time.
+	config.client.HTTPClient = &http.Client{
+		Timeout: 100 * time.Millisecond,
+	}
 	endpoint := newFakeMarathonEndpoint(t, config)
 	defer endpoint.Close()
 

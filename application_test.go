@@ -17,6 +17,7 @@ limitations under the License.
 package marathon
 
 import (
+	"net/http"
 	"net/url"
 	"testing"
 	"time"
@@ -447,6 +448,10 @@ func TestApplication(t *testing.T) {
 
 	config := NewDefaultConfig()
 	config.URL = "http://non-existing-marathon-host.local:5555"
+	// Reduce timeout to speed up test execution time.
+	config.HTTPClient = &http.Client{
+		Timeout: 100 * time.Millisecond,
+	}
 	endpoint = newFakeMarathonEndpoint(t, &configContainer{
 		client: &config,
 	})
