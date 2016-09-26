@@ -993,6 +993,14 @@
         "deploymentId": "0b1467fc-d5cd-4bbc-bac2-2805351cee1e",
         "version": "2014-08-26T08:20:26.171Z"
     }
+- uri: /v2/eventSubscriptions?callbackUrl=http://localhost:9292/callback
+  method: POST
+  content: |
+    {
+            "callbackUrl": "http://localhost:9292/callback",
+            "clientIp": "0:0:0:0:0:0:0:1",
+            "eventType": "subscribe_event"
+        }
 - uri: /v2/eventSubscriptions
   method: POST
   content: |

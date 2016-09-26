@@ -153,6 +153,22 @@ func TestSubscriptions(t *testing.T) {
 	assert.Equal(t, len(sub.CallbackURLs), 1)
 }
 
+func TestSubscribe(t *testing.T) {
+	endpoint := newFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	err := endpoint.Client.Subscribe("http://localhost:9292/callback")
+	assert.NoError(t, err)
+}
+
+func TestUnsubscribe(t *testing.T) {
+	endpoint := newFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	err := endpoint.Client.Unsubscribe("http://localhost:9292/callback")
+	assert.NoError(t, err)
+}
+
 func TestEventStreamConnectionErrorsForwarded(t *testing.T) {
 	clientCfg := NewDefaultConfig()
 	config := &configContainer{

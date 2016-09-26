@@ -5,9 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+- [#201][PR201]: Subscribe method is now exposed on the client to allow subscription of callback URL's
 
 ## [0.2.0] - 2016-09-23
-### Added
 - [#196][PR196]: Port definitions.
 - [#191][PR191]: name and labels to portMappings.
 

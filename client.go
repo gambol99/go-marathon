@@ -123,11 +123,13 @@ type Marathon interface {
 	AddEventsListener(channel EventsChannel, filter int) error
 	// remove a events listener
 	RemoveEventsListener(channel EventsChannel)
-	// remove our self from subscriptions
+	// Subscribe a callback URL
+	Subscribe(string) error
+	// Unsubscribe a callback URL
 	Unsubscribe(string) error
 
 	// --- QUEUE ---
-	// get marathon lanuch queue
+	// get marathon launch queue
 	Queue() (*Queue, error)
 	// resets task launch delay of the specific application
 	DeleteQueueDelay(appID string) error

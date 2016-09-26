@@ -148,6 +148,8 @@ setting with the following possible values: `EventsTransportSSE` and `EventsTran
 See [Event Stream](https://mesosphere.github.io/marathon/docs/rest-api.html#event-stream) and
 [Event Subscriptions](https://mesosphere.github.io/marathon/docs/rest-api.html#event-subscriptions) for details.
 
+Event subscriptions can also be individually controlled with the `Subscribe` and `Unsubscribe` functions. See [Controlling subscriptions](#controlling-subscriptions) for more details.
+
 #### Event Stream
 
 Only available in Marathon >= 0.9.0. Does not require any special configuration or prerequisites.
@@ -241,6 +243,31 @@ client.RemoveEventsListener(events)
 ```
 
 See [events.go](events.go) for a full list of event IDs.
+
+#### Controlling subscriptions
+If you simply want to (de)register event subscribers (i.e. without starting an internal web server) you can use the `Subscribe` and `Unsubscribe` methods.
+
+```Go
+// Configure client
+config := marathon.NewDefaultConfig()
+config.URL = marathonURL
+
+client, err := marathon.NewClient(config)
+if err != nil {
+	log.Fatalf("Failed to create a client for marathon, error: %s", err)
+}
+
+// Register an event subscriber via a callback URL
+callbackURL := "http://10.241.1.71:9494"
+if err := client.Subscribe(callbackURL); err != nil {
+	log.Fatalf("Unable to register the callbackURL [%s], error: %s", callbackURL, err)
+}
+
+// Deregister the same subscriber
+if err := client.Unsubscribe(callbackURL); err != nil {
+	log.Fatalf("Unable to deregister the callbackURL [%s], error: %s", callbackURL, err)
+}
+```
 
 ## Contributing
 

@@ -143,8 +143,7 @@ func (r *marathonClient) registerCallbackSubscription() error {
 	}
 	if !found {
 		// step: we need to register ourselves
-		uri := fmt.Sprintf("%s?callbackUrl=%s", marathonAPISubscription, callback)
-		if err := r.apiPost(uri, "", nil); err != nil {
+		if err := r.Subscribe(callback); err != nil {
 			return err
 		}
 	}
@@ -193,11 +192,19 @@ func (r *marathonClient) registerSSESubscription() error {
 	return nil
 }
 
-// Unsubscribe removes ourselves from Marathon's callback facility
-//	url		: the url you wish to unsubscribe
-func (r *marathonClient) Unsubscribe(callbackURL string) error {
+// Subscribe adds a URL to Marathon's callback facility
+//	callback	: the URL you wish to subscribe
+func (r *marathonClient) Subscribe(callback string) error {
+	uri := fmt.Sprintf("%s?callbackUrl=%s", marathonAPISubscription, callback)
+	return r.apiPost(uri, "", nil)
+
+}
+
+// Unsubscribe removes a URL from Marathon's callback facility
+//	callback	: the URL you wish to unsubscribe
+func (r *marathonClient) Unsubscribe(callback string) error {
 	// step: remove from the list of subscriptions
-	return r.apiDelete(fmt.Sprintf("%s?callbackUrl=%s", marathonAPISubscription, callbackURL), nil, nil)
+	return r.apiDelete(fmt.Sprintf("%s?callbackUrl=%s", marathonAPISubscription, callback), nil, nil)
 }
 
 // HasSubscription checks to see a subscription already exists with Marathon
