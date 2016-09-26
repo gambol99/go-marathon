@@ -65,5 +65,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 [0.1.0]: https://github.com/gambol99/go-marathon/compare/v0.0.1...v0.1.0
 
 [PR202]: https://github.com/gambol99/go-marathon/pull/202
+[PR201]: https://github.com/gambol99/go-marathon/pull/201
 [PR196]: https://github.com/gambol99/go-marathon/pull/196
 [PR191]: https://github.com/gambol99/go-marathon/pull/191
