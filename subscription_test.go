@@ -24,6 +24,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const eventPublishTimeout time.Duration = 250 * time.Millisecond
+
 type testCase struct {
 	source      string
 	expectation interface{}
@@ -185,8 +187,7 @@ func TestEventStreamConnectionErrorsForwarded(t *testing.T) {
 	endpoint := newFakeMarathonEndpoint(t, config)
 	defer endpoint.Close()
 
-	events := make(EventsChannel)
-	err := endpoint.Client.AddEventsListener(events, EventIDApplications)
+	_, err := endpoint.Client.AddEventsListener(EventIDApplications)
 	assert.Error(t, err)
 }
 
@@ -199,8 +200,7 @@ func TestEventStreamEventsReceived(t *testing.T) {
 	endpoint := newFakeMarathonEndpoint(t, &config)
 	defer endpoint.Close()
 
-	events := make(EventsChannel)
-	err := endpoint.Client.AddEventsListener(events, EventIDApplications|EventIDDeploymentInfo)
+	events, err := endpoint.Client.AddEventsListener(EventIDApplications | EventIDDeploymentInfo)
 	assert.NoError(t, err)
 
 	// Publish test events
@@ -212,7 +212,58 @@ func TestEventStreamEventsReceived(t *testing.T) {
 
 	// Receive test events
 	for i := 0; i < len(testCases); i++ {
-		event := <-events
-		assert.Equal(t, testCases[event.Name].expectation, event.Event)
+		select {
+		case event := <-events:
+			assert.Equal(t, testCases[event.Name].expectation, event.Event)
+		case <-time.After(eventPublishTimeout):
+			assert.Fail(t, "did not receive event in time")
+			return
+		}
+	}
+}
+
+func TestEventStreamPrematureTermination(t *testing.T) {
+	if !assert.True(t, len(testCases) > 1, "must have at least 2 test cases to end prematurely") {
+		return
+	}
+
+	clientCfg := NewDefaultConfig()
+	config := configContainer{
+		client: &clientCfg,
+	}
+	config.client.EventsTransport = EventsTransportSSE
+	endpoint := newFakeMarathonEndpoint(t, &config)
+	defer endpoint.Close()
+
+	events, err := endpoint.Client.AddEventsListener(EventIDApplications | EventIDDeploymentInfo)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// Publish test events
+	go func() {
+		for _, testCase := range testCases {
+			endpoint.Server.PublishEvent(testCase.source)
+		}
+	}()
+
+	// Receive single event
+	select {
+	case <-events:
+	case <-time.After(eventPublishTimeout):
+		assert.Fail(t, "did not receive event in time")
+		return
+	}
+
+	// Give event stream some time to buffer another event.
+	time.Sleep(eventPublishTimeout)
+
+	// Trigger done channel closure.
+	endpoint.Client.RemoveEventsListener(events)
+	select {
+	case <-events:
+		assert.Fail(t, "should not have received additional events")
+	default:
+		// All good.
 	}
 }
