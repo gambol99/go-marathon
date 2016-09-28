@@ -26,25 +26,38 @@ import (
 
 const eventPublishTimeout time.Duration = 250 * time.Millisecond
 
+type testCaseList []testCase
+
+func (l testCaseList) find(name string) *testCase {
+	for _, testCase := range l {
+		if testCase.name == name {
+			return &testCase
+		}
+	}
+	return nil
+}
+
 type testCase struct {
+	name        string
 	source      string
 	expectation interface{}
 }
 
-var testCases = map[string]*testCase{
-	"status_update_event": &testCase{
-		`{
-			"eventType": "status_update_event",
-			"timestamp": "2014-03-01T23:29:30.158Z",
-			"slaveId": "20140909-054127-177048842-5050-1494-0",
-			"taskId": "my-app_0-1396592784349",
-			"taskStatus": "TASK_RUNNING",
-			"appId": "/my-app",
-			"host": "slave-1234.acme.org",
-			"ports": [31372],
-			"version": "2014-04-04T06:26:23.051Z"
-		}`,
-		&EventStatusUpdate{
+var testCases = testCaseList{
+	testCase{
+		name: "status_update_event",
+		source: `{
+	"eventType": "status_update_event",
+	"timestamp": "2014-03-01T23:29:30.158Z",
+	"slaveId": "20140909-054127-177048842-5050-1494-0",
+	"taskId": "my-app_0-1396592784349",
+	"taskStatus": "TASK_RUNNING",
+	"appId": "/my-app",
+	"host": "slave-1234.acme.org",
+	"ports": [31372],
+	"version": "2014-04-04T06:26:23.051Z"
+}`,
+		expectation: &EventStatusUpdate{
 			EventType:  "status_update_event",
 			Timestamp:  "2014-03-01T23:29:30.158Z",
 			SlaveID:    "20140909-054127-177048842-5050-1494-0",
@@ -56,16 +69,17 @@ var testCases = map[string]*testCase{
 			Version:    "2014-04-04T06:26:23.051Z",
 		},
 	},
-	"health_status_changed_event": &testCase{
-		`{
-			"eventType": "health_status_changed_event",
-			"timestamp": "2014-03-01T23:29:30.158Z",
-			"appId": "/my-app",
-			"taskId": "my-app_0-1396592784349",
-			"version": "2014-04-04T06:26:23.051Z",
-			"alive": true
-		}`,
-		&EventHealthCheckChanged{
+	testCase{
+		name: "health_status_changed_event",
+		source: `{
+	"eventType": "health_status_changed_event",
+	"timestamp": "2014-03-01T23:29:30.158Z",
+	"appId": "/my-app",
+	"taskId": "my-app_0-1396592784349",
+	"version": "2014-04-04T06:26:23.051Z",
+	"alive": true
+}`,
+		expectation: &EventHealthCheckChanged{
 			EventType: "health_status_changed_event",
 			Timestamp: "2014-03-01T23:29:30.158Z",
 			AppID:     "/my-app",
@@ -74,23 +88,24 @@ var testCases = map[string]*testCase{
 			Alive:     true,
 		},
 	},
-	"failed_health_check_event": &testCase{
-		`{
-			"eventType": "failed_health_check_event",
-			"timestamp": "2014-03-01T23:29:30.158Z",
-			"appId": "/my-app",
-			"taskId": "my-app_0-1396592784349",
-			"healthCheck": {
-				"protocol": "HTTP",
-				"path": "/health",
-				"portIndex": 0,
-				"gracePeriodSeconds": 5,
-				"intervalSeconds": 10,
-				"timeoutSeconds": 10,
-				"maxConsecutiveFailures": 3
-			}
-		}`,
-		&EventFailedHealthCheck{
+	testCase{
+		name: "failed_health_check_event",
+		source: `{
+	"eventType": "failed_health_check_event",
+	"timestamp": "2014-03-01T23:29:30.158Z",
+	"appId": "/my-app",
+	"taskId": "my-app_0-1396592784349",
+	"healthCheck": {
+		"protocol": "HTTP",
+		"path": "/health",
+		"portIndex": 0,
+		"gracePeriodSeconds": 5,
+		"intervalSeconds": 10,
+		"timeoutSeconds": 10,
+		"maxConsecutiveFailures": 3
+	}
+}`,
+		expectation: &EventFailedHealthCheck{
 			EventType: "failed_health_check_event",
 			Timestamp: "2014-03-01T23:29:30.158Z",
 			AppID:     "/my-app",
@@ -113,21 +128,22 @@ var testCases = map[string]*testCase{
 			},
 		},
 	},
-	"deployment_info": &testCase{
-		`{
-			"eventType": "deployment_info",
-			"timestamp": "2016-07-29T08:03:52.542Z",
-			"plan": {},
-			"currentStep": {
-				"actions": [
-					{
-						"type": "ScaleApplication",
-						"app": "/my-app"
-					}
-				]
+	testCase{
+		name: "deployment_info",
+		source: `{
+	"eventType": "deployment_info",
+	"timestamp": "2016-07-29T08:03:52.542Z",
+	"plan": {},
+	"currentStep": {
+		"actions": [
+			{
+				"type": "ScaleApplication",
+				"app": "/my-app"
 			}
-		}`,
-		&EventDeploymentInfo{
+		]
+	}
+}`,
+		expectation: &EventDeploymentInfo{
 			EventType: "deployment_info",
 			Timestamp: "2016-07-29T08:03:52.542Z",
 			Plan:      &DeploymentPlan{},
@@ -192,37 +208,6 @@ func TestEventStreamConnectionErrorsForwarded(t *testing.T) {
 }
 
 func TestEventStreamEventsReceived(t *testing.T) {
-	clientCfg := NewDefaultConfig()
-	config := configContainer{
-		client: &clientCfg,
-	}
-	config.client.EventsTransport = EventsTransportSSE
-	endpoint := newFakeMarathonEndpoint(t, &config)
-	defer endpoint.Close()
-
-	events, err := endpoint.Client.AddEventsListener(EventIDApplications | EventIDDeploymentInfo)
-	assert.NoError(t, err)
-
-	// Publish test events
-	go func() {
-		for _, testCase := range testCases {
-			endpoint.Server.PublishEvent(testCase.source)
-		}
-	}()
-
-	// Receive test events
-	for i := 0; i < len(testCases); i++ {
-		select {
-		case event := <-events:
-			assert.Equal(t, testCases[event.Name].expectation, event.Event)
-		case <-time.After(eventPublishTimeout):
-			assert.Fail(t, "did not receive event in time")
-			return
-		}
-	}
-}
-
-func TestEventStreamPrematureTermination(t *testing.T) {
 	if !assert.True(t, len(testCases) > 1, "must have at least 2 test cases to end prematurely") {
 		return
 	}
@@ -236,34 +221,47 @@ func TestEventStreamPrematureTermination(t *testing.T) {
 	defer endpoint.Close()
 
 	events, err := endpoint.Client.AddEventsListener(EventIDApplications | EventIDDeploymentInfo)
-	if !assert.NoError(t, err) {
-		return
+	assert.NoError(t, err)
+
+	almostAllTestCases := testCases[:len(testCases)-1]
+	finalTestCase := testCases[len(testCases)-1]
+
+	// Publish all but one test event.
+	for _, testCase := range almostAllTestCases {
+		endpoint.Server.PublishEvent(testCase.source)
 	}
 
-	// Publish test events
-	go func() {
-		for _, testCase := range testCases {
-			endpoint.Server.PublishEvent(testCase.source)
+	// Receive test events.
+	for i := 0; i < len(almostAllTestCases); i++ {
+		select {
+		case event := <-events:
+			tc := testCases.find(event.Name)
+			if !assert.NotNil(t, tc, "received unknown event: %s", event.Name) {
+				continue
+			}
+			assert.Equal(t, tc.expectation, event.Event)
+		case <-time.After(eventPublishTimeout):
+			assert.Fail(t, "did not receive event in time")
 		}
-	}()
-
-	// Receive single event
-	select {
-	case <-events:
-	case <-time.After(eventPublishTimeout):
-		assert.Fail(t, "did not receive event in time")
-		return
 	}
+
+	// Publish last test event that we do not intend to consume anymore.
+	endpoint.Server.PublishEvent(finalTestCase.source)
 
 	// Give event stream some time to buffer another event.
 	time.Sleep(eventPublishTimeout)
 
 	// Trigger done channel closure.
 	endpoint.Client.RemoveEventsListener(events)
+
+	// Give pending goroutine time to consume done signal.
+	time.Sleep(eventPublishTimeout)
+
+	// Validate that channel is closed.
 	select {
-	case <-events:
-		assert.Fail(t, "should not have received additional events")
+	case _, more := <-events:
+		assert.False(t, more, "should not have received another event")
 	default:
-		// All good.
+		assert.Fail(t, "channel was not closed")
 	}
 }

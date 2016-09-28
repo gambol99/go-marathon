@@ -161,8 +161,9 @@ var (
 
 // EventsChannelContext holds contextual data for an EventsChannel.
 type EventsChannelContext struct {
-	filter int
-	done   chan struct{}
+	filter     int
+	done       chan struct{}
+	completion *sync.WaitGroup
 }
 
 type marathonClient struct {

@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- [#211][PR211] Close event channel on event listener removal.
 
 ## [0.3.0] - 2016-09-28
 - [#201][PR201]: Subscribe method is now exposed on the client to allow subscription of callback URL's
@@ -74,6 +76,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 [0.1.1]: https://github.com/gambol99/go-marathon/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/gambol99/go-marathon/compare/v0.0.1...v0.1.0
 
+[PR211]: https://github.com/gambol99/go-marathon/pull/211
 [PR205]: https://github.com/gambol99/go-marathon/pull/205
 [PR202]: https://github.com/gambol99/go-marathon/pull/202
 [PR201]: https://github.com/gambol99/go-marathon/pull/201
