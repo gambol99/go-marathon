@@ -23,6 +23,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/donovanhide/eventsource"
@@ -57,8 +58,9 @@ func (r *marathonClient) AddEventsListener(filter int) (EventsChannel, error) {
 
 	channel := make(EventsChannel)
 	r.listeners[channel] = EventsChannelContext{
-		filter: filter,
-		done:   make(chan struct{}, 1),
+		filter:     filter,
+		done:       make(chan struct{}, 1),
+		completion: &sync.WaitGroup{},
 	}
 	return channel, nil
 }
@@ -77,6 +79,12 @@ func (r *marathonClient) RemoveEventsListener(channel EventsChannel) {
 		if r.config.EventsTransport == EventsTransportCallback && len(r.listeners) == 0 {
 			r.Unsubscribe(r.SubscriptionURL())
 		}
+
+		// step: wait for pending goroutines to finish and close channel
+		go func(completion *sync.WaitGroup) {
+			completion.Wait()
+			close(channel)
+		}(context.completion)
 	}
 }
 
@@ -255,13 +263,15 @@ func (r *marathonClient) handleEvent(content string) error {
 	for channel, context := range r.listeners {
 		// step: check if this listener wants this event type
 		if event.ID&context.filter != 0 {
-			go func(ch EventsChannel, done <-chan struct{}, e *Event) {
+			context.completion.Add(1)
+			go func(ch EventsChannel, context EventsChannelContext, e *Event) {
+				defer context.completion.Done()
 				select {
 				case ch <- e:
-				case <-done:
+				case <-context.done:
 					// Terminates goroutine.
 				}
-			}(channel, context.done, event)
+			}(channel, context, event)
 		}
 	}
 
