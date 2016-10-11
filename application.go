@@ -560,10 +560,10 @@ func (r *marathonClient) ApplicationBy(name string, opts *GetAppOpts) (*Applicat
 // 		name: 		the id used to identify the application
 // 		version:  the version of the configuration you would like to receive
 func (r *marathonClient) ApplicationByVersion(name, version string) (*Application, error) {
-	var app *Application
+	app := new(Application)
 
 	uri := fmt.Sprintf("%s/versions/%s", buildURI(name), version)
-	if err := r.apiGet(uri, nil, &app); err != nil {
+	if err := r.apiGet(uri, nil, app); err != nil {
 		return nil, err
 	}
 
@@ -624,7 +624,7 @@ func (r *marathonClient) ApplicationDeployments(name string) ([]*DeploymentID, e
 // 		application:		the structure holding the application configuration
 func (r *marathonClient) CreateApplication(application *Application) (*Application, error) {
 	result := new(Application)
-	if err := r.apiPost(marathonAPIApps, &application, result); err != nil {
+	if err := r.apiPost(marathonAPIApps, application, result); err != nil {
 		return nil, err
 	}
 
@@ -703,7 +703,7 @@ func (r *marathonClient) ScaleApplicationInstances(name string, instances int, f
 	changes.Instances = &instances
 	uri := buildURIWithForceParam(name, force)
 	deployID := new(DeploymentID)
-	if err := r.apiPut(uri, &changes, deployID); err != nil {
+	if err := r.apiPut(uri, changes, deployID); err != nil {
 		return nil, err
 	}
 
@@ -715,7 +715,7 @@ func (r *marathonClient) ScaleApplicationInstances(name string, instances int, f
 func (r *marathonClient) UpdateApplication(application *Application, force bool) (*DeploymentID, error) {
 	result := new(DeploymentID)
 	uri := buildURIWithForceParam(application.ID, force)
-	if err := r.apiPut(uri, &application, result); err != nil {
+	if err := r.apiPut(uri, application, result); err != nil {
 		return nil, err
 	}
 	return result, nil
