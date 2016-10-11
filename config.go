@@ -23,6 +23,8 @@ import (
 	"time"
 )
 
+const defaultPollingWaitTime = 500 * time.Millisecond
+
 // EventsTransport describes which transport should be used to deliver Marathon events
 type EventsTransport int
 
@@ -60,6 +62,6 @@ func NewDefaultConfig() Config {
 		EventsPort:      10001,
 		EventsInterface: "eth0",
 		LogOutput:       ioutil.Discard,
-		PollingWaitTime: 500 * time.Millisecond,
+		PollingWaitTime: defaultPollingWaitTime,
 	}
 }
