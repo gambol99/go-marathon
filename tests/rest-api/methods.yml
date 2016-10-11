@@ -491,6 +491,18 @@
         "version": "2014-09-12T23:28:21.737Z"
     }
     }
+
+- uri: /v2/apps/fake-app
+  method: GET
+  scope: wait-on-app
+  contentSequence:
+    - index: 1
+      content: |
+        {
+        "app": {
+        }
+        }
+
 - uri: /v2/apps/fake-app-broken
   method: GET
   content: |
