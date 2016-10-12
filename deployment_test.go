@@ -40,7 +40,7 @@ func TestDeployments(t *testing.T) {
 func TestDeploymentsV1(t *testing.T) {
 	endpoint := newFakeMarathonEndpoint(t, &configContainer{
 		server: &serverConfig{
-			version: "1.1.1",
+			scope: "v1.1.1",
 		},
 	})
 	defer endpoint.Close()

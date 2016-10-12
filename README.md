@@ -270,3 +270,114 @@ if err := client.Unsubscribe(callbackURL); err != nil {
 ## Contributing
 
 See the [contribution guidelines](CONTRIBUTING.md).
+
+## Development
+
+### Marathon Fake
+
+go-marathon employs a [fake Marathon implementation](https://github.com/gambol99/go-marathon/blob/master/testing_utils_test.go) for testing purposes. It [maintains a YML-encoded list of HTTP response messages](https://github.com/gambol99/go-marathon/blob/master/tests/rest-api/methods.yml) which are returned upon a successful match based upon a number of attributes, the so-called _message identifier_:
+
+- HTTP URI (without the protocol and the hostname, e.g., `/v2/apps`)
+- HTTP method (e.g., `GET`)
+- response content (i.e., the message returned)
+- scope (see below)
+
+#### Response Content
+
+The response content can be provided in one of two forms:
+
+- **static:** A pure response message returned on every match, including repeated queries.
+- **index:** A list of response messages associated to a particular (indexed) sequence order. A message will be returned _iff_ it matches and its zero-based index equals the current request count.
+
+An example for a trivial static response content is
+
+```yaml
+- uri: /v2/apps
+  method: POST
+  content: |
+		{
+		"app": {
+		}
+		}
+```
+
+which would be returned for every POST request targetting `/v2/apps`.
+
+An indexed response content would look like:
+
+```yaml
+- uri: /v2/apps
+  method: POST
+  contentSequence:
+		- index: 1
+		- content: |
+			{
+			"app": {
+				"id": "foo"
+			}
+			}
+		- index: 3
+		- content: |
+			{
+			"app": {
+				"id": "bar"
+			}
+			}
+```
+
+What this means is that the first POST request to `/v2/apps` would yield a 404, the second one the _foo_ app, the third one 404 again, the fourth one _bar_, and every following request thereafter a 404 again. Indexed responses enable more flexible testing required by some use cases.
+
+Trying to define both a static and indexed response content constitutes an error and leads to `panic`.
+
+#### Scope
+
+By default, all responses are defined globally: Every message can be queried by any request across all tests. This enables reusability and allows to keep the YML definition fairly short. For certain cases, however, it is desirable to define a set of responses that are delivered exclusively for a particular test. Scopes offer a means to do so by representing a concept similar to [namespaces](https://en.wikipedia.org/wiki/Namespace). Combined with indexed responses, they allow to return different responses for message identifiers already defined at the global level.
+
+Scopes do not have a particular format -- they are just strings. A scope must be defined in two places: The message specification and the server configuration. They are pure strings without any particular structure. Given the messages specification
+
+```yaml
+- uri: /v2/apps
+  method: GET
+	# Note: no scope defined.
+  content: |
+		{
+		"app": {
+			"id": "foo"
+		}
+		}
+- uri: /v2/apps
+  method: GET
+	scope: v1.1.1  # This one does have a scope.
+  contentSequence:
+		- index: 1
+		- content: |
+			{
+			"app": {
+				"id": "bar"
+			}
+			}
+```
+
+and the tests
+
+```go
+func TestFoo(t * testing.T) {
+	endpoint := newFakeMarathonEndpoint(t, nil)  // No custom configs given.
+	defer endpoint.Close()
+	app, err := endpoint.Client.Applications()
+	// Do something with "foo"
+}
+
+func TestFoo(t * testing.T) {
+	endpoint := newFakeMarathonEndpoint(t, &configContainer{
+		server: &serverConfig{
+			scope: "v1.1.1",		// Matches the message spec's scope.
+		},
+	})
+	defer endpoint.Close()
+	app, err := endpoint.Client.Applications()
+	// Do something with "bar"
+}
+```
+
+The "foo" response can be used by all tests using the default fake endpoint (such as `TestFoo`), while the "bar" response is only visible by tests that explicitly set the scope to `1.1.1` (as `TestBar` does) and query the endpoint twice.
