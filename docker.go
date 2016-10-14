@@ -46,9 +46,17 @@ type Parameters struct {
 
 // Volume is the docker volume details associated to the container
 type Volume struct {
-	ContainerPath string `json:"containerPath,omitempty"`
-	HostPath      string `json:"hostPath,omitempty"`
-	Mode          string `json:"mode,omitempty"`
+	ContainerPath string          `json:"containerPath,omitempty"`
+	HostPath      string          `json:"hostPath,omitempty"`
+	External      *ExternalVolume `json:"external,omitempty"`
+	Mode          string          `json:"mode,omitempty"`
+}
+
+// An external volume definition
+type ExternalVolume struct {
+	Name     string             `json:"name,omitempty"`
+	Provider string             `json:"provider,omitempty"`
+	Options  *map[string]string `json:"options,omitempty"`
 }
 
 // Docker is the docker definition from a marathon application
@@ -88,6 +96,43 @@ func (container *Container) Volume(hostPath, containerPath, mode string) *Contai
 func (container *Container) EmptyVolumes() *Container {
 	container.Volumes = &[]Volume{}
 	return container
+}
+
+// Define external elements for a volume
+//      name: the name of the volume
+//      provider: the provider of the volume (e.g. dvdi)
+func (v *Volume) SetExternalVolume(name, provider string) *ExternalVolume {
+	ev := &ExternalVolume{
+		Name:     name,
+		Provider: provider,
+	}
+	v.External = ev
+	return ev
+}
+
+// Empty the external volume definition
+func (v *Volume) EmptyExternalVolume() *Volume {
+	v.External = &ExternalVolume{}
+	return v
+}
+
+// AddOption adds an option to an ExternalVolume
+//		name:  the name of the option
+//		value: value for the option
+func (ev *ExternalVolume) AddOption(name, value string) *ExternalVolume {
+	if ev.Options == nil {
+		ev.EmptyOptions()
+	}
+	(*ev.Options)[name] = value
+
+	return ev
+}
+
+// EmptyOptions explicitly empties the options
+func (ev *ExternalVolume) EmptyOptions() *ExternalVolume {
+	ev.Options = &map[string]string{}
+
+	return ev
 }
 
 // NewDockerContainer creates a default docker container for you
