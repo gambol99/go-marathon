@@ -564,3 +564,51 @@ func TestAppExistAndRunning(t *testing.T) {
 	assert.True(t, client.appExistAndRunning(fakeAppName))
 	assert.False(t, client.appExistAndRunning("no_such_app"))
 }
+
+func TestSetIPPerTask(t *testing.T) {
+	app := Application{}
+	app.Ports = append(app.Ports, 10)
+	app.AddPortDefinition(PortDefinition{})
+	assert.Nil(t, app.IPAddressPerTask)
+	assert.Equal(t, 1, len(app.Ports))
+	assert.Equal(t, 1, len(*app.PortDefinitions))
+
+	app.SetIPAddressPerTask(IPAddressPerTask{})
+	assert.NotNil(t, app.IPAddressPerTask)
+	assert.Equal(t, 0, len(app.Ports))
+	assert.Equal(t, 0, len(*app.PortDefinitions))
+}
+
+func TestIPAddressPerTask(t *testing.T) {
+	ipPerTask := IPAddressPerTask{}
+	assert.Nil(t, ipPerTask.Groups)
+	assert.Nil(t, ipPerTask.Labels)
+
+	ipPerTask.AddGroup("label")
+	ipPerTask.AddLabel("key", "value")
+
+	assert.Equal(t, 1, len(*ipPerTask.Groups))
+	assert.Equal(t, "label", (*ipPerTask.Groups)[0])
+	assert.Equal(t, "value", (*ipPerTask.Labels)["key"])
+
+	ipPerTask.EmptyGroups()
+	assert.Equal(t, 0, len(*ipPerTask.Groups))
+
+	ipPerTask.EmptyLabels()
+	assert.Equal(t, 0, len(*ipPerTask.Labels))
+
+}
+
+func TestIPAddressPerTaskDiscovery(t *testing.T) {
+	disc := Discovery{}
+	assert.Nil(t, disc.Ports)
+
+	disc.AddPort(Port{})
+	assert.NotNil(t, disc.Ports)
+	assert.Equal(t, 1, len(*disc.Ports))
+
+	disc.EmptyPorts()
+	assert.NotNil(t, disc.Ports)
+	assert.Equal(t, 0, len(*disc.Ports))
+
+}
