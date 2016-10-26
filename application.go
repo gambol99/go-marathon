@@ -36,9 +36,10 @@ type Applications struct {
 
 // IPAddressPerTask is used by IP-per-task functionality https://mesosphere.github.io/marathon/docs/ip-per-task.html
 type IPAddressPerTask struct {
-	Groups    *[]string          `json:"groups,omitempty"`
-	Labels    *map[string]string `json:"labels,omitempty"`
-	Discovery Discovery          `json:"discovery,omitempty"`
+	Groups      *[]string          `json:"groups,omitempty"`
+	Labels      *map[string]string `json:"labels,omitempty"`
+	Discovery   Discovery          `json:"discovery,omitempty"`
+	NetworkName string             `json:"networkName,omitempty"`
 }
 
 // Discovery provides info about ports expose by IP-per-task functionality
