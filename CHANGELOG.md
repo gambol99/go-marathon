@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
+- [#223][PR223] Add support for IP-per-task.
+- [#220][PR220] Add external volume definition to container.
 - [#211][PR211] Close event channel on event listener removal.
 
 ### Fixed
@@ -80,6 +82,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 [0.1.1]: https://github.com/gambol99/go-marathon/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/gambol99/go-marathon/compare/v0.0.1...v0.1.0
 
+[PR223]: https://github.com/gambol99/go-marathon/pull/223
+[PR220]: https://github.com/gambol99/go-marathon/pull/220
 [PR218]: https://github.com/gambol99/go-marathon/pull/218
 [PR214]: https://github.com/gambol99/go-marathon/pull/214
 [PR211]: https://github.com/gambol99/go-marathon/pull/211
