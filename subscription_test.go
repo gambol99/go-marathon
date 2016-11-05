@@ -161,11 +161,11 @@ var testCases = testCaseList{
 		expectation: &EventDeploymentInfo{
 			EventType: "deployment_info",
 			Timestamp: "2016-07-29T08:03:52.542Z",
-			Plan:      &DeploymentPlan{
-				ID: "dcf63e4a-ef27-4816-e865-1730fcb26ac3",
-				Version: "2016-07-29T08:03:52.542Z",
+			Plan: &DeploymentPlan{
+				ID:       "dcf63e4a-ef27-4816-e865-1730fcb26ac3",
+				Version:  "2016-07-29T08:03:52.542Z",
 				Original: &Group{},
-				Target: &Group{},
+				Target:   &Group{},
 				Steps: []*StepActions{
 					&StepActions{
 						Actions: []struct {
