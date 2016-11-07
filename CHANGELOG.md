@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- [#231][PR231] Fixed Marathon cluster code
+
 ## [0.4.0] - 2016-10-28
 ### Added
 - [#223][PR223] Add support for IP-per-task.
@@ -85,6 +88,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 [0.1.1]: https://github.com/gambol99/go-marathon/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/gambol99/go-marathon/compare/v0.0.1...v0.1.0
 
+[PR231]: https://github.com/gambol99/go-marathon/pull/231
 [PR223]: https://github.com/gambol99/go-marathon/pull/223
 [PR220]: https://github.com/gambol99/go-marathon/pull/220
 [PR218]: https://github.com/gambol99/go-marathon/pull/218
