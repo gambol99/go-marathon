@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - [#231][PR231] Fixed Marathon cluster code
+- [#229][PR229] Add LastFailureCause field to HealthCheckResult.
 
 ## [0.4.0] - 2016-10-28
 ### Added
@@ -89,6 +90,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 [0.1.0]: https://github.com/gambol99/go-marathon/compare/v0.0.1...v0.1.0
 
 [PR231]: https://github.com/gambol99/go-marathon/pull/231
+[PR229]: https://github.com/gambol99/go-marathon/pull/229
 [PR223]: https://github.com/gambol99/go-marathon/pull/223
 [PR220]: https://github.com/gambol99/go-marathon/pull/220
 [PR218]: https://github.com/gambol99/go-marathon/pull/218
