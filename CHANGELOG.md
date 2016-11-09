@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+- [#239][PR239] Fix scheme-less endpoint with port.
 
 ## [0.5.0] - 2016-11-07
 ### Fixed
@@ -91,6 +92,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 [0.1.1]: https://github.com/gambol99/go-marathon/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/gambol99/go-marathon/compare/v0.0.1...v0.1.0
 
+[PR239]: https://github.com/gambol99/go-marathon/pull/239
 [PR231]: https://github.com/gambol99/go-marathon/pull/231
 [PR229]: https://github.com/gambol99/go-marathon/pull/229
 [PR223]: https://github.com/gambol99/go-marathon/pull/223

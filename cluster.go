@@ -74,13 +74,16 @@ func newCluster(client *http.Client, marathonURL string) (*cluster, error) {
 			defaultProto = u.Scheme
 		}
 		// step: does the url have a protocol schema? if not, use the default
-		if u.Scheme == "" {
-			u, _ = url.Parse(fmt.Sprintf("%s://%s", defaultProto, u.String()))
+		if u.Scheme == "" || u.Opaque != "" {
+			urlWithScheme := fmt.Sprintf("%s://%s", defaultProto, u.String())
+			if u, err = url.Parse(urlWithScheme); err != nil {
+				panic(fmt.Sprintf("unexpected parsing error for URL '%s' with added default scheme: %s", urlWithScheme, err))
+			}
 		}
 
 		// step: check for empty hosts
-		if u.Host == "" || u.Scheme == "" {
-			return nil, newInvalidEndpointError("endpoint: %s must have a schema and host", endpoint)
+		if u.Host == "" {
+			return nil, newInvalidEndpointError("endpoint: %s must have a host", endpoint)
 		}
 
 		// step: create a new node for this endpoint

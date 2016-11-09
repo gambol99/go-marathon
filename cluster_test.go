@@ -95,8 +95,16 @@ func TestValidClusterHosts(t *testing.T) {
 			Expect: []string{"http://127.0.0.1:8080", "http://127.0.0.2"},
 		},
 		{
+			URL:    "http://127.0.0.1:8080,127.0.0.2:8080",
+			Expect: []string{"http://127.0.0.1:8080", "http://127.0.0.2:8080"},
+		},
+		{
 			URL:    "http://127.0.0.1:8080,https://127.0.0.2",
 			Expect: []string{"http://127.0.0.1:8080", "https://127.0.0.2"},
+		},
+		{
+			URL:    "http://127.0.0.1:8080,https://127.0.0.2:8080",
+			Expect: []string{"http://127.0.0.1:8080", "https://127.0.0.2:8080"},
 		},
 		{
 			URL:    "http://127.0.0.1:8080/path1,127.0.0.2/path2",
