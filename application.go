@@ -38,7 +38,7 @@ type Applications struct {
 type IPAddressPerTask struct {
 	Groups      *[]string          `json:"groups,omitempty"`
 	Labels      *map[string]string `json:"labels,omitempty"`
-	Discovery   Discovery          `json:"discovery,omitempty"`
+	Discovery   *Discovery         `json:"discovery,omitempty"`
 	NetworkName string             `json:"networkName,omitempty"`
 }
 
@@ -807,7 +807,7 @@ func (i *IPAddressPerTask) AddGroup(group string) *IPAddressPerTask {
 // SetDiscovery define the discovery to an IPAddressPerTask
 //  discovery: The discovery struct
 func (i *IPAddressPerTask) SetDiscovery(discovery Discovery) *IPAddressPerTask {
-	i.Discovery = discovery
+	i.Discovery = &discovery
 	return i
 }
 
