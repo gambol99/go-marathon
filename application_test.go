@@ -297,6 +297,21 @@ func TestApplications(t *testing.T) {
 	assert.Equal(t, len(applications.Apps), 1)
 }
 
+func TestApplicationsEmbedTaskStats(t *testing.T) {
+	endpoint := newFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	v := url.Values{}
+	v.Set("embed", "apps.taskStats")
+	applications, err := endpoint.Client.Applications(v)
+	assert.NoError(t, err)
+	assert.NotNil(t, applications)
+	assert.Equal(t, len(applications.Apps), 1)
+	assert.NotNil(t, applications.Apps[0].TaskStats)
+	assert.Equal(t, applications.Apps[0].TaskStats["startedAfterLastScaling"].Stats.Counts["healthy"], 1)
+	assert.Equal(t, applications.Apps[0].TaskStats["startedAfterLastScaling"].Stats.LifeTime["averageSeconds"], 17024.575)
+}
+
 func TestListApplications(t *testing.T) {
 	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()

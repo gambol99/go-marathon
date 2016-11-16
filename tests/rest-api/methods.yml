@@ -203,6 +203,31 @@
         }
     ]
     }
+- uri: /v2/apps?embed=apps.taskStats
+  method: GET
+  content: |
+    {
+    "apps": [
+        {
+            "taskStats": {
+                "startedAfterLastScaling": {
+                    "stats": {
+                        "counts": {
+                            "staged": 0,
+                            "running": 1,
+                            "healthy": 1,
+                            "unhealthy": 0
+                        },
+                        "lifeTime": {
+                            "averageSeconds": 17024.575,
+                            "medianSeconds": 17024.575
+                        }
+                    }
+                }
+            }
+        }
+    ]
+    }
 - uri: /v2/apps?cmd=nginx
   method: GET
   content: |
