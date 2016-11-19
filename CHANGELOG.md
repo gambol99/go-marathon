@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
+- [#246][PR246] Add TaskKillGracePeriodSeconds support.
 - [#244][PR244] Add taskStats support.
 
 ### Changed
@@ -101,6 +102,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 [0.1.1]: https://github.com/gambol99/go-marathon/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/gambol99/go-marathon/compare/v0.0.1...v0.1.0
 
+[PR246]: https://github.com/gambol99/go-marathon/pull/246
 [PR244]: https://github.com/gambol99/go-marathon/pull/244
 [PR242]: https://github.com/gambol99/go-marathon/pull/242
 [PR239]: https://github.com/gambol99/go-marathon/pull/239

@@ -56,42 +56,43 @@ type Port struct {
 
 // Application is the definition for an application in marathon
 type Application struct {
-	ID                    string               `json:"id,omitempty"`
-	Cmd                   *string              `json:"cmd,omitempty"`
-	Args                  *[]string            `json:"args,omitempty"`
-	Constraints           *[][]string          `json:"constraints,omitempty"`
-	Container             *Container           `json:"container,omitempty"`
-	CPUs                  float64              `json:"cpus,omitempty"`
-	Disk                  *float64             `json:"disk,omitempty"`
-	Env                   *map[string]string   `json:"env,omitempty"`
-	Executor              *string              `json:"executor,omitempty"`
-	HealthChecks          *[]HealthCheck       `json:"healthChecks,omitempty"`
-	Instances             *int                 `json:"instances,omitempty"`
-	Mem                   *float64             `json:"mem,omitempty"`
-	Tasks                 []*Task              `json:"tasks,omitempty"`
-	Ports                 []int                `json:"ports"`
-	PortDefinitions       *[]PortDefinition    `json:"portDefinitions,omitempty"`
-	RequirePorts          *bool                `json:"requirePorts,omitempty"`
-	BackoffSeconds        *float64             `json:"backoffSeconds,omitempty"`
-	BackoffFactor         *float64             `json:"backoffFactor,omitempty"`
-	MaxLaunchDelaySeconds *float64             `json:"maxLaunchDelaySeconds,omitempty"`
-	Deployments           []map[string]string  `json:"deployments,omitempty"`
-	Dependencies          []string             `json:"dependencies"`
-	TasksRunning          int                  `json:"tasksRunning,omitempty"`
-	TasksStaged           int                  `json:"tasksStaged,omitempty"`
-	TasksHealthy          int                  `json:"tasksHealthy,omitempty"`
-	TasksUnhealthy        int                  `json:"tasksUnhealthy,omitempty"`
-	TaskStats             map[string]TaskStats `json:"taskStats,omitempty"`
-	User                  string               `json:"user,omitempty"`
-	UpgradeStrategy       *UpgradeStrategy     `json:"upgradeStrategy,omitempty"`
-	Uris                  *[]string            `json:"uris,omitempty"`
-	Version               string               `json:"version,omitempty"`
-	VersionInfo           *VersionInfo         `json:"versionInfo,omitempty"`
-	Labels                *map[string]string   `json:"labels,omitempty"`
-	AcceptedResourceRoles []string             `json:"acceptedResourceRoles,omitempty"`
-	LastTaskFailure       *LastTaskFailure     `json:"lastTaskFailure,omitempty"`
-	Fetch                 *[]Fetch             `json:"fetch,omitempty"`
-	IPAddressPerTask      *IPAddressPerTask    `json:"ipAddress,omitempty"`
+	ID                         string               `json:"id,omitempty"`
+	Cmd                        *string              `json:"cmd,omitempty"`
+	Args                       *[]string            `json:"args,omitempty"`
+	Constraints                *[][]string          `json:"constraints,omitempty"`
+	Container                  *Container           `json:"container,omitempty"`
+	CPUs                       float64              `json:"cpus,omitempty"`
+	Disk                       *float64             `json:"disk,omitempty"`
+	Env                        *map[string]string   `json:"env,omitempty"`
+	Executor                   *string              `json:"executor,omitempty"`
+	HealthChecks               *[]HealthCheck       `json:"healthChecks,omitempty"`
+	Instances                  *int                 `json:"instances,omitempty"`
+	Mem                        *float64             `json:"mem,omitempty"`
+	Tasks                      []*Task              `json:"tasks,omitempty"`
+	Ports                      []int                `json:"ports"`
+	PortDefinitions            *[]PortDefinition    `json:"portDefinitions,omitempty"`
+	RequirePorts               *bool                `json:"requirePorts,omitempty"`
+	BackoffSeconds             *float64             `json:"backoffSeconds,omitempty"`
+	BackoffFactor              *float64             `json:"backoffFactor,omitempty"`
+	MaxLaunchDelaySeconds      *float64             `json:"maxLaunchDelaySeconds,omitempty"`
+	TaskKillGracePeriodSeconds *float64             `json:"taskKillGracePeriodSeconds,omitempty"`
+	Deployments                []map[string]string  `json:"deployments,omitempty"`
+	Dependencies               []string             `json:"dependencies"`
+	TasksRunning               int                  `json:"tasksRunning,omitempty"`
+	TasksStaged                int                  `json:"tasksStaged,omitempty"`
+	TasksHealthy               int                  `json:"tasksHealthy,omitempty"`
+	TasksUnhealthy             int                  `json:"tasksUnhealthy,omitempty"`
+	TaskStats                  map[string]TaskStats `json:"taskStats,omitempty"`
+	User                       string               `json:"user,omitempty"`
+	UpgradeStrategy            *UpgradeStrategy     `json:"upgradeStrategy,omitempty"`
+	Uris                       *[]string            `json:"uris,omitempty"`
+	Version                    string               `json:"version,omitempty"`
+	VersionInfo                *VersionInfo         `json:"versionInfo,omitempty"`
+	Labels                     *map[string]string   `json:"labels,omitempty"`
+	AcceptedResourceRoles      []string             `json:"acceptedResourceRoles,omitempty"`
+	LastTaskFailure            *LastTaskFailure     `json:"lastTaskFailure,omitempty"`
+	Fetch                      *[]Fetch             `json:"fetch,omitempty"`
+	IPAddressPerTask           *IPAddressPerTask    `json:"ipAddress,omitempty"`
 }
 
 // ApplicationVersions is a collection of application versions for a specific app in marathon
@@ -250,6 +251,16 @@ func (r *Application) EmptyPortDefinitions() *Application {
 //		count:	the number of instances to run
 func (r *Application) Count(count int) *Application {
 	r.Instances = &count
+
+	return r
+}
+
+// SetTaskKillGracePeriod sets the number of seconds between escalating from SIGTERM to SIGKILL
+// when signalling tasks to terminate. Using this grace period, tasks should perform orderly shut down
+// immediately upon receiving SIGTERM.
+//		seconds:	the number of seconds
+func (r *Application) SetTaskKillGracePeriod(seconds float64) *Application {
+	r.TaskKillGracePeriodSeconds = &seconds
 
 	return r
 }
