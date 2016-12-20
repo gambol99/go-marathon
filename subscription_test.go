@@ -128,6 +128,7 @@ var testCases = testCaseList{
 			},
 		},
 	},
+	// For Marathon 1.1.1 and before
 	testCase{
 		name: "deployment_info",
 		source: `{
@@ -169,8 +170,9 @@ var testCases = testCaseList{
 				Steps: []*StepActions{
 					&StepActions{
 						Actions: []struct {
-							Type string `json:"type"`
-							App  string `json:"app"`
+							Action string `json:"action"`
+							Type   string `json:"type"`
+							App    string `json:"app"`
 						}{
 							{
 								Type: "ScaleApplication",
@@ -182,12 +184,81 @@ var testCases = testCaseList{
 			},
 			CurrentStep: &StepActions{
 				Actions: []struct {
-					Type string `json:"type"`
-					App  string `json:"app"`
+					Action string `json:"action"`
+					Type   string `json:"type"`
+					App    string `json:"app"`
 				}{
 					{
 						Type: "ScaleApplication",
 						App:  "/my-app",
+					},
+				},
+			},
+		},
+	},
+	// For Marathon 1.1.2 and after
+	testCase{
+		name: "deployment_step_success",
+		source: `{
+	"eventType": "deployment_step_success",
+	"timestamp": "2016-07-29T08:03:52.542Z",
+	"plan": {
+		"id": "dcf63e4a-ef27-4816-e865-1730fcb26ac3",
+		"version": "2016-07-29T08:03:52.542Z",
+		"original": {},
+		"target": {},
+		"steps": [
+			{
+				"actions": [
+					{
+						"action": "ScaleApplication",
+						"app": "/my-app"
+					}
+				]
+			}
+		]
+	},
+	"currentStep": {
+		"actions": [
+			{
+				"action": "ScaleApplication",
+				"app": "/my-app"
+			}
+		]
+	}
+}`,
+		expectation: &EventDeploymentInfo{
+			EventType: "deployment_info",
+			Timestamp: "2016-07-29T08:03:52.542Z",
+			Plan: &DeploymentPlan{
+				ID:       "dcf63e4a-ef27-4816-e865-1730fcb26ac3",
+				Version:  "2016-07-29T08:03:52.542Z",
+				Original: &Group{},
+				Target:   &Group{},
+				Steps: []*StepActions{
+					&StepActions{
+						Actions: []struct {
+							Action string `json:"action"`
+							Type   string `json:"type"`
+							App    string `json:"app"`
+						}{
+							{
+								Action: "ScaleApplication",
+								App:    "/my-app",
+							},
+						},
+					},
+				},
+			},
+			CurrentStep: &StepActions{
+				Actions: []struct {
+					Action string `json:"action"`
+					Type   string `json:"type"`
+					App    string `json:"app"`
+				}{
+					{
+						Action: "ScaleApplication",
+						App:    "/my-app",
 					},
 				},
 			},
@@ -253,7 +324,7 @@ func TestEventStreamEventsReceived(t *testing.T) {
 	endpoint := newFakeMarathonEndpoint(t, &config)
 	defer endpoint.Close()
 
-	events, err := endpoint.Client.AddEventsListener(EventIDApplications | EventIDDeploymentInfo)
+	events, err := endpoint.Client.AddEventsListener(EventIDApplications | EventIDDeploymentInfo | EventIDDeploymentStepSuccess)
 	assert.NoError(t, err)
 
 	almostAllTestCases := testCases[:len(testCases)-1]
