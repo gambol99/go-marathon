@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- [#256][PR256] Expose task state.
 
 ## [0.6.0] - 2016-12-14
 ### Added
@@ -104,6 +106,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 [0.1.1]: https://github.com/gambol99/go-marathon/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/gambol99/go-marathon/compare/v0.0.1...v0.1.0
 
+[PR256]: https://github.com/gambol99/go-marathon/pull/256
 [PR246]: https://github.com/gambol99/go-marathon/pull/246
 [PR244]: https://github.com/gambol99/go-marathon/pull/244
 [PR242]: https://github.com/gambol99/go-marathon/pull/242
