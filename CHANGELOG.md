@@ -5,8 +5,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.7.0] - 2017-02-17
 ### Added
 - [#256][PR256] Expose task state.
+
+### Changed
+- [#259][PR259] Add 'omitempty' to UpgradeStrategy properties.
 
 ## [0.6.0] - 2016-12-14
 ### Added
@@ -97,7 +102,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial SemVer release.
 
-[Unreleased]: https://github.com/gambol99/go-marathon/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/gambol99/go-marathon/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/gambol99/go-marathon/compare/v0.6.0...v0.7.0
+[0.6.0]: https://github.com/gambol99/go-marathon/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/gambol99/go-marathon/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/gambol99/go-marathon/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/gambol99/go-marathon/compare/v0.3.0...v0.4.0
@@ -106,6 +113,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 [0.1.1]: https://github.com/gambol99/go-marathon/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/gambol99/go-marathon/compare/v0.0.1...v0.1.0
 
+[PR259]: https://github.com/gambol99/go-marathon/pull/259
 [PR256]: https://github.com/gambol99/go-marathon/pull/256
 [PR246]: https://github.com/gambol99/go-marathon/pull/246
 [PR244]: https://github.com/gambol99/go-marathon/pull/244
