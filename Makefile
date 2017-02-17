@@ -55,7 +55,7 @@ check-format:
 
 test: deps
 	@echo "--> Running go tests"
-	@go test -v
+	@go test -race -v
 	@$(MAKE) vet
 	@$(MAKE) cover
 

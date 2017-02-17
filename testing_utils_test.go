@@ -53,6 +53,15 @@ type indexedResponse struct {
 	Content string `yaml:"content,omitempty"`
 }
 
+type responseIndices struct {
+	sync.Mutex
+	m map[string]int
+}
+
+func newResponseIndices() *responseIndices {
+	return &responseIndices{m: map[string]int{}}
+}
+
 // restMethod represents an expected HTTP method and an associated fake response
 type restMethod struct {
 	// the uri of the method
@@ -91,7 +100,7 @@ type fakeServer struct {
 
 	eventSrv        *eventsource.Server
 	httpSrv         *httptest.Server
-	fakeRespIndices map[string]int
+	fakeRespIndices *responseIndices
 }
 
 type endpoint struct {
@@ -130,16 +139,18 @@ func newFakeMarathonEndpoint(t *testing.T, configs *configContainer) *endpoint {
 		configs.server = &serverConfig{}
 	}
 
-	fakeRespIndices := map[string]int{}
+	fakeRespIndices := newResponseIndices()
 
 	// step: create the HTTP router
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v2/events", authMiddleware(configs.server, eventSrv.Handler("event")))
 	mux.HandleFunc("/", authMiddleware(configs.server, func(writer http.ResponseWriter, reader *http.Request) {
 		respKey := fakeResponseMapKey(reader.Method, reader.RequestURI, configs.server.scope)
-		fakeRespIndex := fakeRespIndices[respKey]
-		fakeRespIndices[respKey]++
+		fakeRespIndices.Lock()
+		fakeRespIndex := fakeRespIndices.m[respKey]
+		fakeRespIndices.m[respKey]++
 		responses, found := fakeResponses[respKey]
+		fakeRespIndices.Unlock()
 		if found {
 			for _, response := range responses {
 				// Index < 0 indicates a static response.

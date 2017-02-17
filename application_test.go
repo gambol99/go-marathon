@@ -17,6 +17,7 @@ limitations under the License.
 package marathon
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
@@ -558,16 +559,20 @@ func TestWaitOnApplication(t *testing.T) {
 		endpoint := newFakeMarathonEndpoint(t, configs)
 		defer endpoint.Close()
 
-		var err error
+		errCh := make(chan error)
 		go func() {
-			err = endpoint.Client.WaitOnApplication(test.appName, test.timeout)
+			errCh <- endpoint.Client.WaitOnApplication(test.appName, test.timeout)
 		}()
-		timer := time.NewTimer(400 * time.Millisecond)
-		<-timer.C
-		if test.shouldSucceed {
-			assert.NoError(t, err, test.desc)
-		} else {
-			assert.IsType(t, err, ErrTimeoutError, test.desc)
+
+		select {
+		case <-time.After(400 * time.Millisecond):
+			assert.Fail(t, fmt.Sprintf("%s: WaitOnApplication did not complete in time", test.desc))
+		case err := <-errCh:
+			if test.shouldSucceed {
+				assert.NoError(t, err, test.desc)
+			} else {
+				assert.IsType(t, err, ErrTimeoutError, test.desc)
+			}
 		}
 	}
 }
