@@ -501,6 +501,20 @@ func (r *Application) EmptyFetchURIs() *Application {
 	return r
 }
 
+// SetUpgradeStrategy sets the upgrade strategy.
+func (r *Application) SetUpgradeStrategy(us UpgradeStrategy) *Application {
+	r.UpgradeStrategy = &us
+	return r
+}
+
+// EmptyUpgradeStrategy explicitly empties the upgrade strategy -- use this if
+// you need to empty the upgrade strategy of an application that already has
+// the upgrade strategy set (setting it to nil will keep the current value).
+func (r *Application) EmptyUpgradeStrategy() *Application {
+	r.UpgradeStrategy = &UpgradeStrategy{}
+	return r
+}
+
 // String returns the json representation of this application
 func (r *Application) String() string {
 	s, err := json.MarshalIndent(r, "", "  ")

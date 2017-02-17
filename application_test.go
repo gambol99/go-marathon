@@ -636,3 +636,18 @@ func TestIPAddressPerTaskDiscovery(t *testing.T) {
 	assert.Equal(t, 0, len(*disc.Ports))
 
 }
+
+func TestUpgradeStrategy(t *testing.T) {
+	app := Application{}
+	assert.Nil(t, app.UpgradeStrategy)
+	app.SetUpgradeStrategy(UpgradeStrategy{}.SetMinimumHealthCapacity(1.0).SetMaximumOverCapacity(0.0))
+	us := app.UpgradeStrategy
+	assert.Equal(t, 1.0, *us.MinimumHealthCapacity)
+	assert.Equal(t, 0.0, *us.MaximumOverCapacity)
+
+	app.EmptyUpgradeStrategy()
+	us = app.UpgradeStrategy
+	assert.NotNil(t, us)
+	assert.Nil(t, us.MinimumHealthCapacity)
+	assert.Nil(t, us.MaximumOverCapacity)
+}
