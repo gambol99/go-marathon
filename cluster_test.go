@@ -44,6 +44,7 @@ func TestNonActive(t *testing.T) {
 
 func TestGetMember(t *testing.T) {
 	cluster, err := newCluster(http.DefaultClient, fakeMarathonURL)
+	assert.NoError(t, err)
 	member, err := cluster.getMember()
 	assert.NoError(t, err)
 	assert.Equal(t, member, "http://127.0.0.1:3000")
