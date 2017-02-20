@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- [#261][PR261] Fix URL parsing for Go 1.8.
+
 ## [0.7.0] - 2017-02-17
 ### Added
 - [#256][PR256] Expose task state.
@@ -113,6 +116,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 [0.1.1]: https://github.com/gambol99/go-marathon/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/gambol99/go-marathon/compare/v0.0.1...v0.1.0
 
+[PR261]: https://github.com/gambol99/go-marathon/pull/261
 [PR259]: https://github.com/gambol99/go-marathon/pull/259
 [PR256]: https://github.com/gambol99/go-marathon/pull/256
 [PR246]: https://github.com/gambol99/go-marathon/pull/246

@@ -92,8 +92,16 @@ func TestValidClusterHosts(t *testing.T) {
 			Expect: []string{"http://127.0.0.1:8080", "http://127.0.0.2:8081"},
 		},
 		{
+			URL:    "https://127.0.0.1:8080,http://127.0.0.2:8081",
+			Expect: []string{"https://127.0.0.1:8080", "http://127.0.0.2:8081"},
+		},
+		{
 			URL:    "http://127.0.0.1:8080,127.0.0.2",
 			Expect: []string{"http://127.0.0.1:8080", "http://127.0.0.2"},
+		},
+		{
+			URL:    "https://127.0.0.1:8080,127.0.0.2",
+			Expect: []string{"https://127.0.0.1:8080", "https://127.0.0.2"},
 		},
 		{
 			URL:    "http://127.0.0.1:8080,127.0.0.2:8080",
@@ -112,12 +120,12 @@ func TestValidClusterHosts(t *testing.T) {
 			Expect: []string{"http://127.0.0.1:8080/path1", "http://127.0.0.2/path2"},
 		},
 	}
-	for i, x := range cs {
+	for _, x := range cs {
 		c, err := newCluster(http.DefaultClient, x.URL)
-		if !assert.NoError(t, err, "case %d should not have thrown an error: %s") {
+		if !assert.NoError(t, err, "URL '%s' should not have thrown an error: %s", x.URL, err) {
 			continue
 		}
-		assert.Equal(t, x.Expect, c.activeMembers(), "case %d, expected: %v, got: %s", i, x.Expect, c.activeMembers())
+		assert.Equal(t, x.Expect, c.activeMembers(), "URL '%s', expected: %v, got: %s", x.URL, x.Expect, c.activeMembers())
 	}
 }
 
@@ -127,6 +135,7 @@ func TestInvalidClusterHosts(t *testing.T) {
 		"://",
 		"http://",
 		"http://,,",
+		"http://%42",
 		"http://,127.0.0.1:3000,127.0.0.1:3000",
 		"http://127.0.0.1:3000,,127.0.0.1:3000",
 		"http://127.0.0.1:3000,127.0.0.1:3000,",

@@ -61,24 +61,21 @@ func newCluster(client *http.Client, marathonURL string) (*cluster, error) {
 		if endpoint == "" {
 			return nil, newInvalidEndpointError("endpoint is blank")
 		}
+		// step: prepend scheme if missing on (non-initial) endpoint.
+		if !strings.HasPrefix(endpoint, "http://") && !strings.HasPrefix(endpoint, "https://") {
+			if defaultProto == "" {
+				return nil, newInvalidEndpointError("missing scheme on (first) endpoint")
+			}
+
+			endpoint = fmt.Sprintf("%s://%s", defaultProto, endpoint)
+		}
 		// step: parse the url
 		u, err := url.Parse(endpoint)
 		if err != nil {
-			return nil, newInvalidEndpointError("endpoint: %s is invalid reason: %s", endpoint, err)
+			return nil, newInvalidEndpointError("invalid endpoint '%s': %s", endpoint, err)
 		}
-		// step: set the default protocol schema
 		if defaultProto == "" {
-			if u.Scheme != "http" && u.Scheme != "https" {
-				return nil, newInvalidEndpointError("endpoint: %s protocol must be (http|https)", endpoint)
-			}
 			defaultProto = u.Scheme
-		}
-		// step: does the url have a protocol schema? if not, use the default
-		if u.Scheme == "" || u.Opaque != "" {
-			urlWithScheme := fmt.Sprintf("%s://%s", defaultProto, u.String())
-			if u, err = url.Parse(urlWithScheme); err != nil {
-				panic(fmt.Sprintf("unexpected parsing error for URL '%s' with added default scheme: %s", urlWithScheme, err))
-			}
 		}
 
 		// step: check for empty hosts

@@ -116,7 +116,10 @@ type fakeEvent struct {
 }
 
 func getTestURL(urlString string) string {
-	parsedURL, _ := url.Parse(urlString)
+	parsedURL, err := url.Parse(urlString)
+	if err != nil {
+		panic(fmt.Sprintf("failed to parse URL '%s': %s", urlString, err))
+	}
 	return fmt.Sprintf("%s://%s", parsedURL.Scheme, strings.Join([]string{parsedURL.Host, parsedURL.Host, parsedURL.Host}, ","))
 }
 
