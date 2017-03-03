@@ -100,6 +100,20 @@ func TestApplicationCPU(t *testing.T) {
 	assert.Equal(t, 0.1, app.CPUs)
 }
 
+func TestApplicationSetGPUs(t *testing.T) {
+	app := NewDockerApplication()
+	assert.Nil(t, app.GPUs)
+	app.SetGPUs(0.1)
+	assert.Equal(t, 0.1, *app.GPUs)
+}
+
+func TestApplicationEmptyGPUs(t *testing.T) {
+	app := NewDockerApplication()
+	assert.Nil(t, app.GPUs)
+	app.EmptyGPUs()
+	assert.Equal(t, 0.0, *app.GPUs)
+}
+
 func TestApplicationArgs(t *testing.T) {
 	app := NewDockerApplication()
 	assert.Nil(t, app.Args)
