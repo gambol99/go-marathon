@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDeployments(t *testing.T) {
@@ -27,13 +28,13 @@ func TestDeployments(t *testing.T) {
 	defer endpoint.Close()
 
 	deployments, err := endpoint.Client.Deployments()
-	assert.NoError(t, err)
-	assert.NotNil(t, deployments)
-	assert.Equal(t, len(deployments), 1)
+	require.NoError(t, err)
+	require.NotNil(t, deployments)
+	require.Equal(t, len(deployments), 1)
 	deployment := deployments[0]
-	assert.NotNil(t, deployment)
+	require.NotNil(t, deployment)
 	assert.Equal(t, deployment.ID, "867ed450-f6a8-4d33-9b0e-e11c5513990b")
-	assert.NotNil(t, deployment.Steps)
+	require.NotNil(t, deployment.Steps)
 	assert.Equal(t, len(deployment.Steps), 1)
 }
 
@@ -53,6 +54,24 @@ func TestDeploymentsV1(t *testing.T) {
 	assert.Equal(t, deployment.ID, "2620aa06-1001-4eea-8861-a51957d4fd80")
 	assert.NotNil(t, deployment.Steps)
 	assert.Equal(t, len(deployment.Steps), 2)
+
+	require.Equal(t, len(deployment.CurrentActions), 1)
+	curAction := deployment.CurrentActions[0]
+	require.NotNil(t, curAction)
+	require.NotNil(t, curAction.ReadinessCheckResults)
+	require.True(t, len(*curAction.ReadinessCheckResults) > 0)
+	actualRes := (*curAction.ReadinessCheckResults)[0]
+	expectedRes := ReadinessCheckResult{
+		Name:   "myReadyCheck",
+		TaskID: "test_frontend_app1.c9de6033",
+		Ready:  false,
+		LastResponse: ReadinessLastResponse{
+			Body:        "{}",
+			ContentType: "application/json",
+			Status:      500,
+		},
+	}
+	assert.Equal(t, expectedRes, actualRes)
 }
 
 func TestDeleteDeployment(t *testing.T) {

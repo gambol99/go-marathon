@@ -1015,7 +1015,18 @@
           {
             "action": "ScaleApplication",
             "app": "/test-app-v1",
-            "readinessCheckResults": []
+            "readinessCheckResults": [
+              {
+                "name": "myReadyCheck",
+                "taskId": "test_frontend_app1.c9de6033",
+                "ready": false,
+                "lastResponse": {
+                  "body": "{}",
+                  "contentType": "application/json",
+                  "status": 500
+                }
+              }
+            ]
           }
         ],
         "currentStep": 2,
@@ -1349,4 +1360,26 @@
         "tasksStaged": 0,
         "version": "2014-09-12T23:28:21.737Z"
     }
+    }
+- uri: /v2/apps?embed=apps.readiness
+  method: GET
+  content: |
+    {
+    "apps": [
+      {
+        "id": "/fake-app",
+        "readinessCheckResults": [
+          {
+            "name": "myReadyCheck",
+            "taskId": "test_frontend_app1.c9de6033",
+            "ready": false,
+            "lastResponse": {
+              "body": "{}",
+              "contentType": "application/json",
+              "status": 500
+            }
+          }
+        ]
+      }
+    ]
     }

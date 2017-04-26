@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestApplicationDependsOn(t *testing.T) {
@@ -205,6 +206,21 @@ func TestApplicationHealthChecks(t *testing.T) {
 	assert.Equal(t, 0, len(*app.HealthChecks))
 }
 
+func TestApplicationReadinessChecks(t *testing.T) {
+	app := NewDockerApplication()
+	require.Nil(t, app.HealthChecks)
+	rc := ReadinessCheck{}
+	rc.SetName("/readiness")
+	app.AddReadinessCheck(rc)
+
+	require.Equal(t, 1, len(*app.ReadinessChecks))
+	assert.Equal(t, "/readiness", *((*app.ReadinessChecks)[0].Name))
+
+	app.EmptyReadinessChecks()
+	require.NotNil(t, app.ReadinessChecks)
+	assert.Equal(t, 0, len(*app.ReadinessChecks))
+}
+
 func TestApplicationPortDefinitions(t *testing.T) {
 	app := NewDockerApplication()
 	assert.Nil(t, app.PortDefinitions)
@@ -325,6 +341,32 @@ func TestApplicationsEmbedTaskStats(t *testing.T) {
 	assert.NotNil(t, applications.Apps[0].TaskStats)
 	assert.Equal(t, applications.Apps[0].TaskStats["startedAfterLastScaling"].Stats.Counts["healthy"], 1)
 	assert.Equal(t, applications.Apps[0].TaskStats["startedAfterLastScaling"].Stats.LifeTime["averageSeconds"], 17024.575)
+}
+
+func TestApplicationsEmbedReadiness(t *testing.T) {
+	endpoint := newFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
+	v := url.Values{}
+	v.Set("embed", "apps.readiness")
+	applications, err := endpoint.Client.Applications(v)
+	require.NoError(t, err)
+	require.NotNil(t, applications)
+	require.Equal(t, len(applications.Apps), 1)
+	require.NotNil(t, applications.Apps[0].ReadinessCheckResults)
+	require.True(t, len(*applications.Apps[0].ReadinessCheckResults) > 0)
+	actualRes := (*applications.Apps[0].ReadinessCheckResults)[0]
+	expectedRes := ReadinessCheckResult{
+		Name:   "myReadyCheck",
+		TaskID: "test_frontend_app1.c9de6033",
+		Ready:  false,
+		LastResponse: ReadinessLastResponse{
+			Body:        "{}",
+			ContentType: "application/json",
+			Status:      500,
+		},
+	}
+	assert.Equal(t, expectedRes, actualRes)
 }
 
 func TestListApplications(t *testing.T) {
