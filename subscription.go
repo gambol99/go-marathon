@@ -174,7 +174,7 @@ func (r *marathonClient) registerSSESubscription() error {
 	}
 
 	// Try to connect to stream, reusing the http client settings
-	stream, err := eventsource.SubscribeWith("", r.httpClient, request)
+	stream, err := eventsource.SubscribeWith("", r.config.HTTPClient, request)
 	if err != nil {
 		return err
 	}

@@ -39,6 +39,14 @@ func TestNewClient(t *testing.T) {
 	assert.Equal(t, conf.PollingWaitTime, defaultPollingWaitTime)
 }
 
+func TestInvalidConfig(t *testing.T) {
+	config := Config{
+		URL: "",
+	}
+	_, err := NewClient(config)
+	assert.Error(t, err)
+}
+
 func TestPing(t *testing.T) {
 	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
