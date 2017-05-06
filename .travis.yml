@@ -12,6 +12,6 @@ install:
 script:
 - make test examples
 - if ([[ ${TRAVIS_BRANCH} == "master" ]] && [[ ${TRAVIS_EVENT_TYPE} == "push" ]]); then
-    make coverage
+    make coverage;
     goveralls -coverprofile=coverage -service=travis-ci;
   fi
