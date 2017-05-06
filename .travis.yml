@@ -10,8 +10,9 @@ go:
 install:
 - go get github.com/mattn/goveralls
 script:
-- make test examples
+- make test
 - if ([[ ${TRAVIS_BRANCH} == "master" ]] && [[ ${TRAVIS_EVENT_TYPE} == "push" ]]); then
     go get github.com/mattn/goveralls;
     goveralls -service=travis-ci;
   fi
+- make examples
