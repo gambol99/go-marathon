@@ -89,6 +89,8 @@ type Application struct {
 	TaskStats             map[string]TaskStats    `json:"taskStats,omitempty"`
 	User                  string                  `json:"user,omitempty"`
 	UpgradeStrategy       *UpgradeStrategy        `json:"upgradeStrategy,omitempty"`
+	UnreachableStrategy   *UnreachableStrategy    `json:"unreachableStrategy,omitempty"`
+	KillSelection         string                  `json:"killSelection,omitempty"`
 	Uris                  *[]string               `json:"uris,omitempty"`
 	Version               string                  `json:"version,omitempty"`
 	VersionInfo           *VersionInfo            `json:"versionInfo,omitempty"`
@@ -552,6 +554,20 @@ func (r *Application) SetUpgradeStrategy(us UpgradeStrategy) *Application {
 // the upgrade strategy set (setting it to nil will keep the current value).
 func (r *Application) EmptyUpgradeStrategy() *Application {
 	r.UpgradeStrategy = &UpgradeStrategy{}
+	return r
+}
+
+// SetUnreachableStrategy sets the unreachable strategy.
+func (r *Application) SetUnreachableStrategy(us UnreachableStrategy) *Application {
+	r.UnreachableStrategy = &us
+	return r
+}
+
+// EmptyUnreachableStrategy explicitly empties the unreachable strategy -- use this if
+// you need to empty the unreachable strategy of an application that already has
+// the unreachable strategy set (setting it to nil will keep the current value).
+func (r *Application) EmptyUnreachableStrategy() *Application {
+	r.UnreachableStrategy = &UnreachableStrategy{}
 	return r
 }
 

@@ -707,3 +707,18 @@ func TestUpgradeStrategy(t *testing.T) {
 	assert.Nil(t, us.MinimumHealthCapacity)
 	assert.Nil(t, us.MaximumOverCapacity)
 }
+
+func TestUnreachableStrategy(t *testing.T) {
+	app := Application{}
+	assert.Nil(t, app.UnreachableStrategy)
+	app.SetUnreachableStrategy(UnreachableStrategy{}.SetExpungeAfterSeconds(30.0).SetInactiveAfterSeconds(5.0))
+	us := app.UnreachableStrategy
+	assert.Equal(t, 30.0, *us.ExpungeAfterSeconds)
+	assert.Equal(t, 5.0, *us.InactiveAfterSeconds)
+
+	app.EmptyUnreachableStrategy()
+	us = app.UnreachableStrategy
+	assert.NotNil(t, us)
+	assert.Nil(t, us.ExpungeAfterSeconds)
+	assert.Nil(t, us.InactiveAfterSeconds)
+}
