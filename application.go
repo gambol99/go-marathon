@@ -455,7 +455,7 @@ func (r *Application) DeploymentIDs() []*DeploymentID {
 // CheckHTTP adds a HTTP check to an application
 //		port: 		the port the check should be checking
 // 		interval:	the interval in seconds the check should be performed
-func (r *Application) CheckHTTP(uri string, port, interval int) (*Application, error) {
+func (r *Application) CheckHTTP(path string, port, interval int) (*Application, error) {
 	if r.Container == nil || r.Container.Docker == nil {
 		return nil, ErrNoApplicationContainer
 	}
@@ -466,7 +466,7 @@ func (r *Application) CheckHTTP(uri string, port, interval int) (*Application, e
 	}
 	health := NewDefaultHealthCheck()
 	health.IntervalSeconds = interval
-	*health.Path = uri
+	*health.Path = path
 	*health.PortIndex = portIndex
 	// step: add to the checks
 	r.AddHealthCheck(*health)
@@ -627,9 +627,9 @@ func (r *marathonClient) HasApplicationVersion(name, version string) (bool, erro
 // ApplicationVersions is a list of versions which has been deployed with marathon for a specific application
 //		name:		the id used to identify the application
 func (r *marathonClient) ApplicationVersions(name string) (*ApplicationVersions, error) {
-	uri := fmt.Sprintf("%s/versions", buildURI(name))
+	path := fmt.Sprintf("%s/versions", buildPath(name))
 	versions := new(ApplicationVersions)
-	if err := r.apiGet(uri, nil, versions); err != nil {
+	if err := r.apiGet(path, nil, versions); err != nil {
 		return nil, err
 	}
 	return versions, nil
@@ -639,9 +639,9 @@ func (r *marathonClient) ApplicationVersions(name string) (*ApplicationVersions,
 // 		name: 		the id used to identify the application
 //		version: 	the version (normally a timestamp) you wish to change to
 func (r *marathonClient) SetApplicationVersion(name string, version *ApplicationVersion) (*DeploymentID, error) {
-	uri := fmt.Sprintf(buildURI(name))
+	path := fmt.Sprintf(buildPath(name))
 	deploymentID := new(DeploymentID)
-	if err := r.apiPut(uri, version, deploymentID); err != nil {
+	if err := r.apiPut(path, version, deploymentID); err != nil {
 		return nil, err
 	}
 
@@ -655,7 +655,7 @@ func (r *marathonClient) Application(name string) (*Application, error) {
 		Application *Application `json:"app"`
 	}
 
-	if err := r.apiGet(buildURI(name), nil, &wrapper); err != nil {
+	if err := r.apiGet(buildPath(name), nil, &wrapper); err != nil {
 		return nil, err
 	}
 
@@ -666,7 +666,7 @@ func (r *marathonClient) Application(name string) (*Application, error) {
 // 		name: 		the id used to identify the application
 //		opts:		GetAppOpts request payload
 func (r *marathonClient) ApplicationBy(name string, opts *GetAppOpts) (*Application, error) {
-	u, err := addOptions(buildURI(name), opts)
+	path, err := addOptions(buildPath(name), opts)
 	if err != nil {
 		return nil, err
 	}
@@ -674,7 +674,7 @@ func (r *marathonClient) ApplicationBy(name string, opts *GetAppOpts) (*Applicat
 		Application *Application `json:"app"`
 	}
 
-	if err := r.apiGet(u, nil, &wrapper); err != nil {
+	if err := r.apiGet(path, nil, &wrapper); err != nil {
 		return nil, err
 	}
 
@@ -687,8 +687,8 @@ func (r *marathonClient) ApplicationBy(name string, opts *GetAppOpts) (*Applicat
 func (r *marathonClient) ApplicationByVersion(name, version string) (*Application, error) {
 	app := new(Application)
 
-	uri := fmt.Sprintf("%s/versions/%s", buildURI(name), version)
-	if err := r.apiGet(uri, nil, app); err != nil {
+	path := fmt.Sprintf("%s/versions/%s", buildPath(name), version)
+	if err := r.apiGet(path, nil, app); err != nil {
 		return nil, err
 	}
 
@@ -795,10 +795,10 @@ func (r *marathonClient) appExistAndRunning(name string) bool {
 // 		name: 		the id used to identify the application
 //		force:		used to force the delete operation in case of blocked deployment
 func (r *marathonClient) DeleteApplication(name string, force bool) (*DeploymentID, error) {
-	uri := buildURIWithForceParam(name, force)
+	path := buildPathWithForceParam(name, force)
 	// step: check of the application already exists
 	deployID := new(DeploymentID)
-	if err := r.apiDelete(uri, nil, deployID); err != nil {
+	if err := r.apiDelete(path, nil, deployID); err != nil {
 		return nil, err
 	}
 
@@ -810,8 +810,8 @@ func (r *marathonClient) DeleteApplication(name string, force bool) (*Deployment
 func (r *marathonClient) RestartApplication(name string, force bool) (*DeploymentID, error) {
 	deployment := new(DeploymentID)
 	var options struct{}
-	uri := buildURIWithForceParam(fmt.Sprintf("%s/restart", name), force)
-	if err := r.apiPost(uri, &options, deployment); err != nil {
+	path := buildPathWithForceParam(fmt.Sprintf("%s/restart", name), force)
+	if err := r.apiPost(path, &options, deployment); err != nil {
 		return nil, err
 	}
 
@@ -826,9 +826,9 @@ func (r *marathonClient) ScaleApplicationInstances(name string, instances int, f
 	changes := new(Application)
 	changes.ID = validateID(name)
 	changes.Instances = &instances
-	uri := buildURIWithForceParam(name, force)
+	path := buildPathWithForceParam(name, force)
 	deployID := new(DeploymentID)
-	if err := r.apiPut(uri, changes, deployID); err != nil {
+	if err := r.apiPut(path, changes, deployID); err != nil {
 		return nil, err
 	}
 
@@ -839,22 +839,22 @@ func (r *marathonClient) ScaleApplicationInstances(name string, instances int, f
 // 		application:		the structure holding the application configuration
 func (r *marathonClient) UpdateApplication(application *Application, force bool) (*DeploymentID, error) {
 	result := new(DeploymentID)
-	uri := buildURIWithForceParam(application.ID, force)
-	if err := r.apiPut(uri, application, result); err != nil {
+	path := buildPathWithForceParam(application.ID, force)
+	if err := r.apiPut(path, application, result); err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func buildURIWithForceParam(path string, force bool) string {
-	uri := buildURI(path)
+func buildPathWithForceParam(rootPath string, force bool) string {
+	path := buildPath(rootPath)
 	if force {
-		uri += "?force=true"
+		path += "?force=true"
 	}
-	return uri
+	return path
 }
 
-func buildURI(path string) string {
+func buildPath(path string) string {
 	return fmt.Sprintf("%s/%s", marathonAPIApps, trimRootPath(path))
 }
 
