@@ -17,14 +17,17 @@ limitations under the License.
 package marathon
 
 import (
-	"net/http"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-const eventPublishTimeout time.Duration = 250 * time.Millisecond
+const (
+	eventPublishTimeout time.Duration = 250 * time.Millisecond
+	SSEConnectWaitTime  time.Duration = 250 * time.Millisecond
+)
 
 type testCaseList []testCase
 
@@ -293,28 +296,8 @@ func TestUnsubscribe(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestEventStreamConnectionErrorsForwarded(t *testing.T) {
-	clientCfg := NewDefaultConfig()
-	config := &configContainer{
-		client: &clientCfg,
-	}
-	config.client.EventsTransport = EventsTransportSSE
-	config.client.URL = "http://non-existing-marathon-host.local:5555"
-	// Reduce timeout to speed up test execution time.
-	config.client.HTTPClient = &http.Client{
-		Timeout: 100 * time.Millisecond,
-	}
-	endpoint := newFakeMarathonEndpoint(t, config)
-	defer endpoint.Close()
-
-	_, err := endpoint.Client.AddEventsListener(EventIDApplications)
-	assert.Error(t, err)
-}
-
 func TestEventStreamEventsReceived(t *testing.T) {
-	if !assert.True(t, len(testCases) > 1, "must have at least 2 test cases to end prematurely") {
-		return
-	}
+	require.True(t, len(testCases) > 1, "must have at least 2 test cases to end prematurely")
 
 	clientCfg := NewDefaultConfig()
 	config := configContainer{
@@ -329,6 +312,9 @@ func TestEventStreamEventsReceived(t *testing.T) {
 
 	almostAllTestCases := testCases[:len(testCases)-1]
 	finalTestCase := testCases[len(testCases)-1]
+
+	// Let a bit time pass so that the SSE subscription can connect
+	time.Sleep(SSEConnectWaitTime)
 
 	// Publish all but one test event.
 	for _, testCase := range almostAllTestCases {
@@ -367,5 +353,73 @@ func TestEventStreamEventsReceived(t *testing.T) {
 		assert.False(t, more, "should not have received another event")
 	default:
 		assert.Fail(t, "channel was not closed")
+	}
+}
+
+func TestConnectToSSESuccess(t *testing.T) {
+	clientCfg := NewDefaultConfig()
+	// Use non-existent address as first cluster member
+	clientCfg.URL = "http://127.0.0.1:11111"
+	clientCfg.EventsTransport = EventsTransportSSE
+	config := configContainer{client: &clientCfg}
+
+	endpoint := newFakeMarathonEndpoint(t, &config)
+	defer endpoint.Close()
+
+	client := endpoint.Client.(*marathonClient)
+	// Add real server as member to the cluster
+	client.hosts.members = append(client.hosts.members, &member{endpoint: endpoint.Server.httpSrv.URL})
+
+	// Connection should work as one of the Marathon members is up
+	_, err := client.connectToSSE()
+	assert.NoError(t, err, "expected no error in connectToSSE")
+}
+
+func TestConnectToSSEFailure(t *testing.T) {
+	clientCfg := NewDefaultConfig()
+	clientCfg.EventsTransport = EventsTransportSSE
+	config := configContainer{client: &clientCfg}
+
+	endpoint := newFakeMarathonEndpoint(t, &config)
+	endpoint.Close()
+
+	client := endpoint.Client.(*marathonClient)
+
+	// No Marathon member is up, we should get an error
+	_, err := client.connectToSSE()
+	assert.Error(t, err, "expected error in connectToSSE when all cluster members are down")
+}
+
+func TestRegisterSEESubscriptionReconnectsStreamOnError(t *testing.T) {
+	clientCfg := NewDefaultConfig()
+	clientCfg.EventsTransport = EventsTransportSSE
+	config := configContainer{client: &clientCfg}
+
+	endpoint1 := newFakeMarathonEndpoint(t, &config)
+	endpoint2 := newFakeMarathonEndpoint(t, &config)
+	defer endpoint2.Close()
+
+	client1 := endpoint1.Client.(*marathonClient)
+	// Add the second server to the cluster members
+	client1.hosts.members = append(client1.hosts.members, &member{endpoint: endpoint2.Server.httpSrv.URL})
+
+	events, err := endpoint1.Client.AddEventsListener(EventIDApplications)
+	require.NoError(t, err)
+
+	// This should make the SSE subscription fail and reconnect to another cluster member
+	endpoint1.Close()
+
+	// Let a bit time so that subscription can reconnect
+	time.Sleep(SSEConnectWaitTime)
+
+	// Now that our SSE subscription failed over, we can publish on the second server and the message should be consumed
+	endpoint2.Server.PublishEvent(testCases[0].source)
+
+	select {
+	case event := <-events:
+		tc := testCases.find(event.Name)
+		assert.NotNil(t, tc, "received unknown event: %s", event.Name)
+	case <-time.After(eventPublishTimeout):
+		assert.Fail(t, "did not receive event in time")
 	}
 }
