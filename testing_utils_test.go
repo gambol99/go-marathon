@@ -264,12 +264,11 @@ func initFakeMarathonResponses(t *testing.T) {
 		// step: read in the test method specification
 		methodSpec, err := ioutil.ReadFile("./tests/rest-api/methods.yml")
 		if err != nil {
-			t.Fatalf("failed to read in the fake yaml responses")
+			t.Fatalf("failed to read in the fake yaml responses: %s", err)
 		}
 
-		err = yaml.Unmarshal([]byte(methodSpec), &methods)
-		if err != nil {
-			t.Fatalf("failed to unmarshal the response")
+		if err = yaml.Unmarshal([]byte(methodSpec), &methods); err != nil {
+			t.Fatalf("failed to unmarshal the response: %s", err)
 		}
 		for _, method := range methods {
 			key := fakeResponseMapKey(method.Method, method.URI, method.Scope)
