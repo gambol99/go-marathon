@@ -18,8 +18,10 @@ package marathon
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -38,6 +40,32 @@ func TestApplicationMemory(t *testing.T) {
 	app := NewDockerApplication()
 	app.Memory(50.0)
 	assert.Equal(t, 50.0, *app.Mem)
+}
+
+func TestApplicationString(t *testing.T) {
+	app := NewDockerApplication().
+		Name("my-app").
+		CPU(0.1).
+		Memory(64).
+		Storage(0.0).
+		Count(2).
+		AddArgs("/usr/sbin/apache2ctl", "-D", "FOREGROUND").
+		AddEnv("NAME", "frontend_http").
+		AddEnv("SERVICE_80_NAME", "test_http")
+	app.
+		Container.Docker.Container("quay.io/gambol99/apache-php:latest").
+		Bridged().
+		Expose(80).
+		Expose(443)
+	app, err := app.CheckHTTP("/health", 80, 5)
+	assert.Nil(t, err)
+
+	expectedAppJSONBytes, err := ioutil.ReadFile("tests/app-definitions/TestApplicationString-output.json")
+	if err != nil {
+		panic(err)
+	}
+	expectedAppJSON := strings.TrimSpace(string(expectedAppJSONBytes))
+	assert.Equal(t, expectedAppJSON, app.String())
 }
 
 func TestApplicationCount(t *testing.T) {
