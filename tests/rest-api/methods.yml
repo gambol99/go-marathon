@@ -1383,3 +1383,26 @@
       }
     ]
     }
+- uri: /v2/apps/fake-app
+  method: GET
+  scope: unreachablestrategy-present
+  content: |
+    {
+    "app": {
+          "id": "/fake-app",
+          "unreachableStrategy": {
+            "inactiveAfterSeconds": 3.0,
+            "expungeAfterSeconds": 4.0
+          }
+      }
+    }
+- uri: /v2/apps/fake-app
+  method: GET
+  scope: unreachablestrategy-absent
+  content: |
+    {
+    "app": {
+          "id": "/fake-app",
+          "unreachableStrategy": "disabled"
+      }
+    }
