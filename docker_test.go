@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func createPortMapping(containerPort int, protocol string) *PortMapping {
@@ -121,4 +122,33 @@ func TestExternalVolume(t *testing.T) {
 	ev2 := (*container.Volumes)[0].External
 	assert.Equal(t, ev2.Name, "")
 	assert.Equal(t, ev2.Provider, "")
+}
+
+func TestDockerPersistentVolume(t *testing.T) {
+	docker := NewDockerApplication()
+	container := docker.Container.Volume("/host", "/container", "RW")
+	require.Equal(t, 1, len(*docker.Container.Volumes))
+
+	pVol := (*container.Volumes)[0].SetPersistentVolume()
+	pVol.SetType(PersistentVolumeTypeMount)
+	pVol.SetSize(256)
+	pVol.SetMaxSize(128)
+	pVol.AddConstraint("cons1", "EQUAL", "tag1")
+	pVol.AddConstraint("cons2", "UNIQUE")
+
+	assert.Equal(t, 256, pVol.Size)
+	assert.Equal(t, PersistentVolumeTypeMount, pVol.Type)
+	assert.Equal(t, 128, pVol.MaxSize)
+
+	if assert.NotNil(t, pVol.Constraints) {
+		constraints := *pVol.Constraints
+		require.Equal(t, 2, len(constraints))
+		assert.Equal(t, []string{"cons1", "EQUAL", "tag1"}, constraints[0])
+		assert.Equal(t, []string{"cons2", "UNIQUE"}, constraints[1])
+	}
+
+	pVol.EmptyConstraints()
+	if assert.NotNil(t, pVol.Constraints) {
+		assert.Empty(t, len(*pVol.Constraints))
+	}
 }
