@@ -24,6 +24,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -154,6 +155,24 @@ var (
 	ErrMarathonDown = errors.New("all the Marathon hosts are presently down")
 	// ErrTimeoutError is thrown when the operation has timed out
 	ErrTimeoutError = errors.New("the operation has timed out")
+
+	// Default HTTP client used for SSE subscription requests
+	// It is invalid to set client.Timeout because it includes time to read response so
+	// set dial, tls handshake and response header timeouts instead
+	defaultHTTPSSEClient = &http.Client{
+		Transport: &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout: 5 * time.Second,
+			}).Dial,
+			ResponseHeaderTimeout: 10 * time.Second,
+			TLSHandshakeTimeout:   5 * time.Second,
+		},
+	}
+
+	// Default HTTP client used for non SSE requests
+	defaultHTTPClient = &http.Client{
+		Timeout: 10 * time.Second,
+	}
 )
 
 // EventsChannelContext holds contextual data for an EventsChannel.
@@ -198,7 +217,16 @@ type newRequestError struct {
 func NewClient(config Config) (Marathon, error) {
 	// step: if no http client, set to default
 	if config.HTTPClient == nil {
-		config.HTTPClient = http.DefaultClient
+		config.HTTPClient = defaultHTTPClient
+	}
+
+	if config.HTTPSSEClient == nil {
+		config.HTTPSSEClient = defaultHTTPSSEClient
+	} else if config.HTTPSSEClient.Timeout != 0 {
+		return nil, fmt.Errorf(
+			"Global timeout must not be set on custom HTTP client for SSE connections (got %s)",
+			config.HTTPSSEClient.Timeout,
+		)
 	}
 
 	// step: if no polling wait time is set, default to 500 milliseconds.

@@ -59,9 +59,12 @@ marathonURL := "http://10.241.1.71:8080/cluster,10.241.1.72:8080/cluster,10.241.
 
 If you specify a `DCOSToken` in the configuration file but do not pass a custom URL path, `/marathon` will be used.
 
-### Custom HTTP Client
+### Custom HTTP Clients
 
-If you wish to override the http client (by default http.DefaultClient) used by the API; use cases bypassing TLS verification, load root CA's or change the timeouts etc, you can pass a custom client in the config.
+If you wish to override http clients used by the API; use cases bypassing TLS verification, load root CA's or change the timeouts etc, you can pass a custom client in the config.
+There are two clients:
+* `HTTPClient` used for non SSE subscription requests. By default a http.Client with 10 seconds timeout for a whole request.
+* `HTTPSSEClient` used only for SSE subscription requests. `HTTPSSEClient` can't have response read timeout set. By default a http.Client with 5 seconds timeout for dial and tls handshake and 10 seconds timeout for response header receive.
 
 ```Go
 marathonURL := "http://10.241.1.71:8080"
@@ -69,6 +72,18 @@ config := marathon.NewDefaultConfig()
 config.URL = marathonURL
 config.HTTPClient = &http.Client{
     Timeout: (time.Duration(10) * time.Second),
+    Transport: &http.Transport{
+        Dial: (&net.Dialer{
+            Timeout:   10 * time.Second,
+            KeepAlive: 10 * time.Second,
+        }).Dial,
+        TLSClientConfig: &tls.Config{
+            InsecureSkipVerify: true,
+        },
+    },
+}
+config.HTTPSSEClient = &http.Client{
+    // Invalid to set Timeout as it contains timeout for reading a response body
     Transport: &http.Transport{
         Dial: (&net.Dialer{
             Timeout:   10 * time.Second,

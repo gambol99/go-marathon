@@ -735,4 +735,3 @@ func TestUpgradeStrategy(t *testing.T) {
 	assert.Nil(t, us.MinimumHealthCapacity)
 	assert.Nil(t, us.MaximumOverCapacity)
 }
-
