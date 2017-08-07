@@ -17,6 +17,8 @@ limitations under the License.
 package marathon
 
 import (
+	"net"
+	"net/http"
 	"testing"
 	"time"
 
@@ -392,6 +394,15 @@ func TestConnectToSSEFailure(t *testing.T) {
 
 func TestRegisterSEESubscriptionReconnectsStreamOnError(t *testing.T) {
 	clientCfg := NewDefaultConfig()
+	clientCfg.HTTPSSEClient = &http.Client{
+		Transport: &http.Transport{
+			Dial: (&net.Dialer{
+				// set timeout to a small fraction of SSEConnectWaitTime to give client enough time
+				// to detect error and reconnect during sleep
+				Timeout: SSEConnectWaitTime / 10,
+			}).Dial,
+		},
+	}
 	clientCfg.EventsTransport = EventsTransportSSE
 	config := configContainer{client: &clientCfg}
 
