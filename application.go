@@ -56,15 +56,16 @@ type Port struct {
 
 // Application is the definition for an application in marathon
 type Application struct {
-	ID                         string              `json:"id,omitempty"`
-	Cmd                        *string             `json:"cmd,omitempty"`
-	Args                       *[]string           `json:"args,omitempty"`
-	Constraints                *[][]string         `json:"constraints,omitempty"`
-	Container                  *Container          `json:"container,omitempty"`
-	CPUs                       float64             `json:"cpus,omitempty"`
-	GPUs                       *float64            `json:"gpus,omitempty"`
-	Disk                       *float64            `json:"disk,omitempty"`
-	Env                        *map[string]string  `json:"env,omitempty"`
+	ID          string      `json:"id,omitempty"`
+	Cmd         *string     `json:"cmd,omitempty"`
+	Args        *[]string   `json:"args,omitempty"`
+	Constraints *[][]string `json:"constraints,omitempty"`
+	Container   *Container  `json:"container,omitempty"`
+	CPUs        float64     `json:"cpus,omitempty"`
+	GPUs        *float64    `json:"gpus,omitempty"`
+	Disk        *float64    `json:"disk,omitempty"`
+	// Contains non-secret environment variables. Secrets environment variables are part of the Secrets map.
+	Env                        *map[string]string  `json:"-"`
 	Executor                   *string             `json:"executor,omitempty"`
 	HealthChecks               *[]HealthCheck      `json:"healthChecks,omitempty"`
 	ReadinessChecks            *[]ReadinessCheck   `json:"readinessChecks,omitempty"`
@@ -99,6 +100,7 @@ type Application struct {
 	LastTaskFailure       *LastTaskFailure        `json:"lastTaskFailure,omitempty"`
 	Fetch                 *[]Fetch                `json:"fetch,omitempty"`
 	IPAddressPerTask      *IPAddressPerTask       `json:"ipAddress,omitempty"`
+	Secrets               *map[string]Secret      `json:"-"`
 }
 
 // ApplicationVersions is a collection of application versions for a specific app in marathon
@@ -147,6 +149,14 @@ type TaskStats struct {
 type Stats struct {
 	Counts   map[string]int     `json:"counts"`
 	LifeTime map[string]float64 `json:"lifeTime"`
+}
+
+// Secret is the environment variable and secret store path associated with a secret.
+// The value for EnvVar is populated from the env field, and Source is populated from
+// the secrets field of the application json.
+type Secret struct {
+	EnvVar string
+	Source string
 }
 
 // SetIPAddressPerTask defines that the application will have a IP address defines by a external agent.
@@ -355,8 +365,8 @@ func (r *Application) EmptyLabels() *Application {
 }
 
 // AddEnv adds an environment variable to the application
-//		name:	the name of the variable
-//		value:	go figure, the value associated to the above
+// name:	the name of the variable
+// value:	go figure, the value associated to the above
 func (r *Application) AddEnv(name, value string) *Application {
 	if r.Env == nil {
 		r.EmptyEnvs()
@@ -371,6 +381,28 @@ func (r *Application) AddEnv(name, value string) *Application {
 // keep the current value)
 func (r *Application) EmptyEnvs() *Application {
 	r.Env = &map[string]string{}
+
+	return r
+}
+
+// AddSecret adds a secret declaration
+// envVar: the name of the environment variable
+// name:	the name of the secret
+// source:	the source ID of the secret
+func (r *Application) AddSecret(envVar, name, source string) *Application {
+	if r.Secrets == nil {
+		r.EmptySecrets()
+	}
+	(*r.Secrets)[name] = Secret{EnvVar: envVar, Source: source}
+
+	return r
+}
+
+// EmptySecrets explicitly empties the secrets -- use this if you need to empty
+// the secrets of an application that already has secrets set (setting secrets to nil will
+// keep the current value)
+func (r *Application) EmptySecrets() *Application {
+	r.Secrets = &map[string]Secret{}
 
 	return r
 }

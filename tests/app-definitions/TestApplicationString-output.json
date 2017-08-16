@@ -26,10 +26,6 @@
   },
   "cpus": 0.1,
   "disk": 0,
-  "env": {
-    "NAME": "frontend_http",
-    "SERVICE_80_NAME": "test_http"
-  },
   "healthChecks": [
     {
       "portIndex": 0,
@@ -44,5 +40,9 @@
   "instances": 2,
   "mem": 64,
   "ports": null,
-  "dependencies": null
+  "dependencies": null,
+  "env": {
+    "NAME": "frontend_http",
+    "SERVICE_80_NAME": "test_http"
+  }
 }
