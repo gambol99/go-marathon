@@ -65,13 +65,13 @@ func (us *UnreachableStrategy) MarshalJSON() ([]byte, error) {
 }
 
 // SetInactiveAfterSeconds sets the period after which instance will be marked as inactive.
-func (us UnreachableStrategy) SetInactiveAfterSeconds(cap float64) UnreachableStrategy {
+func (us *UnreachableStrategy) SetInactiveAfterSeconds(cap float64) *UnreachableStrategy {
 	us.InactiveAfterSeconds = &cap
 	return us
 }
 
 // SetExpungeAfterSeconds sets the period after which instance will be expunged.
-func (us UnreachableStrategy) SetExpungeAfterSeconds(cap float64) UnreachableStrategy {
+func (us *UnreachableStrategy) SetExpungeAfterSeconds(cap float64) *UnreachableStrategy {
 	us.ExpungeAfterSeconds = &cap
 	return us
 }

@@ -23,13 +23,13 @@ type UpgradeStrategy struct {
 }
 
 // SetMinimumHealthCapacity sets the minimum health capacity.
-func (us UpgradeStrategy) SetMinimumHealthCapacity(cap float64) UpgradeStrategy {
+func (us *UpgradeStrategy) SetMinimumHealthCapacity(cap float64) *UpgradeStrategy {
 	us.MinimumHealthCapacity = &cap
 	return us
 }
 
 // SetMaximumOverCapacity sets the maximum over capacity.
-func (us UpgradeStrategy) SetMaximumOverCapacity(cap float64) UpgradeStrategy {
+func (us *UpgradeStrategy) SetMaximumOverCapacity(cap float64) *UpgradeStrategy {
 	us.MaximumOverCapacity = &cap
 	return us
 }

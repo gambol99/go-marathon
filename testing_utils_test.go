@@ -313,12 +313,11 @@ func (s *fakeServer) PublishEvent(event string) {
 	s.eventSrv.Publish([]string{"event"}, fakeEvent{event})
 }
 
-func (s *fakeServer) Close() error {
+func (s *fakeServer) Close() {
 	s.eventSrv.Close()
 	s.httpSrv.Close()
-	return nil
 }
 
-func (e *endpoint) Close() error {
-	return e.Server.Close()
+func (e *endpoint) Close() {
+	e.Server.Close()
 }
