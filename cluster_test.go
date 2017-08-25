@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSize(t *testing.T) {
@@ -81,16 +82,32 @@ func TestMarkDown(t *testing.T) {
 	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 	cluster, err := newStandardCluster(endpoint.URL)
-	assert.NoError(t, err)
-	assert.Equal(t, len(cluster.activeMembers()), 3)
+	require.NoError(t, err)
+	require.Equal(t, len(cluster.activeMembers()), 3)
+	cluster.healthCheckInterval = 2500 * time.Millisecond
 
 	members := cluster.activeMembers()
 	cluster.markDown(members[0])
 	cluster.markDown(members[1])
-	assert.Equal(t, 1, len(cluster.activeMembers()))
+	require.Equal(t, len(cluster.activeMembers()), 1)
 
-	time.Sleep(10 * time.Millisecond)
-	assert.Equal(t, len(cluster.activeMembers()), 3)
+	ticker := time.NewTicker(250 * time.Millisecond)
+	defer ticker.Stop()
+	timeout := time.NewTimer(5 * time.Second)
+	defer timeout.Stop()
+	var numFoundMembers int
+	for {
+		numFoundMembers = len(cluster.activeMembers())
+		if numFoundMembers == 3 {
+			break
+		}
+		select {
+		case <-ticker.C:
+			continue
+		case <-timeout.C:
+			t.Fatalf("found %d active member(s), want 3", numFoundMembers)
+		}
+	}
 }
 
 func TestValidClusterHosts(t *testing.T) {
