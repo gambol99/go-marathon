@@ -373,8 +373,10 @@ func TestConnectToSSESuccess(t *testing.T) {
 	client.hosts.members = append(client.hosts.members, &member{endpoint: endpoint.Server.httpSrv.URL})
 
 	// Connection should work as one of the Marathon members is up
-	_, err := client.connectToSSE()
-	assert.NoError(t, err, "expected no error in connectToSSE")
+	stream, err := client.connectToSSE()
+	if assert.NoError(t, err, "expected no error in connectToSSE") {
+		stream.Close()
+	}
 }
 
 func TestConnectToSSEFailure(t *testing.T) {
@@ -388,8 +390,10 @@ func TestConnectToSSEFailure(t *testing.T) {
 	client := endpoint.Client.(*marathonClient)
 
 	// No Marathon member is up, we should get an error
-	_, err := client.connectToSSE()
-	assert.Error(t, err, "expected error in connectToSSE when all cluster members are down")
+	stream, err := client.connectToSSE()
+	if !assert.Error(t, err, "expected error in connectToSSE when all cluster members are down") {
+		stream.Close()
+	}
 }
 
 func TestRegisterSEESubscriptionReconnectsStreamOnError(t *testing.T) {
