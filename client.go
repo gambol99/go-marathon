@@ -357,16 +357,28 @@ func (r *marathonClient) buildAPIRequest(method, path string, reader io.Reader) 
 	}
 
 	// Build the HTTP request to Marathon
-	request, err = r.client.buildMarathonRequest(method, member, path, reader)
+	request, err = r.client.buildMarathonJSONRequest(method, member, path, reader)
 	if err != nil {
 		return nil, member, newRequestError{err}
 	}
 	return request, member, nil
 }
 
+// buildMarathonJSONRequest is like buildMarathonRequest but sets the
+// Content-Type and Accept headers to application/json.
+func (rc *httpClient) buildMarathonJSONRequest(method, member, path string, reader io.Reader) (request *http.Request, err error) {
+	req, err := rc.buildMarathonRequest(method, member, path, reader)
+	if err == nil {
+		req.Header.Add("Content-Type", "application/json")
+		req.Header.Add("Accept", "application/json")
+	}
+
+	return req, err
+}
+
 // buildMarathonRequest creates a new HTTP request and configures it according to the *httpClient configuration.
 // The path must not contain a leading "/", otherwise buildMarathonRequest will panic.
-func (rc *httpClient) buildMarathonRequest(method string, member string, path string, reader io.Reader) (request *http.Request, err error) {
+func (rc *httpClient) buildMarathonRequest(method, member, path string, reader io.Reader) (request *http.Request, err error) {
 	if strings.HasPrefix(path, "/") {
 		panic(fmt.Sprintf("Path '%s' must not start with a leading slash", path))
 	}
@@ -388,9 +400,6 @@ func (rc *httpClient) buildMarathonRequest(method string, member string, path st
 	if rc.config.DCOSToken != "" {
 		request.Header.Add("Authorization", "token="+rc.config.DCOSToken)
 	}
-
-	request.Header.Add("Content-Type", "application/json")
-	request.Header.Add("Accept", "application/json")
 
 	return request, nil
 }
