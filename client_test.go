@@ -20,7 +20,6 @@ import (
 	"testing"
 
 	"net/http"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -43,15 +42,57 @@ func TestNewClient(t *testing.T) {
 	assert.Equal(t, conf.PollingWaitTime, defaultPollingWaitTime)
 }
 
-func TestInvalidConfigHTTPSSEClientTimeoutIsSet(t *testing.T) {
-	config := Config{
-		URL: "http://marathon",
-		HTTPSSEClient: &http.Client{
-			Timeout: 1 * time.Second,
+func TestHTTPClientDefaults(t *testing.T) {
+	customHTTPRegularClient := http.DefaultClient
+
+	tests := []struct {
+		name                  string
+		httpRegularClient     *http.Client
+		httpSSEClient         *http.Client
+		wantHTTPRegularClient *http.Client
+		wantHTTPSSEClient     *http.Client
+	}{
+		{
+			name:                  "regular HTTP client missing",
+			httpRegularClient:     nil,
+			wantHTTPRegularClient: defaultHTTPClient,
+		},
+		{
+			name:              "SSE and regular HTTP clients missing",
+			httpSSEClient:     nil,
+			wantHTTPSSEClient: defaultHTTPSSEClient,
+		},
+		{
+			name:              "SSE HTTP client missing, regular HTTP client available",
+			httpSSEClient:     nil,
+			httpRegularClient: customHTTPRegularClient,
+			wantHTTPSSEClient: customHTTPRegularClient,
 		},
 	}
-	_, err := NewClient(config)
-	assert.Error(t, err)
+
+	for _, test := range tests {
+		config := NewDefaultConfig()
+		config.HTTPClient = test.httpRegularClient
+		config.HTTPSSEClient = test.httpSSEClient
+
+		client, err := NewClient(config)
+		if !assert.NoError(t, err, test.name) {
+			continue
+		}
+
+		maraClient := client.(*marathonClient)
+		if test.wantHTTPRegularClient != nil {
+			if !assert.Equal(t, test.wantHTTPRegularClient, maraClient.config.HTTPClient, test.name) {
+				continue
+			}
+		}
+
+		if test.wantHTTPSSEClient != nil {
+			if !assert.Equal(t, test.wantHTTPSSEClient, maraClient.config.HTTPSSEClient, test.name) {
+				continue
+			}
+		}
+	}
 }
 
 func TestInvalidConfig(t *testing.T) {

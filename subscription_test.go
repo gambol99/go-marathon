@@ -298,6 +298,22 @@ func TestUnsubscribe(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestSSEWithGlobalTimeout(t *testing.T) {
+	clientCfg := NewDefaultConfig()
+	clientCfg.HTTPSSEClient = &http.Client{
+		Timeout: 1 * time.Second,
+	}
+	config := configContainer{
+		client: &clientCfg,
+	}
+	config.client.EventsTransport = EventsTransportSSE
+	endpoint := newFakeMarathonEndpoint(t, &config)
+	defer endpoint.Close()
+
+	_, err := endpoint.Client.AddEventsListener(EventIDApplications)
+	assert.Error(t, err)
+}
+
 func TestEventStreamEventsReceived(t *testing.T) {
 	require.True(t, len(testCases) > 1, "must have at least 2 test cases to end prematurely")
 
