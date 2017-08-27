@@ -136,7 +136,7 @@ func (r *marathonClient) GroupBy(name string, opts *GetGroupOpts) (*Group, error
 // 		name:			the identifier for the group
 func (r *marathonClient) HasGroup(name string) (bool, error) {
 	path := fmt.Sprintf("%s/%s", marathonAPIGroups, trimRootPath(name))
-	err := r.apiCall("GET", path, "", nil)
+	err := r.apiGet(path, "", nil)
 	if err != nil {
 		if apiErr, ok := err.(*APIError); ok && apiErr.ErrCode == ErrCodeNotFound {
 			return false, nil
