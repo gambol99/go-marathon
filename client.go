@@ -303,6 +303,14 @@ func (r *marathonClient) apiCall(method, path string, body, result interface{}) 
 			return err
 		}
 
+		// Might suffice to set Content-Type if body is non-nil and Accept if
+		// result is non-nil. Without integration tests, however, we'll play
+		// it safe.
+		if body != nil || result != nil {
+			request.Header.Add("Content-Type", "application/json")
+			request.Header.Add("Accept", "application/json")
+		}
+
 		// step: perform the API request
 		response, err := r.client.Do(request)
 		if err != nil {
@@ -357,23 +365,11 @@ func (r *marathonClient) buildAPIRequest(method, path string, reader io.Reader) 
 	}
 
 	// Build the HTTP request to Marathon
-	request, err = r.client.buildMarathonJSONRequest(method, member, path, reader)
+	request, err = r.client.buildMarathonRequest(method, member, path, reader)
 	if err != nil {
 		return nil, member, newRequestError{err}
 	}
 	return request, member, nil
-}
-
-// buildMarathonJSONRequest is like buildMarathonRequest but sets the
-// Content-Type and Accept headers to application/json.
-func (rc *httpClient) buildMarathonJSONRequest(method, member, path string, reader io.Reader) (request *http.Request, err error) {
-	req, err := rc.buildMarathonRequest(method, member, path, reader)
-	if err == nil {
-		req.Header.Add("Content-Type", "application/json")
-		req.Header.Add("Accept", "application/json")
-	}
-
-	return req, err
 }
 
 // buildMarathonRequest creates a new HTTP request and configures it according to the *httpClient configuration.
