@@ -319,5 +319,10 @@ func (s *fakeServer) Close() {
 }
 
 func (e *endpoint) Close() {
+	e.Client.Stop()
+	e.CloseServer()
+}
+
+func (e *endpoint) CloseServer() {
 	e.Server.Close()
 }

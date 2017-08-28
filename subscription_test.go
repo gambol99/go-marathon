@@ -385,7 +385,7 @@ func TestConnectToSSEFailure(t *testing.T) {
 	config := configContainer{client: &clientCfg}
 
 	endpoint := newFakeMarathonEndpoint(t, &config)
-	endpoint.Close()
+	endpoint.CloseServer()
 
 	client := endpoint.Client.(*marathonClient)
 
@@ -425,7 +425,7 @@ func TestRegisterSEESubscriptionReconnectsStreamOnError(t *testing.T) {
 	time.Sleep(SSEConnectWaitTime)
 
 	// This should make the SSE subscription fail and reconnect to another cluster member
-	endpoint1.Close()
+	endpoint1.CloseServer()
 
 	// Give it a bit of time so that the subscription can reconnect
 	time.Sleep(SSEConnectWaitTime)
