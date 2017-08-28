@@ -148,6 +148,14 @@ type Marathon interface {
 	Leader() (string, error)
 	// cause the current leader to abdicate
 	AbdicateLeader() (string, error)
+
+	// Extra APIs not mapping to any Marathon REST endpoint.
+
+	// Stop terminates any library-local processes. For now, this covers
+	// notifying all running health check routines to terminate.
+	// This method is thread-safe and returns once all processes have
+	// stopped.
+	Stop()
 }
 
 var (
@@ -268,6 +276,10 @@ func (r *marathonClient) Ping() (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func (r *marathonClient) Stop() {
+	r.hosts.Stop()
 }
 
 func (r *marathonClient) apiGet(path string, post, result interface{}) error {

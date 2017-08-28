@@ -17,12 +17,15 @@ limitations under the License.
 package marathon
 
 import (
+	"sync/atomic"
 	"testing"
 
 	"net/http"
+	"net/http/httptest"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewClient(t *testing.T) {
@@ -271,4 +274,42 @@ func TestAPIRequestDCOS(t *testing.T) {
 
 		endpoint.Close()
 	}
+}
+
+func TestStop(t *testing.T) {
+	var reqCount uint32
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		atomic.AddUint32(&reqCount, 1)
+		http.Error(w, "I'm down", 503)
+	}))
+	defer ts.Close()
+
+	client, err := NewClient(Config{URL: ts.URL})
+	require.NoError(t, err)
+	client.(*marathonClient).hosts.healthCheckInterval = 50 * time.Millisecond
+
+	_, err = client.Ping()
+	require.Equal(t, ErrMarathonDown, err)
+
+	// Expect some health checks to fail.
+	time.Sleep(150 * time.Millisecond)
+	count := int(atomic.LoadUint32(&reqCount))
+	require.True(t, count > 0, "expected non-zero request count")
+
+	// Stop all health check goroutines.
+	// Should be okay to call the method multiple times.
+	client.Stop()
+	client.Stop()
+
+	// Wait for all health checks to terminate.
+	time.Sleep(100 * time.Millisecond)
+
+	// Reset request counter.
+	atomic.StoreUint32(&reqCount, 0)
+
+	// Wait another small period, not expecting any further health checks to
+	// fire.
+	time.Sleep(100 * time.Millisecond)
+	count = int(atomic.LoadUint32(&reqCount))
+	assert.Equal(t, 0, count, "expected zero request count")
 }

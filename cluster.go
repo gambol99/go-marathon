@@ -42,6 +42,14 @@ type cluster struct {
 	// healthCheckInterval is the interval by which we probe down nodes for
 	// availability again.
 	healthCheckInterval time.Duration
+	// done is a channel signaling to all pending health-checking routines
+	// that it's time to shut down.
+	done chan struct{}
+	// isDone is used to guarantee thread-safety when calling Stop().
+	isDone bool
+	// healthCheckWg is a sync.Workgroup sychronizing the successful
+	// termination of all pending health-check routines.
+	healthCheckWg sync.WaitGroup
 }
 
 // member represents an individual endpoint
@@ -100,7 +108,21 @@ func newCluster(client *httpClient, marathonURL string, isDCOS bool) (*cluster, 
 		client:              client,
 		members:             members,
 		healthCheckInterval: 5 * time.Second,
+		done:                make(chan struct{}),
 	}, nil
+}
+
+// Stop gracefully terminates the cluster. It returns once all health-checking
+// goroutines have finished.
+func (c *cluster) Stop() {
+	c.Lock()
+	defer c.Unlock()
+	if c.isDone {
+		return
+	}
+	c.isDone = true
+	close(c.done)
+	c.healthCheckWg.Wait()
 }
 
 // retrieve the current member, i.e. the current endpoint in use
@@ -125,7 +147,11 @@ func (c *cluster) markDown(endpoint string) {
 		// nodes status ensures the multiple calls don't create multiple checks
 		if n.status == memberStatusUp && n.endpoint == endpoint {
 			n.status = memberStatusDown
-			go c.healthCheckNode(n)
+			c.healthCheckWg.Add(1)
+			go func() {
+				defer c.healthCheckWg.Done()
+				c.healthCheckNode(n)
+			}()
 			break
 		}
 	}
@@ -136,16 +162,21 @@ func (c *cluster) healthCheckNode(node *member) {
 	// step: wait for the node to become active ... we are assuming a /ping is enough here
 	ticker := time.NewTicker(c.healthCheckInterval)
 	defer ticker.Stop()
-	for range ticker.C {
-		req, err := c.client.buildMarathonRequest("GET", node.endpoint, "ping", nil)
-		if err == nil {
-			res, err := c.client.Do(req)
-			if err == nil && res.StatusCode == 200 {
-				// step: mark the node as active again
-				c.Lock()
-				node.status = memberStatusUp
-				c.Unlock()
-				break
+	for {
+		select {
+		case <-c.done:
+			return
+		case <-ticker.C:
+			req, err := c.client.buildMarathonRequest("GET", node.endpoint, "ping", nil)
+			if err == nil {
+				res, err := c.client.Do(req)
+				if err == nil && res.StatusCode == 200 {
+					// step: mark the node as active again
+					c.Lock()
+					node.status = memberStatusUp
+					c.Unlock()
+					break
+				}
 			}
 		}
 	}
