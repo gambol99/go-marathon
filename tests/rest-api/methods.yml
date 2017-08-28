@@ -61,6 +61,10 @@
           0
       ],
       "requirePorts": false,
+      "residency" : {
+          "taskLostBehavior" : "RELAUNCH_AFTER_TIMEOUT",
+          "relaunchEscalationTimeoutSeconds" : 60
+      },
       "storeUrls": [],
       "upgradeStrategy": {
           "minimumHealthCapacity": 0.5,
@@ -201,6 +205,10 @@
                 10001
             ],
             "requirePorts": false,
+            "residency" : {
+                "taskLostBehavior" : "RELAUNCH_AFTER_TIMEOUT",
+                "relaunchEscalationTimeoutSeconds" : 60
+            },
             "storeUrls": [],
             "tasksRunning": 2,
             "tasksStaged": 0,
@@ -353,6 +361,10 @@
             10000
         ],
         "requirePorts": false,
+        "residency" : {
+            "taskLostBehavior" : "RELAUNCH_AFTER_TIMEOUT",
+            "relaunchEscalationTimeoutSeconds" : 60
+        },
         "storeUrls": [],
         "tasks": [
             {
@@ -469,6 +481,10 @@
             10000
         ],
         "requirePorts": false,
+        "residency" : {
+            "taskLostBehavior" : "RELAUNCH_AFTER_TIMEOUT",
+            "relaunchEscalationTimeoutSeconds" : 60
+        },
         "storeUrls": [],
         "tasks": [
             {
@@ -598,6 +614,10 @@
             10000
         ],
         "requirePorts": false,
+        "residency" : {
+            "taskLostBehavior" : "RELAUNCH_AFTER_TIMEOUT",
+            "relaunchEscalationTimeoutSeconds" : 60
+        },
         "storeUrls": [],
         "tasks": [
             {
@@ -1248,6 +1268,10 @@
                 10001
             ],
             "requirePorts": false,
+            "residency" : {
+                "taskLostBehavior" : "RELAUNCH_AFTER_TIMEOUT",
+                "relaunchEscalationTimeoutSeconds" : 60
+            },
             "storeUrls": [],
             "tasksRunning": 2,
             "tasksStaged": 0,

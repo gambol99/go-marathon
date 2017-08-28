@@ -551,6 +551,10 @@ func verifyApplication(application *Application, t *testing.T) {
 	assert.NotNil(t, application.Tasks)
 	assert.Equal(t, len(*application.HealthChecks), 1)
 	assert.Equal(t, len(application.Tasks), 2)
+	assert.Equal(t, application.Residency, &Residency{
+		TaskLostBehavior:                 TaskLostBehaviorTypeRelaunchAfterTimeout,
+		RelaunchEscalationTimeoutSeconds: 60,
+	})
 }
 
 func TestApplication(t *testing.T) {
