@@ -315,7 +315,7 @@ func TestEventStreamEventsReceived(t *testing.T) {
 	almostAllTestCases := testCases[:len(testCases)-1]
 	finalTestCase := testCases[len(testCases)-1]
 
-	// Let a bit time pass so that the SSE subscription can connect
+	// Give it a bit of time so that the subscription can be set up
 	time.Sleep(SSEConnectWaitTime)
 
 	// Publish all but one test event.
@@ -421,10 +421,13 @@ func TestRegisterSEESubscriptionReconnectsStreamOnError(t *testing.T) {
 	events, err := endpoint1.Client.AddEventsListener(EventIDApplications)
 	require.NoError(t, err)
 
+	// Give it a bit of time so that the subscription can be set up
+	time.Sleep(SSEConnectWaitTime)
+
 	// This should make the SSE subscription fail and reconnect to another cluster member
 	endpoint1.Close()
 
-	// Let a bit time so that subscription can reconnect
+	// Give it a bit of time so that the subscription can reconnect
 	time.Sleep(SSEConnectWaitTime)
 
 	// Now that our SSE subscription failed over, we can publish on the second server and the message should be consumed
