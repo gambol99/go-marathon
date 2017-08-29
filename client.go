@@ -215,18 +215,18 @@ type newRequestError struct {
 // NewClient creates a new marathon client
 //		config:			the configuration to use
 func NewClient(config Config) (Marathon, error) {
-	// step: if no http client, set to default
-	if config.HTTPClient == nil {
-		config.HTTPClient = defaultHTTPClient
-	}
-
+	// step: if the SSE HTTP client is missing, prefer a configured regular
+	// client, and otherwise use the default SSE HTTP client.
 	if config.HTTPSSEClient == nil {
 		config.HTTPSSEClient = defaultHTTPSSEClient
-	} else if config.HTTPSSEClient.Timeout != 0 {
-		return nil, fmt.Errorf(
-			"Global timeout must not be set on custom HTTP client for SSE connections (got %s)",
-			config.HTTPSSEClient.Timeout,
-		)
+		if config.HTTPClient != nil {
+			config.HTTPSSEClient = config.HTTPClient
+		}
+	}
+
+	// step: if a regular HTTP client is missing, use the default one.
+	if config.HTTPClient == nil {
+		config.HTTPClient = defaultHTTPClient
 	}
 
 	// step: if no polling wait time is set, default to 500 milliseconds.

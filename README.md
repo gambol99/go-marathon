@@ -59,12 +59,16 @@ marathonURL := "http://10.241.1.71:8080/cluster,10.241.1.72:8080/cluster,10.241.
 
 If you specify a `DCOSToken` in the configuration file but do not pass a custom URL path, `/marathon` will be used.
 
-### Custom HTTP Clients
+### Customizing the HTTP Clients
 
-If you wish to override http clients used by the API; use cases bypassing TLS verification, load root CA's or change the timeouts etc, you can pass a custom client in the config.
-There are two clients:
-* `HTTPClient` used for non SSE subscription requests. By default a http.Client with 10 seconds timeout for a whole request.
-* `HTTPSSEClient` used only for SSE subscription requests. `HTTPSSEClient` can't have response read timeout set. By default a http.Client with 5 seconds timeout for dial and tls handshake and 10 seconds timeout for response header receive.
+HTTP clients with reasonable timeouts are used by default. It is possible to pass custom clients to the configuration though if the behavior should be customized (e.g., to bypass TLS verification, load root CAs, or change timeouts).
+
+Two clients can be given independently of each other:
+
+- `HTTPClient` used only for (non-SSE) HTTP API requests. By default, an http.Client with 10 seconds timeout for the entire request is used.
+- `HTTPSSEClient` used only for SSE-based subscription requests. Note that `HTTPSSEClient` cannot have a response read timeout set as this breaks SSE communication; trying to do so will lead to an error during the SSE connection setup. By default, an http.Client with 5 seconds timeout for dial and TLS handshake, and 10 seconds timeout for response headers received is used.
+
+If no `HTTPSSEClient` is given but an `HTTPClient` is, it will be used for SSE subscriptions as well (thereby overriding the default SSE HTTP client).
 
 ```Go
 marathonURL := "http://10.241.1.71:8080"
