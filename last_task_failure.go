@@ -21,6 +21,7 @@ type LastTaskFailure struct {
 	AppID     string `json:"appId,omitempty"`
 	Host      string `json:"host,omitempty"`
 	Message   string `json:"message,omitempty"`
+	SlaveID   string `json:"slaveId,omitempty"`
 	State     string `json:"state,omitempty"`
 	TaskID    string `json:"taskId,omitempty"`
 	Timestamp string `json:"timestamp,omitempty"`
