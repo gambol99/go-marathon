@@ -258,7 +258,7 @@ func authMiddleware(server *serverConfig, next http.HandlerFunc) func(http.Respo
 // initFakeMarathonResponses reads in the marathon fake responses from the yaml file
 func initFakeMarathonResponses(t *testing.T) {
 	once.Do(func() {
-		fakeResponses = make(map[string][]indexedResponse, 0)
+		fakeResponses = make(map[string][]indexedResponse)
 		var methods []*restMethod
 
 		// step: read in the test method specification
