@@ -689,7 +689,7 @@ func (r *marathonClient) ApplicationVersions(name string) (*ApplicationVersions,
 // 		name: 		the id used to identify the application
 //		version: 	the version (normally a timestamp) you wish to change to
 func (r *marathonClient) SetApplicationVersion(name string, version *ApplicationVersion) (*DeploymentID, error) {
-	path := fmt.Sprintf(buildPath(name))
+	path := buildPath(name)
 	deploymentID := new(DeploymentID)
 	if err := r.apiPut(path, version, deploymentID); err != nil {
 		return nil, err

@@ -52,9 +52,5 @@ func (r *marathonClient) Queue() (*Queue, error) {
 //		appID:		the ID of the application
 func (r *marathonClient) DeleteQueueDelay(appID string) error {
 	path := fmt.Sprintf("%s/%s/delay", marathonAPIQueue, trimRootPath(appID))
-	err := r.apiDelete(path, nil, nil)
-	if err != nil {
-		return err
-	}
-	return nil
+	return r.apiDelete(path, nil, nil)
 }

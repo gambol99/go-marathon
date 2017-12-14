@@ -441,7 +441,7 @@ func TestApplicationVersions(t *testing.T) {
 	assert.Equal(t, len(versions.Versions), 1)
 	assert.Equal(t, versions.Versions[0], "2014-04-04T06:25:31.399Z")
 	/* check we get an error on app not there */
-	versions, err = endpoint.Client.ApplicationVersions("/not/there")
+	_, err = endpoint.Client.ApplicationVersions("/not/there")
 	assert.Error(t, err)
 }
 
@@ -524,7 +524,7 @@ func TestDeleteApplication(t *testing.T) {
 		assert.NotNil(t, id)
 		assert.Equal(t, "83b215a6-4e26-4e44-9333-5c385eda6438", id.DeploymentID)
 		assert.Equal(t, "2014-08-26T07:37:50.462Z", id.Version)
-		id, err = endpoint.Client.DeleteApplication("no_such_app", force)
+		_, err = endpoint.Client.DeleteApplication("no_such_app", force)
 		assert.Error(t, err)
 	}
 }
