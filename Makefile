@@ -54,10 +54,9 @@ check-format:
 		exit 1; \
 	fi
 
-test: deps
+test: deps vet
 	@echo "--> Running go tests"
 	@go test -race -v
-	@$(MAKE) vet
 	@$(MAKE) cover
 
 examples:
