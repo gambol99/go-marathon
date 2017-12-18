@@ -17,11 +17,13 @@ limitations under the License.
 package marathon
 
 import (
+	"bytes"
 	"testing"
 
 	"net/http"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewClient(t *testing.T) {
@@ -93,6 +95,21 @@ func TestHTTPClientDefaults(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestLogOutput(t *testing.T) {
+	buf := bytes.NewBuffer(nil)
+	config := Config{
+		URL:       "http://marathon",
+		LogOutput: buf,
+	}
+
+	cl, err := NewClient(config)
+	require.Nil(t, err)
+
+	cl.(*marathonClient).debugLog("this is a %s", "test")
+
+	assert.Equal(t, "this is a test\n", buf.String())
 }
 
 func TestInvalidConfig(t *testing.T) {
