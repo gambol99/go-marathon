@@ -717,7 +717,9 @@ func TestIPAddressPerTask(t *testing.T) {
 	ipPerTask.
 		AddGroup("label").
 		AddLabel("key", "value").
-		SetDiscovery(Discovery{})
+		SetDiscovery(Discovery{
+			Ports: &[]Port{},
+		})
 
 	assert.Equal(t, 1, len(*ipPerTask.Groups))
 	assert.Equal(t, "label", (*ipPerTask.Groups)[0])
@@ -729,7 +731,6 @@ func TestIPAddressPerTask(t *testing.T) {
 
 	ipPerTask.EmptyLabels()
 	assert.Equal(t, 0, len(*ipPerTask.Labels))
-
 }
 
 func TestIPAddressPerTaskDiscovery(t *testing.T) {
