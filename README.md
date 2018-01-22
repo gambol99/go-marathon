@@ -11,6 +11,7 @@ It currently supports
 - Helper filters for pulling the status, configuration and tasks
 - Multiple Endpoint support for HA deployments
 - Marathon Event Subscriptions and Event Streams
+- Pods
 
 Note: the library is still under active development; users should expect frequent (possibly breaking) API changes for the time being.
 
@@ -167,6 +168,38 @@ if err := client.ScaleApplicationInstances(application.ID, 4); err != nil {
 	client.WaitOnApplication(application.ID, 30 * time.Second)
 	log.Printf("Successfully scaled the application")
 }
+```
+
+### Pods
+
+Pods allow you to deploy groups of tasks as a unit. All tasks in a single instance of a pod share networking and storage. View the [Marathon documentation](https://mesosphere.github.io/marathon/docs/pods.html) for more details on this feature.
+
+Examples of their usage can be seen in the `examples/pods` directory, and a smaller snippet is below.
+
+```Go
+// Initialize a single-container pod running nginx
+pod := marathon.NewPod()
+
+image := marathon.NewDockerPodContainerImage().SetID("nginx")
+
+container := marathon.NewPodContainer().
+	SetName("container", i).
+	CPUs(0.1).
+	Memory(128).
+	SetImage(image)
+
+pod.Name("mypod").AddContainer(container)
+
+// Create it and wait for it to start up
+pod, err := client.CreatePod(pod)
+err = client.WaitOnPod(pod.ID, time.Minute*1)
+
+// Scale it
+pod.Count(5)
+pod, err = client.UpdatePod(pod, true)
+
+// Delete it
+id, err := client.DeletePod(pod.ID, true)
 ```
 
 ### Subscription & Events

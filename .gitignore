@@ -12,6 +12,7 @@ examples/events_sse_transport/events_sse_transport
 examples/glog/glog
 examples/groups/groups
 examples/multiple_endpoints/multiple_endpoints
+examples/pods/pods
 examples/queue/queue
 examples/tasks/tasks
 coverage

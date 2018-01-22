@@ -516,9 +516,10 @@ func TestHasApplicationVersion(t *testing.T) {
 }
 
 func TestDeleteApplication(t *testing.T) {
+	endpoint := newFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+
 	for _, force := range []bool{false, true} {
-		endpoint := newFakeMarathonEndpoint(t, nil)
-		defer endpoint.Close()
 		id, err := endpoint.Client.DeleteApplication(fakeAppName, force)
 		assert.NoError(t, err)
 		assert.NotNil(t, id)

@@ -29,6 +29,7 @@ type Deployment struct {
 	CurrentStep    int                 `json:"currentStep"`
 	TotalSteps     int                 `json:"totalSteps"`
 	AffectedApps   []string            `json:"affectedApps"`
+	AffectedPods   []string            `json:"affectedPods"`
 	Steps          [][]*DeploymentStep `json:"-"`
 	XXStepsRaw     json.RawMessage     `json:"steps"` // Holds raw steps JSON to unmarshal later
 	CurrentActions []*DeploymentStep   `json:"currentActions"`

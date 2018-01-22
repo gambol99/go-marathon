@@ -699,6 +699,586 @@
       "deploymentId": "83b215a6-4e26-4e44-9333-5c385eda6438",
       "version": "2014-08-26T07:37:50.462Z"
     }
+- uri: /v2/pods
+  method: HEAD
+- uri: /v2/pods/fake-pod::status
+  method: GET
+  content: |
+    {
+      "id": "/fake-pod",
+      "spec": {
+        "id": "/fake-pod",
+        "labels": {
+          "key": "value"
+        },
+        "version": "2014-08-18T22:36:41.451Z",
+        "user": "nobody",
+        "environment": {
+          "key": {
+            "secret": "secret0"
+          }
+        },
+        "containers": [],
+        "secrets": {
+          "secret0": {
+            "source": "source0"
+          }
+        },
+        "volumes": [],
+        "networks": [],
+        "scaling": {
+          "kind": "fixed",
+          "instances": 1
+        },
+        "scheduling": {}
+      },
+      "status": "STABLE",
+      "statusSince": "2017-07-13T21:33:17.349Z",
+      "instances": [
+        {
+          "id": "fake-pod.instance-dc6cfe60-6812-11e7-a18e-70b3d5800003",
+          "status": "STABLE",
+          "statusSince": "2017-07-13T21:33:17.349Z",
+          "conditions": [],
+          "agentHostname": "192.168.99.100",
+          "resources": {
+            "cpus": 0.1,
+            "mem": 64,
+            "disk": 0,
+            "gpus": 0
+          },
+          "networks": [],
+          "containers": [
+            {
+              "name": "container1",
+              "status": "TASK_RUNNING",
+              "statusSince": "2017-07-13T21:33:17.349Z",
+              "conditions": [],
+              "containerId": "fake-pod.instance-dc6cfe60-6812-11e7-a18e-70b3d5800003.container1",
+              "endpoints": [],
+              "resources": {
+                "cpus": 0.1,
+                "mem": 32,
+                "disk": 0,
+                "gpus": 0
+              },
+              "lastUpdated": "2017-07-13T21:33:17.349Z",
+              "lastChanged": "2017-07-13T21:33:17.349Z"
+            }
+          ],
+          "specReference": "/v2/pods/fake-pod::versions/2017-07-13T21:33:07.389Z",
+          "lastUpdated": "2017-07-13T21:33:17.349Z",
+          "lastChanged": "2017-07-13T21:33:17.349Z"
+        }
+      ],
+      "terminationHistory": [],
+      "lastUpdated": "2017-07-13T22:13:46.635Z",
+      "lastChanged": "2017-07-13T21:33:17.349Z"
+    }
+- uri: /v2/pods/fake-pod2::status
+  method: GET
+  content: |
+    {
+      "id": "/fake-pod2",
+      "spec": {
+        "id": "/fake-pod2",
+        "labels": {
+          "key": "value"
+        },
+        "version": "2014-08-18T22:36:41.451Z",
+        "user": "nobody",
+        "environment": {
+          "key": {
+            "secret": "secret0"
+          }
+        },
+        "containers": [],
+        "secrets": {
+          "secret0": {
+            "source": "source0"
+          }
+        },
+        "volumes": [],
+        "networks": [],
+        "scaling": {
+          "kind": "fixed",
+          "instances": 1
+        },
+        "scheduling": {}
+      },
+      "status": "DEGRADED",
+      "statusSince": "2017-07-13T21:33:17.349Z",
+      "instances": [
+        {
+          "id": "fake-pod2.instance-dc6cfe60-6812-11e7-a18e-70b3d5800003",
+          "status": "DEGRADED",
+          "statusSince": "2017-07-13T21:33:17.349Z",
+          "conditions": [],
+          "agentHostname": "192.168.99.100",
+          "resources": {
+            "cpus": 0.1,
+            "mem": 64,
+            "disk": 0,
+            "gpus": 0
+          },
+          "networks": [],
+          "containers": [
+            {
+              "name": "container1",
+              "status": "TASK_RUNNING",
+              "statusSince": "2017-07-13T21:33:17.349Z",
+              "conditions": [],
+              "containerId": "fake-pod.instance-dc6cfe60-6812-11e7-a18e-70b3d5800003.container1",
+              "endpoints": [],
+              "resources": {
+                "cpus": 0.1,
+                "mem": 32,
+                "disk": 0,
+                "gpus": 0
+              },
+              "lastUpdated": "2017-07-13T21:33:17.349Z",
+              "lastChanged": "2017-07-13T21:33:17.349Z"
+            }
+          ],
+          "specReference": "/v2/pods/fake-pod::versions/2017-07-13T21:33:07.389Z",
+          "lastUpdated": "2017-07-13T21:33:17.349Z",
+          "lastChanged": "2017-07-13T21:33:17.349Z"
+        }
+      ],
+      "terminationHistory": [],
+      "lastUpdated": "2017-07-13T22:13:46.635Z",
+      "lastChanged": "2017-07-13T21:33:17.349Z"
+    }
+- uri: /v2/pods/::status
+  method: GET
+  content: |
+    [
+      {
+        "id": "/fake-pod",
+        "spec": {
+          "id": "/fake-pod",
+          "labels": {
+            "key": "value"
+          },
+          "version": "2014-08-18T22:36:41.451Z",
+          "user": "nobody",
+          "environment": {
+            "key": {
+              "secret": "secret0"
+            }
+          },
+          "containers": [],
+          "secrets": {
+            "secret0": {
+              "source": "source0"
+            }
+          },
+          "volumes": [],
+          "networks": [],
+          "scaling": {
+            "kind": "fixed",
+            "instances": 1
+          },
+          "scheduling": {}
+        },
+        "status": "STABLE",
+        "statusSince": "2017-07-13T21:33:17.349Z",
+        "instances": [
+          {
+            "id": "fake-pod.instance-dc6cfe60-6812-11e7-a18e-70b3d5800003",
+            "status": "STABLE",
+            "statusSince": "2017-07-13T21:33:17.349Z",
+            "conditions": [],
+            "agentHostname": "192.168.99.100",
+            "resources": {
+              "cpus": 0.1,
+              "mem": 64,
+              "disk": 0,
+              "gpus": 0
+            },
+            "networks": [],
+            "containers": [
+              {
+                "name": "container1",
+                "status": "TASK_RUNNING",
+                "statusSince": "2017-07-13T21:33:17.349Z",
+                "conditions": [],
+                "containerId": "fake-pod.instance-dc6cfe60-6812-11e7-a18e-70b3d5800003.container1",
+                "endpoints": [],
+                "resources": {
+                  "cpus": 0.1,
+                  "mem": 32,
+                  "disk": 0,
+                  "gpus": 0
+                },
+                "lastUpdated": "2017-07-13T21:33:17.349Z",
+                "lastChanged": "2017-07-13T21:33:17.349Z"
+              }
+            ],
+            "specReference": "/v2/pods/fake-pod::versions/2017-07-13T21:33:07.389Z",
+            "lastUpdated": "2017-07-13T21:33:17.349Z",
+            "lastChanged": "2017-07-13T21:33:17.349Z"
+          }
+        ],
+        "terminationHistory": [],
+        "lastUpdated": "2017-07-13T22:13:46.635Z",
+        "lastChanged": "2017-07-13T21:33:17.349Z"
+      }
+    ]
+- uri: /v2/pods/fake-pod
+  method: GET
+  content: |
+    {
+      "id": "/fake-pod",
+      "labels": {
+          "key": "value"
+      },
+      "version": "2014-08-18T22:36:41.451Z",
+      "user": "nobody",
+      "environment": {
+          "key1": "value",
+          "key2": {
+              "secret": "secret0"
+          }
+      },
+      "containers": [
+          {
+              "environment": {
+                  "key3": "value3",
+                  "key4": {
+                      "secret": "secret1"
+                  }
+              }
+          }
+      ],
+      "secrets": {
+          "secret0": {
+              "source": "source0"
+          },
+          "secret1": {
+              "source": "source1"
+          }
+      },
+      "volumes": [
+
+      ],
+      "networks": [
+
+      ],
+      "scaling": {
+          "kind": "fixed",
+          "instances": 1
+      },
+      "scheduling": {
+
+      }
+    }
+- uri: /v2/pods
+  method: GET
+  content: |
+    [
+      {
+        "id": "/fake-pod",
+        "labels": {
+            "key": "value"
+        },
+        "version": "2014-08-18T22:36:41.451Z",
+        "user": "nobody",
+        "environment": {
+            "key1": "value",
+            "key2": {
+                "secret": "secret0"
+            }
+        },
+        "containers": [
+        ],
+        "secrets": {
+            "secret0": {
+                "source": "source0"
+            }
+        },
+        "volumes": [
+
+        ],
+        "networks": [
+
+        ],
+        "scaling": {
+            "kind": "fixed",
+            "instances": 1
+        },
+        "scheduling": {
+
+        }
+      },
+      {
+        "id": "/fake-pod2",
+        "labels": {
+            "key": "value"
+        },
+        "version": "2014-08-18T22:36:41.451Z",
+        "user": "nobody",
+        "environment": {
+            "key": "value",
+            "key": {
+                "secret": "secret0"
+            }
+        },
+        "containers": [
+        ],
+        "secrets": {
+            "secret0": {
+                "source": "source0"
+            }
+        },
+        "volumes": [
+
+        ],
+        "networks": [
+
+        ],
+        "scaling": {
+            "kind": "fixed",
+            "instances": 1
+        },
+        "scheduling": {
+
+        }
+      }
+    ]
+- uri: /v2/pods
+  method: POST
+  content: |
+    {
+      "id": "/fake-pod",
+      "labels": {
+          "key": "value"
+      },
+      "version": "2014-08-18T22:36:41.451Z",
+      "user": "nobody",
+      "environment": {
+          "key": "value",
+          "key": {
+              "secret": "secret0"
+          }
+      },
+      "containers": [
+      ],
+      "secrets": {
+          "secret0": {
+              "source": "source0"
+          }
+      },
+      "volumes": [
+
+      ],
+      "networks": [
+
+      ],
+      "scaling": {
+          "kind": "fixed",
+          "instances": 1
+      },
+      "scheduling": {
+
+      }
+    }
+- uri: /v2/pods/fake-pod?force=true
+  method: PUT
+  content: |
+    {
+      "id": "/fake-pod",
+      "labels": {
+          "key": "value"
+      },
+      "version": "2014-08-18T22:36:41.451Z",
+      "user": "nobody",
+      "environment": {
+          "key": "value",
+          "key": {
+              "secret": "secret0"
+          }
+      },
+      "containers": [
+      ],
+      "secrets": {
+          "secret0": {
+              "source": "source0"
+          }
+      },
+      "volumes": [
+
+      ],
+      "networks": [
+
+      ],
+      "scaling": {
+          "kind": "fixed",
+          "instances": 2
+      },
+      "scheduling": {
+
+      }
+    }
+- uri: /v2/pods/fake-pod?force=true
+  method: DELETE
+  headers:
+    "Marathon-Deployment-Id": "c0e7434c-df47-4d23-99f1-78bd78662231"
+- uri: /v2/pods/fake-pod::versions
+  method: GET
+  content: |
+    [
+        "2014-08-18T22:36:41.451Z"
+    ]
+- uri: /v2/pods/fake-pod::versions/2014-08-18T22:36:41.451Z
+  method: GET
+  content: |
+    {
+      "id": "/fake-pod",
+      "labels": {
+          "key": "value"
+      },
+      "version": "2014-08-18T22:36:41.451Z",
+      "user": "nobody",
+      "environment": {
+          "key": "value",
+          "key": {
+              "secret": "secret0"
+          }
+      },
+      "containers": [
+      ],
+      "secrets": {
+          "secret0": {
+              "source": "source0"
+          }
+      },
+      "volumes": [
+
+      ],
+      "networks": [
+
+      ],
+      "scaling": {
+          "kind": "fixed",
+          "instances": 1
+      },
+      "scheduling": {
+
+      }
+    }
+- uri: /v2/pods/fake-pod::instances/fake-pod.instance-dc6cfe60-6812-11e7-a18e-70b3d5800003
+  method: DELETE
+  content: |
+    {
+      "instanceId": {
+        "idString": "fake-pod.instance-dc6cfe60-6812-11e7-a18e-70b3d5800003"
+      },
+      "agentInfo": {
+        "host": "192.168.99.100",
+        "agentId": "c3856950-ab1a-4aea-b1a8-168397c0fb33-S9",
+        "attributes": [
+          "CgR6b25lEAMqBgoEcGR4Mw==",
+          "CgZyZWdpb24QABoJCQAAAAAAAAhA",
+          "Cg1pbnN0YW5jZV90eXBlEAMqCQoHY29tcHV0ZQ==",
+          "CgNzZG4QAyoKCghjb250cmFpbA==",
+          "CgJvcxADKgkKB2NlbnRvczc="
+        ]
+      },
+      "tasksMap": {
+        "fake-pod.instance-dc6cfe60-6812-11e7-a18e-70b3d5800003.container1": {
+          "taskId": "fake-pod.instance-dc6cfe60-6812-11e7-a18e-70b3d5800003.container1",
+          "runSpecVersion": "2017-07-13T23:04:05.835Z",
+          "status": {
+            "stagedAt": "2017-07-13T23:04:05.939Z",
+            "startedAt": "2017-07-13T23:04:07.767Z",
+            "mesosStatus": "Ck0KS3JjbHVzdGVyX2Rjb3Mtc2lkZWNhci5pbnN0YW5jZS05MWU5YzE1OC02ODFmLTExZTctYTE4ZS03MGIzZDU4MDAwMDMuc2lkZWNhchABKikKJ2MzODU2OTUwLWFiMWEtNGFlYS1iMWE4LTE2ODM5N2MwZmIzMy1TOTGxw/AZ/1nWQTpFCkNpbnN0YW5jZS1yY2x1c3Rlcl9kY29zLXNpZGVjYXIuOTFlOWMxNTgtNjgxZi0xMWU3LWExOGUtNzBiM2Q1ODAwMDAzSAJaEOVRUUkSVEbRi5mOLzx0bnxqkgIKvAEimAEKLgoRcmNsdXN0ZXIubG9jYXRpb24SGWdsb2JhbHJpb3QucGR4Mi5yY2x1c3RlcjEKGgoOcmNsdXN0ZXIuZ3JvdXASCHJjbHVzdGVyCiQKFHJjbHVzdGVyLmFwcGxpY2F0aW9uEgxkY29zLXNpZGVjYXIKJAoKRENPU19TUEFDRRIWL3JjbHVzdGVyL2Rjb3Mtc2lkZWNhcioRCAESDTEwLjQwLjI1My4xMDAyDHJjbHVzdGVyLWNuaRiiWyJOCiRiYjgyOWJiZS02OWExLTRiMmQtYWE4Zi0zNGY5MDQ4YjNiMjUSJgokY2UyZDFjOWMtZGQ5MC00MDYyLWI1M2QtYzdkNTRiZGI2ODI1",
+            "condition": {
+              "str": "running"
+            },
+            "networkInfo": {
+              "hostName": "192.168.99.100",
+              "hostPorts": [],
+              "ipAddresses": [
+                {
+                  "ipAddress": "192.168.99.100",
+                  "protocol": "IPv4"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "runSpecVersion": "2017-07-13T23:04:05.835Z",
+      "state": {
+        "condition": {
+          "str": "running"
+        },
+        "since": "2017-07-13T23:04:07.767Z",
+        "activeSince": "2017-07-13T23:04:07.767Z"
+      },
+      "unreachableStrategy": {
+        "inactiveAfterSeconds": 300,
+        "expungeAfterSeconds": 600
+      }
+    }
+- uri: /v2/pods/fake-pod::instances
+  method: DELETE
+  content: |
+    [
+      {
+        "instanceId": {
+          "idString": "fake-pod.instance-dc6cfe60-6812-11e7-a18e-70b3d5800003"
+        },
+        "agentInfo": {
+          "host": "192.168.99.100",
+          "agentId": "c3856950-ab1a-4aea-b1a8-168397c0fb33-S9",
+          "attributes": [
+            "CgR6b25lEAMqBgoEcGR4Mw==",
+            "CgZyZWdpb24QABoJCQAAAAAAAAhA",
+            "Cg1pbnN0YW5jZV90eXBlEAMqCQoHY29tcHV0ZQ==",
+            "CgNzZG4QAyoKCghjb250cmFpbA==",
+            "CgJvcxADKgkKB2NlbnRvczc="
+          ]
+        },
+        "tasksMap": {
+          "fake-pod.instance-dc6cfe60-6812-11e7-a18e-70b3d5800003.container1": {
+            "taskId": "fake-pod.instance-dc6cfe60-6812-11e7-a18e-70b3d5800003.container1",
+            "runSpecVersion": "2017-07-13T23:04:05.835Z",
+            "status": {
+              "stagedAt": "2017-07-13T23:04:05.939Z",
+              "startedAt": "2017-07-13T23:04:07.767Z",
+              "mesosStatus": "Ck0KS3JjbHVzdGVyX2Rjb3Mtc2lkZWNhci5pbnN0YW5jZS05MWU5YzE1OC02ODFmLTExZTctYTE4ZS03MGIzZDU4MDAwMDMuc2lkZWNhchABKikKJ2MzODU2OTUwLWFiMWEtNGFlYS1iMWE4LTE2ODM5N2MwZmIzMy1TOTGxw/AZ/1nWQTpFCkNpbnN0YW5jZS1yY2x1c3Rlcl9kY29zLXNpZGVjYXIuOTFlOWMxNTgtNjgxZi0xMWU3LWExOGUtNzBiM2Q1ODAwMDAzSAJaEOVRUUkSVEbRi5mOLzx0bnxqkgIKvAEimAEKLgoRcmNsdXN0ZXIubG9jYXRpb24SGWdsb2JhbHJpb3QucGR4Mi5yY2x1c3RlcjEKGgoOcmNsdXN0ZXIuZ3JvdXASCHJjbHVzdGVyCiQKFHJjbHVzdGVyLmFwcGxpY2F0aW9uEgxkY29zLXNpZGVjYXIKJAoKRENPU19TUEFDRRIWL3JjbHVzdGVyL2Rjb3Mtc2lkZWNhcioRCAESDTEwLjQwLjI1My4xMDAyDHJjbHVzdGVyLWNuaRiiWyJOCiRiYjgyOWJiZS02OWExLTRiMmQtYWE4Zi0zNGY5MDQ4YjNiMjUSJgokY2UyZDFjOWMtZGQ5MC00MDYyLWI1M2QtYzdkNTRiZGI2ODI1",
+              "condition": {
+                "str": "running"
+              },
+              "networkInfo": {
+                "hostName": "192.168.99.100",
+                "hostPorts": [],
+                "ipAddresses": [
+                  {
+                    "ipAddress": "192.168.99.100",
+                    "protocol": "IPv4"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "runSpecVersion": "2017-07-13T23:04:05.835Z",
+        "state": {
+          "condition": {
+            "str": "running"
+          },
+          "since": "2017-07-13T23:04:07.767Z",
+          "activeSince": "2017-07-13T23:04:07.767Z"
+        },
+        "unreachableStrategy": {
+          "inactiveAfterSeconds": 300,
+          "expungeAfterSeconds": 600
+        }
+      }
+    ]
 - uri: /v2/groups
   method: GET
   content: |

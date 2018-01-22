@@ -810,24 +810,7 @@ func (r *marathonClient) CreateApplication(application *Application) (*Applicati
 //		name:		the id of the application
 //		timeout:	a duration of time to wait for an application to deploy
 func (r *marathonClient) WaitOnApplication(name string, timeout time.Duration) error {
-	if r.appExistAndRunning(name) {
-		return nil
-	}
-
-	timeoutTimer := time.After(timeout)
-	ticker := time.NewTicker(r.config.PollingWaitTime)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-timeoutTimer:
-			return ErrTimeoutError
-		case <-ticker.C:
-			if r.appExistAndRunning(name) {
-				return nil
-			}
-		}
-	}
+	return r.wait(name, timeout, r.appExistAndRunning)
 }
 
 func (r *marathonClient) appExistAndRunning(name string) bool {
