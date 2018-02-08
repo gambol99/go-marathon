@@ -78,8 +78,15 @@ func TestDeleteDeployment(t *testing.T) {
 	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 	id, err := endpoint.Client.DeleteDeployment(fakeDeploymentID, false)
-	assert.NoError(t, err)
-	assert.NotNil(t, t)
+	require.NoError(t, err)
 	assert.Equal(t, id.DeploymentID, "0b1467fc-d5cd-4bbc-bac2-2805351cee1e")
 	assert.Equal(t, id.Version, "2014-08-26T08:20:26.171Z")
+}
+
+func TestDeleteDeploymentForce(t *testing.T) {
+	endpoint := newFakeMarathonEndpoint(t, nil)
+	defer endpoint.Close()
+	resp, err := endpoint.Client.DeleteDeployment(fakeDeploymentID, true)
+	require.NoError(t, err)
+	assert.Nil(t, resp)
 }

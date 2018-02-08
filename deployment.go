@@ -108,8 +108,17 @@ func (r *marathonClient) Deployments() ([]*Deployment, error) {
 // 	id:		the deployment id you wish to delete
 // 	force:	whether or not to force the deletion
 func (r *marathonClient) DeleteDeployment(id string, force bool) (*DeploymentID, error) {
+	path := fmt.Sprintf("%s/%s", marathonAPIDeployments, id)
+
+	// if force=true, no body is returned
+	if force {
+		path += "?force=true"
+		return nil, r.apiDelete(path, nil, nil)
+	}
+
 	deployment := new(DeploymentID)
-	err := r.apiDelete(fmt.Sprintf("%s/%s", marathonAPIDeployments, id), nil, deployment)
+	err := r.apiDelete(path, nil, deployment)
+
 	if err != nil {
 		return nil, err
 	}

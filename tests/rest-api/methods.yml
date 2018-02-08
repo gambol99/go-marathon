@@ -1653,6 +1653,11 @@
         "deploymentId": "0b1467fc-d5cd-4bbc-bac2-2805351cee1e",
         "version": "2014-08-26T08:20:26.171Z"
     }
+- uri: /v2/deployments/867ed450-f6a8-4d33-9b0e-e11c5513990b?force=true
+  method: DELETE
+  content: |
+    {
+    }
 - uri: /v2/eventSubscriptions?callbackUrl=http://localhost:9292/callback
   method: POST
   content: |
