@@ -61,6 +61,13 @@ func TestErrors(t *testing.T) {
 			errText:  "App '/not_existent' does not exist",
 			content:  `{"message": "App '/not_existent' does not exist"}`,
 		},
+		// 405
+		{
+			httpCode: http.StatusMethodNotAllowed,
+			errCode:  ErrCodeMethodNotAllowed,
+			errText:  "",
+			content:  `{"message": null}`,
+		},
 		// 409 POST
 		{
 			httpCode:   http.StatusConflict,
