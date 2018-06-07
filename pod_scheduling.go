@@ -25,8 +25,8 @@ type PodBackoff struct {
 
 // PodUpgrade describes the policy for upgrading a pod in-place
 type PodUpgrade struct {
-	MinimumHealthCapacity *int `json:"minimumHealthCapacity,omitempty"`
-	MaximumOverCapacity   *int `json:"maximumOverCapacity,omitempty"`
+	MinimumHealthCapacity *float64 `json:"minimumHealthCapacity,omitempty"`
+	MaximumOverCapacity   *float64 `json:"maximumOverCapacity,omitempty"`
 }
 
 // PodPlacement supports constraining which hosts a pod is placed on
