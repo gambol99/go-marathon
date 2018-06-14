@@ -43,31 +43,70 @@ func TestApplicationMemory(t *testing.T) {
 }
 
 func TestApplicationString(t *testing.T) {
-	app := NewDockerApplication().
-		Name("my-app").
-		CPU(0.1).
-		Memory(64).
-		Storage(0.0).
-		Count(2).
-		AddArgs("/usr/sbin/apache2ctl", "-D", "FOREGROUND").
-		AddEnv("NAME", "frontend_http").
-		AddEnv("SERVICE_80_NAME", "test_http")
-	app.
-		Container.Docker.Container("quay.io/gambol99/apache-php:latest").
-		Bridged().
-		Expose(80).
-		Expose(443)
-	app, err := app.CheckHTTP("/health", 80, 5)
-	assert.Nil(t, err)
-
-	expectedAppJSONBytes, err := ioutil.ReadFile("tests/app-definitions/TestApplicationString-output.json")
-	if err != nil {
-		panic(err)
+	type test struct {
+		name                string
+		app                 *Application
+		expectedAppJSONPath string
+		setup               func(*Application)
 	}
-	expectedAppJSON := strings.TrimSpace(string(expectedAppJSONBytes))
-	assert.Equal(t, expectedAppJSON, app.String())
-}
 
+	tests := []test{
+		{
+			name: "marathon < 1.5",
+			app: NewDockerApplication().
+				Name("my-app").
+				CPU(0.1).
+				Memory(64).
+				Storage(0.0).
+				Count(2).
+				AddArgs("/usr/sbin/apache2ctl", "-D", "FOREGROUND").
+				AddEnv("NAME", "frontend_http").
+				AddEnv("SERVICE_80_NAME", "test_http"),
+			expectedAppJSONPath: "tests/app-definitions/TestApplicationString-output.json",
+			setup: func(app *Application) {
+				app.
+					Container.Docker.Container("quay.io/gambol99/apache-php:latest").
+					Bridged().
+					Expose(80).
+					Expose(443)
+			},
+		},
+		{
+			name: "marathon > 1.5",
+			app: NewDockerApplication().
+				Name("my-app").
+				CPU(0.1).
+				Memory(64).
+				Storage(0.0).
+				Count(2).
+				SetNetwork("", "container/bridge").
+				AddArgs("/usr/sbin/apache2ctl", "-D", "FOREGROUND").
+				AddEnv("NAME", "frontend_http").
+				AddEnv("SERVICE_80_NAME", "test_http"),
+			expectedAppJSONPath: "tests/app-definitions/TestApplicationString-1.5-output.json",
+			setup: func(app *Application) {
+				app.
+					Container.Expose(80).Expose(443).
+					Docker.Container("quay.io/gambol99/apache-php:latest")
+			},
+		},
+	}
+
+	for _, test := range tests {
+		label := fmt.Sprintf("test: %s", test.name)
+
+		test.setup(test.app)
+		_, err := test.app.CheckHTTP("/health", 80, 5)
+		assert.Nil(t, err)
+
+		expectedAppJSONBytes, err := ioutil.ReadFile(test.expectedAppJSONPath)
+		if err != nil {
+			panic(err)
+		}
+		expectedAppJSON := strings.TrimSpace(string(expectedAppJSONBytes))
+		assert.Equal(t, expectedAppJSON, test.app.String(), label)
+	}
+}
 func TestApplicationCount(t *testing.T) {
 	app := NewDockerApplication()
 	assert.Nil(t, app.Instances)
@@ -290,45 +329,87 @@ func TestApplicationPortDefinitions(t *testing.T) {
 }
 
 func TestHasHealthChecks(t *testing.T) {
-	app := NewDockerApplication()
-	assert.False(t, app.HasHealthChecks())
-	app.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80)
-	_, err := app.CheckTCP(80, 10)
-	assert.NoError(t, err)
-	assert.True(t, app.HasHealthChecks())
+	apps := []*Application{
+		NewDockerApplication(),
+		NewDockerApplication(),
+	}
+
+	for i := range apps {
+		assert.False(t, apps[i].HasHealthChecks())
+	}
+
+	// Marathon < 1.5
+	apps[0].Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80)
+
+	// Marathon >= 1.5
+	apps[1].Container.Expose(80).Docker.Container("quay.io/gambol99/apache-php:latest")
+
+	for i := range apps {
+		_, err := apps[i].CheckTCP(80, 10)
+		assert.NoError(t, err)
+		assert.True(t, apps[i].HasHealthChecks())
+	}
 }
 
 func TestApplicationCheckTCP(t *testing.T) {
-	app := NewDockerApplication()
-	assert.False(t, app.HasHealthChecks())
-	_, err := app.CheckTCP(80, 10)
-	assert.Error(t, err)
-	assert.False(t, app.HasHealthChecks())
-	app.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80)
-	_, err = app.CheckTCP(80, 10)
-	assert.NoError(t, err)
-	assert.True(t, app.HasHealthChecks())
-	check := (*app.HealthChecks)[0]
-	assert.Equal(t, "TCP", check.Protocol)
-	assert.Equal(t, 10, check.IntervalSeconds)
-	assert.Equal(t, 0, *check.PortIndex)
+	apps := []*Application{
+		NewDockerApplication(),
+		NewDockerApplication(),
+	}
+
+	for i := range apps {
+		assert.False(t, apps[i].HasHealthChecks())
+		_, err := apps[i].CheckTCP(80, 10)
+		assert.Error(t, err)
+		assert.False(t, apps[i].HasHealthChecks())
+	}
+
+	// Marathon < 1.5
+	apps[0].Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80)
+
+	// Marathon >= 1.5
+	apps[1].Container.Expose(80).Docker.Container("quay.io/gambol99/apache-php:latest")
+
+	for i := range apps {
+		_, err := apps[i].CheckTCP(80, 10)
+		assert.NoError(t, err)
+		assert.True(t, apps[i].HasHealthChecks())
+		check := (*apps[i].HealthChecks)[0]
+		assert.Equal(t, "TCP", check.Protocol)
+		assert.Equal(t, 10, check.IntervalSeconds)
+		assert.Equal(t, 0, *check.PortIndex)
+	}
 }
 
 func TestApplicationCheckHTTP(t *testing.T) {
-	app := NewDockerApplication()
-	assert.False(t, app.HasHealthChecks())
-	_, err := app.CheckHTTP("/", 80, 10)
-	assert.Error(t, err)
-	assert.False(t, app.HasHealthChecks())
-	app.Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80)
-	_, err = app.CheckHTTP("/health", 80, 10)
-	assert.NoError(t, err)
-	assert.True(t, app.HasHealthChecks())
-	check := (*app.HealthChecks)[0]
-	assert.Equal(t, "HTTP", check.Protocol)
-	assert.Equal(t, 10, check.IntervalSeconds)
-	assert.Equal(t, "/health", *check.Path)
-	assert.Equal(t, 0, *check.PortIndex)
+	apps := []*Application{
+		NewDockerApplication(),
+		NewDockerApplication(),
+	}
+
+	for i := range apps {
+		assert.False(t, apps[i].HasHealthChecks())
+		_, err := apps[i].CheckHTTP("/", 80, 10)
+		assert.Error(t, err)
+		assert.False(t, apps[i].HasHealthChecks())
+	}
+
+	// Marathon < 1.5
+	apps[0].Container.Docker.Container("quay.io/gambol99/apache-php:latest").Expose(80)
+
+	// Marathon >= 1.5
+	apps[1].Container.Expose(80).Docker.Container("quay.io/gambol99/apache-php:latest")
+
+	for i := range apps {
+		_, err := apps[i].CheckHTTP("/health", 80, 10)
+		assert.NoError(t, err)
+		assert.True(t, apps[i].HasHealthChecks())
+		check := (*apps[i].HealthChecks)[0]
+		assert.Equal(t, "HTTP", check.Protocol)
+		assert.Equal(t, 10, check.IntervalSeconds)
+		assert.Equal(t, "/health", *check.Path)
+		assert.Equal(t, 0, *check.PortIndex)
+	}
 }
 
 func TestCreateApplication(t *testing.T) {
@@ -483,9 +564,9 @@ func TestApplicationFetchURIs(t *testing.T) {
 	assert.Equal(t, Fetch{URI: "file://uri2.tar.gz"}, (*app.Fetch)[1])
 	assert.Equal(t, Fetch{URI: "file://uri3.tar.gz"}, (*app.Fetch)[2])
 
-	app.EmptyUris()
-	assert.NotNil(t, app.Uris)
-	assert.Equal(t, 0, len(*app.Uris))
+	app.EmptyFetchURIs()
+	assert.NotNil(t, app.Fetch)
+	assert.Equal(t, 0, len(*app.Fetch))
 }
 
 func TestSetApplicationVersion(t *testing.T) {
@@ -725,7 +806,7 @@ func TestIPAddressPerTask(t *testing.T) {
 	assert.Equal(t, 1, len(*ipPerTask.Groups))
 	assert.Equal(t, "label", (*ipPerTask.Groups)[0])
 	assert.Equal(t, "value", (*ipPerTask.Labels)["key"])
-	assert.NotEmpty(t, ipPerTask.Discovery)
+	assert.NotEmpty(t, *ipPerTask.Discovery)
 
 	ipPerTask.EmptyGroups()
 	assert.Equal(t, 0, len(*ipPerTask.Groups))
@@ -763,4 +844,25 @@ func TestUpgradeStrategy(t *testing.T) {
 	assert.NotNil(t, us)
 	assert.Nil(t, us.MinimumHealthCapacity)
 	assert.Nil(t, us.MaximumOverCapacity)
+}
+
+func TestBridgedNetworking(t *testing.T) {
+	app := NewDockerApplication().SetNetwork("test", "container/bridge")
+	networks := *app.Networks
+
+	assert.Equal(t, networks[0].Mode, BridgeNetworkMode)
+}
+
+func TestContainerNetworking(t *testing.T) {
+	app := NewDockerApplication().SetNetwork("test", "container")
+	networks := *app.Networks
+
+	assert.Equal(t, networks[0].Mode, ContainerNetworkMode)
+}
+
+func TestHostNetworking(t *testing.T) {
+	app := NewDockerApplication().SetNetwork("test", "host")
+	networks := *app.Networks
+
+	assert.Equal(t, networks[0].Mode, HostNetworkMode)
 }

@@ -71,9 +71,9 @@ func main() {
 			log.Printf("Exiting the loop")
 			done = true
 		case event := <-events:
-			log.Printf("Recieved application event: %s", event)
+			log.Printf("Received application event: %s", event)
 		case event := <-deployments:
-			log.Printf("Recieved deployment event: %v", event)
+			log.Printf("Received deployment event: %v", event)
 			var deployment *marathon.EventDeploymentStepSuccess
 			deployment = event.Event.(*marathon.EventDeploymentStepSuccess)
 			log.Printf("deployment step: %v", deployment.CurrentStep)

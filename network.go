@@ -57,10 +57,22 @@ func NewPodEndpoint() *PodEndpoint {
 	}
 }
 
+// NewBridgePodNetwork creates a PodNetwork for a container in bridge mode
+func NewBridgePodNetwork() *PodNetwork {
+	pn := NewPodNetwork("")
+	return pn.SetMode(BridgeNetworkMode)
+}
+
 // NewContainerPodNetwork creates a PodNetwork for a container
 func NewContainerPodNetwork(name string) *PodNetwork {
 	pn := NewPodNetwork(name)
 	return pn.SetMode(ContainerNetworkMode)
+}
+
+// NewHostPodNetwork creates a PodNetwork for a container in host mode
+func NewHostPodNetwork() *PodNetwork {
+	pn := NewPodNetwork("")
+	return pn.SetMode(HostNetworkMode)
 }
 
 // SetName sets the name of a PodNetwork

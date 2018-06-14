@@ -107,7 +107,7 @@ func main() {
 	assert(client.CreateGroup(group))
 	log.Printf("Successfully created the group: %s", group.ID)
 
-	log.Printf("Updating the group paramaters")
+	log.Printf("Updating the group parameters")
 	frontend.Count(4)
 
 	id, err := client.UpdateGroup(groupName, group, true)

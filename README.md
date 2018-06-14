@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/gambol99/go-marathon.svg?branch=master)](https://travis-ci.org/gambol99/go-marathon)
 [![GoDoc](http://godoc.org/github.com/gambol99/go-marathon?status.png)](http://godoc.org/github.com/gambol99/go-marathon)
+[![Go Report Card](https://goreportcard.com/badge/github.com/katallaxie/go-marathon)](https://goreportcard.com/report/github.com/katallaxie/go-marathon)
 [![Coverage Status](https://coveralls.io/repos/github/gambol99/go-marathon/badge.svg?branch=master)](https://coveralls.io/github/gambol99/go-marathon?branch=master)
 
 # Go-Marathon

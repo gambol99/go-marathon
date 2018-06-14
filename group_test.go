@@ -29,38 +29,72 @@ func TestGroups(t *testing.T) {
 	groups, err := endpoint.Client.Groups()
 	assert.NoError(t, err)
 	assert.NotNil(t, groups)
-	assert.Equal(t, len(groups.Groups), 1)
+	assert.Equal(t, 1, len(groups.Groups))
 	group := groups.Groups[0]
-	assert.Equal(t, group.ID, fakeGroupName)
+	assert.Equal(t, fakeGroupName, group.ID)
 }
 
-func TestGroup(t *testing.T) {
+func TestNewGroup(t *testing.T) {
 	endpoint := newFakeMarathonEndpoint(t, nil)
 	defer endpoint.Close()
 
 	group, err := endpoint.Client.Group(fakeGroupName)
 	assert.NoError(t, err)
 	assert.NotNil(t, group)
-	assert.Equal(t, len(group.Apps), 1)
-	assert.Equal(t, group.ID, fakeGroupName)
+	assert.Equal(t, 1, len(group.Apps))
+	assert.Equal(t, fakeGroupName, group.ID)
 
 	group, err = endpoint.Client.Group(fakeGroupName1)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, group)
-	assert.Equal(t, group.ID, fakeGroupName1)
+	assert.Equal(t, fakeGroupName1, group.ID)
 	assert.NotNil(t, group.Groups)
-	assert.Equal(t, len(group.Groups), 1)
+	assert.Equal(t, 1, len(group.Groups))
 
 	frontend := group.Groups[0]
-	assert.Equal(t, frontend.ID, "frontend")
-	assert.Equal(t, len(frontend.Apps), 3)
+	assert.Equal(t, "frontend", frontend.ID)
+	assert.Equal(t, 3, len(frontend.Apps))
 	for _, app := range frontend.Apps {
 		assert.NotNil(t, app.Container)
 		assert.NotNil(t, app.Container.Docker)
-		assert.Equal(t, app.Container.Docker.Network, "BRIDGE")
-		if len(*app.Container.Docker.PortMappings) == 0 {
+		for _, network := range *app.Networks {
+			assert.Equal(t, BridgeNetworkMode, network.Mode)
+		}
+		if len(*app.Container.PortMappings) == 0 {
 			t.Fail()
 		}
 	}
 }
+
+// TODO @kamsz: How to work with old and new endpoints from methods.yml?
+// func TestGroup(t *testing.T) {
+// 	endpoint := newFakeMarathonEndpoint(t, nil)
+// 	defer endpoint.Close()
+
+// 	group, err := endpoint.Client.Group(fakeGroupName)
+// 	assert.NoError(t, err)
+// 	assert.NotNil(t, group)
+// 	assert.Equal(t, 1, len(group.Apps))
+// 	assert.Equal(t, fakeGroupName, group.ID)
+
+// 	group, err = endpoint.Client.Group(fakeGroupName1)
+
+// 	assert.NoError(t, err)
+// 	assert.NotNil(t, group)
+// 	assert.Equal(t, fakeGroupName1, group.ID)
+// 	assert.NotNil(t, group.Groups)
+// 	assert.Equal(t, 1, len(group.Groups))
+
+// 	frontend := group.Groups[0]
+// 	assert.Equal(t, "frontend", frontend.ID)
+// 	assert.Equal(t, 3, len(frontend.Apps))
+// 	for _, app := range frontend.Apps {
+// 		assert.NotNil(t, app.Container)
+// 		assert.NotNil(t, app.Container.Docker)
+// 		assert.Equal(t, "BRIDGE", app.Container.Docker.Network)
+// 		if len(*app.Container.Docker.PortMappings) == 0 {
+// 			t.Fail()
+// 		}
+// 	}
+// }

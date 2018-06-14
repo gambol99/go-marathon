@@ -46,28 +46,55 @@ func TestDockerAddParameter(t *testing.T) {
 	assert.NotNil(t, docker.Parameters)
 	assert.Equal(t, 0, len(*docker.Parameters))
 }
-
 func TestDockerExpose(t *testing.T) {
-	app := NewDockerApplication()
-	app.Container.Docker.Expose(8080).Expose(80, 443)
+	apps := []*Application{
+		NewDockerApplication(),
+		NewDockerApplication(),
+	}
 
-	portMappings := app.Container.Docker.PortMappings
-	assert.Equal(t, 3, len(*portMappings))
+	// Marathon < 1.5
+	apps[0].Container.Docker.Expose(8080).Expose(80, 443)
 
-	assert.Equal(t, *createPortMapping(8080, "tcp"), (*portMappings)[0])
-	assert.Equal(t, *createPortMapping(80, "tcp"), (*portMappings)[1])
-	assert.Equal(t, *createPortMapping(443, "tcp"), (*portMappings)[2])
+	// Marathon >= 1.5
+	apps[1].Container.Expose(8080).Expose(80, 443)
+
+	portMappings := []*[]PortMapping{
+		apps[0].Container.Docker.PortMappings,
+		apps[1].Container.PortMappings,
+	}
+
+	for _, portMapping := range portMappings {
+		assert.Equal(t, 3, len(*portMapping))
+
+		assert.Equal(t, *createPortMapping(8080, "tcp"), (*portMapping)[0])
+		assert.Equal(t, *createPortMapping(80, "tcp"), (*portMapping)[1])
+		assert.Equal(t, *createPortMapping(443, "tcp"), (*portMapping)[2])
+	}
 }
 
 func TestDockerExposeUDP(t *testing.T) {
-	app := NewDockerApplication()
-	app.Container.Docker.ExposeUDP(53).ExposeUDP(5060, 6881)
+	apps := []*Application{
+		NewDockerApplication(),
+		NewDockerApplication(),
+	}
 
-	portMappings := app.Container.Docker.PortMappings
-	assert.Equal(t, 3, len(*portMappings))
-	assert.Equal(t, *createPortMapping(53, "udp"), (*portMappings)[0])
-	assert.Equal(t, *createPortMapping(5060, "udp"), (*portMappings)[1])
-	assert.Equal(t, *createPortMapping(6881, "udp"), (*portMappings)[2])
+	// Marathon < 1.5
+	apps[0].Container.Docker.ExposeUDP(53).ExposeUDP(5060, 6881)
+
+	// Marathon >= 1.5
+	apps[1].Container.ExposeUDP(53).ExposeUDP(5060, 6881)
+
+	portMappings := []*[]PortMapping{
+		apps[0].Container.Docker.PortMappings,
+		apps[1].Container.PortMappings,
+	}
+
+	for _, portMapping := range portMappings {
+		assert.Equal(t, 3, len(*portMapping))
+		assert.Equal(t, *createPortMapping(53, "udp"), (*portMapping)[0])
+		assert.Equal(t, *createPortMapping(5060, "udp"), (*portMapping)[1])
+		assert.Equal(t, *createPortMapping(6881, "udp"), (*portMapping)[2])
+	}
 }
 
 func TestPortMappingLabels(t *testing.T) {
@@ -83,6 +110,20 @@ func TestPortMappingLabels(t *testing.T) {
 
 	assert.NotNil(t, pm.Labels)
 	assert.Equal(t, 0, len(*pm.Labels))
+}
+
+func TestPortMappingNetworkNames(t *testing.T) {
+	pm := createPortMapping(80, "tcp")
+
+	pm.AddNetwork("test")
+
+	assert.Equal(t, 1, len(*pm.NetworkNames))
+	assert.Equal(t, "test", (*pm.NetworkNames)[0])
+
+	pm.EmptyNetworkNames()
+
+	assert.NotNil(t, pm.NetworkNames)
+	assert.Equal(t, 0, len(*pm.NetworkNames))
 }
 
 func TestVolume(t *testing.T) {

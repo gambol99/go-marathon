@@ -368,7 +368,7 @@ func (r *marathonClient) apiCall(method, path string, body, result interface{}) 
 			r.debugLog("apiCall(): %v %v returned %v %s", request.Method, request.URL.String(), response.Status, oneLogLine(respBody))
 		}
 
-		// step: check for a successfull response
+		// step: check for a successful response
 		if response.StatusCode >= 200 && response.StatusCode <= 299 {
 			if result != nil {
 				// If we have a deployment ID header and no response body, give them that

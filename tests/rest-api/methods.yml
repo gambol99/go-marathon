@@ -57,9 +57,6 @@
       "id": "/fake-app",
       "instances": 2,
       "mem": 50.0,
-      "ports": [
-          0
-      ],
       "requirePorts": false,
       "residency" : {
           "taskLostBehavior" : "RELAUNCH_AFTER_TIMEOUT",
@@ -70,7 +67,6 @@
           "minimumHealthCapacity": 0.5,
           "maximumOverCapacity": 0.5
       },
-      "uris": [],
       "user": null,
       "version": "2014-08-18T22:36:41.451Z"
     }
@@ -87,22 +83,21 @@
             "constraints": [],
             "container": {
                 "docker": {
-                    "image": "python:3",
-                    "network": "BRIDGE",
-                    "portMappings": [
-                        {
-                            "containerPort": 8080,
-                            "hostPort": 0,
-                            "servicePort": 9000,
-                            "protocol": "tcp"
-                        },
-                        {
-                            "containerPort": 161,
-                            "hostPort": 0,
-                            "protocol": "udp"
-                        }
-                    ]
+                    "image": "python:3"
                 },
+                "portMappings": [
+                    {
+                        "containerPort": 8080,
+                        "hostPort": 0,
+                        "servicePort": 9000,
+                        "protocol": "tcp"
+                    },
+                    {
+                        "containerPort": 161,
+                        "hostPort": 0,
+                        "protocol": "udp"
+                    }
+                ],
                 "type": "DOCKER",
                 "volumes": []
             },
@@ -110,6 +105,11 @@
             "dependencies": [],
             "deployments": [],
             "disk": 0.0,
+            "networks": [
+                {
+                    "mode": "container/bridge"
+                }
+            ],
             "env": {
                 "VAR": "VALUE",
                 "SECRET1": {
@@ -132,10 +132,6 @@
             "id": "/fake-app",
             "instances": 2,
             "mem": 64.0,
-            "ports": [
-                10000,
-                10001
-            ],
             "requirePorts": false,
             "secrets": {
                 "secret0": {
@@ -148,7 +144,6 @@
             "upgradeStrategy": {
                 "minimumHealthCapacity": 1.0
             },
-            "uris": [],
             "user": null,
             "version": "2014-09-25T02:26:59.256Z"
         },
@@ -160,22 +155,21 @@
             "constraints": [],
             "container": {
                 "docker": {
-                    "image": "python:3",
-                    "network": "BRIDGE",
-                    "portMappings": [
-                        {
-                            "containerPort": 8080,
-                            "hostPort": 0,
-                            "servicePort": 9000,
-                            "protocol": "tcp"
-                        },
-                        {
-                            "containerPort": 161,
-                            "hostPort": 0,
-                            "protocol": "udp"
-                        }
-                    ]
+                    "image": "python:3"
                 },
+                "portMappings": [
+                    {
+                        "containerPort": 8080,
+                        "hostPort": 0,
+                        "servicePort": 9000,
+                        "protocol": "tcp"
+                    },
+                    {
+                        "containerPort": 161,
+                        "hostPort": 0,
+                        "protocol": "udp"
+                    }
+                ],
                 "type": "DOCKER",
                 "volumes": []
             },
@@ -183,6 +177,11 @@
             "dependencies": [],
             "deployments": [],
             "disk": 0.0,
+            "networks": [
+                {
+                    "mode": "container/bridge"
+                }
+            ],
             "env": {},
             "executor": "",
             "healthChecks": [
@@ -200,10 +199,6 @@
             "id": "/fake-app-broken",
             "instances": 2,
             "mem": 64.0,
-            "ports": [
-                10000,
-                10001
-            ],
             "requirePorts": false,
             "residency" : {
                 "taskLostBehavior" : "RELAUNCH_AFTER_TIMEOUT",
@@ -215,7 +210,6 @@
             "upgradeStrategy": {
                 "minimumHealthCapacity": 1.0
             },
-            "uris": [],
             "user": null,
             "version": "2014-09-25T02:26:59.256Z"
         }
@@ -313,17 +307,16 @@
         "constraints": [],
         "container": {
             "docker": {
-                "image": "python:3",
-                "network": "BRIDGE",
-                "portMappings": [
-                    {
-                        "containerPort": 8080,
-                        "hostPort": 0,
-                        "servicePort": 9000,
-                        "protocol": "tcp"
-                    }
-                ]
+                "image": "python:3"
             },
+            "portMappings": [
+                {
+                    "containerPort": 8080,
+                    "hostPort": 0,
+                    "servicePort": 9000,
+                    "protocol": "tcp"
+                }
+            ],
             "type": "DOCKER",
             "volumes": []
         },
@@ -331,6 +324,11 @@
         "dependencies": [],
         "deployments": [],
         "disk": 0.0,
+        "networks": [
+            {
+                "mode": "container/bridge"
+            }
+        ],
         "env": {},
         "executor": "",
         "healthChecks": [
@@ -358,9 +356,6 @@
             "version": "2014-09-12T23:28:21.737Z"
         },
         "mem": 32.0,
-        "ports": [
-            10000
-        ],
         "requirePorts": false,
         "residency" : {
             "taskLostBehavior" : "RELAUNCH_AFTER_TIMEOUT",
@@ -416,9 +411,6 @@
         "upgradeStrategy": {
             "minimumHealthCapacity": 1.0
         },
-        "uris": [
-            "http://downloads.mesosphere.com/misc/toggle.tgz"
-        ],
         "user": null,
         "version": "2014-09-12T23:28:21.737Z"
     }
@@ -434,17 +426,16 @@
         "constraints": [],
         "container": {
             "docker": {
-                "image": "python:3",
-                "network": "BRIDGE",
-                "portMappings": [
-                    {
-                        "containerPort": 8080,
-                        "hostPort": 0,
-                        "servicePort": 9000,
-                        "protocol": "tcp"
-                    }
-                ]
+                "image": "python:3"
             },
+             "portMappings": [
+                {
+                    "containerPort": 8080,
+                    "hostPort": 0,
+                    "servicePort": 9000,
+                    "protocol": "tcp"
+                }
+            ],
             "type": "DOCKER",
             "volumes": []
         },
@@ -452,6 +443,11 @@
         "dependencies": [],
         "deployments": [],
         "disk": 0.0,
+        "networks": [
+            {
+                "mode": "container/bridge"
+            }
+        ],
         "env": {},
         "executor": "",
         "healthChecks": [
@@ -479,9 +475,6 @@
             "version": "2014-09-12T23:28:21.737Z"
         },
         "mem": 32.0,
-        "ports": [
-            10000
-        ],
         "requirePorts": false,
         "residency" : {
             "taskLostBehavior" : "RELAUNCH_AFTER_TIMEOUT",
@@ -537,9 +530,6 @@
         "upgradeStrategy": {
             "minimumHealthCapacity": 1.0
         },
-        "uris": [
-            "http://downloads.mesosphere.com/misc/toggle.tgz"
-        ],
         "user": null,
         "version": "2014-09-12T23:28:21.737Z"
     }
@@ -568,17 +558,16 @@
         "constraints": [],
         "container": {
             "docker": {
-                "image": "python:3",
-                "network": "BRIDGE",
-                "portMappings": [
-                    {
-                        "containerPort": 8080,
-                        "hostPort": 0,
-                        "servicePort": 9000,
-                        "protocol": "tcp"
-                    }
-                ]
+                "image": "python:3"
             },
+            "portMappings": [
+                {
+                    "containerPort": 8080,
+                    "hostPort": 0,
+                    "servicePort": 9000,
+                    "protocol": "tcp"
+                }
+            ],
             "type": "DOCKER",
             "volumes": []
         },
@@ -586,6 +575,11 @@
         "dependencies": [],
         "deployments": [],
         "disk": 0.0,
+        "networks": [
+            {
+                "mode": "container/bridge"
+            }
+        ],
         "env": {},
         "executor": "",
         "healthChecks": [
@@ -612,9 +606,6 @@
             "version": "2014-09-12T23:28:21.737Z"
         },
         "mem": 32.0,
-        "ports": [
-            10000
-        ],
         "requirePorts": false,
         "residency" : {
             "taskLostBehavior" : "RELAUNCH_AFTER_TIMEOUT",
@@ -670,9 +661,6 @@
         "upgradeStrategy": {
             "minimumHealthCapacity": 1.0
         },
-        "uris": [
-            "http://downloads.mesosphere.com/misc/toggle.tgz"
-        ],
         "user": null,
         "version": "2014-09-12T23:28:21.737Z"
     }
@@ -1305,15 +1293,11 @@
                         "id": "/test/app",
                         "instances": 1,
                         "mem": 128.0,
-                        "ports": [
-                            10000
-                        ],
                         "requirePorts": false,
                         "storeUrls": [],
                         "upgradeStrategy": {
                             "minimumHealthCapacity": 1.0
                         },
-                        "uris": [],
                         "user": null,
                         "version": "2014-08-28T01:05:40.586Z"
                     }
@@ -1349,15 +1333,11 @@
                 "id": "/test/app",
                 "instances": 1,
                 "mem": 128.0,
-                "ports": [
-                    10000
-                ],
                 "requirePorts": false,
                 "storeUrls": [],
                 "upgradeStrategy": {
                     "minimumHealthCapacity": 1.0
                 },
-                "uris": [],
                 "user": null,
                 "version": "2014-08-28T01:05:40.586Z"
             }
@@ -1381,9 +1361,9 @@
               "container": {
                 "type": "DOCKER",
                 "docker": {
-                  "image": "quay.io/gambol99/apache-php:latest",
-                  "network": "BRIDGE",
-                  "portMappings": [
+                  "image": "quay.io/gambol99/apache-php:latest"
+                },
+                "portMappings": [
                     {
                       "containerPort": 80,
                       "hostPort": 0,
@@ -1394,8 +1374,7 @@
                       "hostPort": 0,
                       "protocol": "tcp"
                     }
-                  ]
-                }
+                ]
               },
               "healthChecks": [
                 {
@@ -1411,6 +1390,11 @@
               "id": "apache",
               "mem": 64,
               "args": [],
+              "networks": [
+                {
+                  "mode": "container/bridge"
+                }
+              ],
               "env": {
                 "ENVIRONMENT": "qa",
                 "SERVICE_80_NAME": "apache_http-qa-1",
@@ -1428,12 +1412,11 @@
               "container": {
                 "type": "DOCKER",
                 "docker": {
-                  "image": "tutum/mysql",
-                  "network": "BRIDGE",
-                  "portMappings": [
-                    { "containerPort": 3306, "hostPort": 0, "protocol": "tcp" }
-                  ]
-                }
+                  "image": "tutum/mysql"
+                },
+                "portMappings": [
+                  { "containerPort": 3306, "hostPort": 0, "protocol": "tcp" }
+                ]
               },
               "healthChecks": [
                 {
@@ -1448,6 +1431,11 @@
               "id": "mysql",
               "mem": 1024,
               "cmd": "",
+              "networks": [
+                {
+                  "mode": "container/bridge"
+                }
+              ],
               "env": {
                 "ENVIRONMENT": "qa",
                 "SERVICE_NAME": "dbmaster",
@@ -1461,16 +1449,15 @@
               "container": {
                 "type": "DOCKER",
                 "docker": {
-                  "image": "redis",
-                  "network": "BRIDGE",
-                  "portMappings": [
+                  "image": "redis"
+                },
+                "portMappings": [
                     {
                       "containerPort": 6379,
                       "hostPort": 0,
                       "protocol": "tcp"
                     }
-                  ]
-                }
+                ]
               },
               "healthChecks": [
                 {
@@ -1485,6 +1472,11 @@
               "id": "caching",
               "cmd": "",
               "mem": 128,
+              "networks": [
+                {
+                  "mode": "container/bridge"
+                }
+              ],
               "env": {
                 "ENVIRONMENT": "qa",
                 "SERVICE_6379_NAME": "redis-qa-1"
@@ -1717,15 +1709,11 @@
                     "id": "/test",
                     "instances": 3,
                     "mem": 32.0,
-                    "ports": [10000],
                     "requirePorts": false,
                     "storeUrls": [],
                     "upgradeStrategy": {
                         "minimumHealthCapacity": 1.0
                     },
-                    "uris": [
-                        "http://downloads.mesosphere.com/misc/toggle.tgz"
-                    ],
                     "user": null,
                     "version": "2014-08-26T05:04:49.766Z"
                 }
@@ -1850,10 +1838,6 @@
             "id": "/fake-app",
             "instances": 2,
             "mem": 64.0,
-            "ports": [
-                10000,
-                10001
-            ],
             "requirePorts": false,
             "residency" : {
                 "taskLostBehavior" : "RELAUNCH_AFTER_TIMEOUT",
@@ -1865,7 +1849,6 @@
             "upgradeStrategy": {
                 "minimumHealthCapacity": 1.0
             },
-            "uris": [],
             "user": null,
             "version": "2014-09-25T02:26:59.256Z"
         },
@@ -1917,10 +1900,6 @@
             "id": "/fake-app-broken",
             "instances": 2,
             "mem": 64.0,
-            "ports": [
-                10000,
-                10001
-            ],
             "requirePorts": false,
             "storeUrls": [],
             "tasksRunning": 2,
@@ -1928,7 +1907,6 @@
             "upgradeStrategy": {
                 "minimumHealthCapacity": 1.0
             },
-            "uris": [],
             "user": null,
             "version": "2014-09-25T02:26:59.256Z"
         }
@@ -1954,9 +1932,6 @@
         "id": "/no-health-check-results-app",
         "instances": 2,
         "mem": 32.0,
-        "ports": [
-            10000
-        ],
         "tasks": [
             {
                 "appId": "/no-health-check-results-app",
