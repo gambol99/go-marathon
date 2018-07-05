@@ -18,14 +18,16 @@ package marathon
 
 // PodVolume describes a volume on the host
 type PodVolume struct {
-	Name string `json:"name,omitempty"`
-	Host string `json:"host,omitempty"`
+	Name       string            `json:"name,omitempty"`
+	Host       string            `json:"host,omitempty"`
+	Persistent *PersistentVolume `json:"persistent,omitempty"`
 }
 
 // PodVolumeMount describes how to mount a volume into a task
 type PodVolumeMount struct {
 	Name      string `json:"name,omitempty"`
 	MountPath string `json:"mountPath,omitempty"`
+	ReadOnly  bool   `json:"readOnly,omitempty"`
 }
 
 // NewPodVolume creates a new PodVolume
@@ -42,4 +44,10 @@ func NewPodVolumeMount(name, mount string) *PodVolumeMount {
 		Name:      name,
 		MountPath: mount,
 	}
+}
+
+// SetPersistentVolume sets the persistence settings of a PodVolume
+func (pv *PodVolume) SetPersistentVolume(p *PersistentVolume) *PodVolume {
+	pv.Persistent = p
+	return pv
 }
