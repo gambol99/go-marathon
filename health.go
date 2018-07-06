@@ -59,6 +59,26 @@ type PodHealthCheck struct {
 	DelaySeconds           *int                `json:"delaySeconds,omitempty"`
 }
 
+// NewPodHealthCheck creates an empty PodHealthCheck
+func NewPodHealthCheck() *PodHealthCheck {
+	return &PodHealthCheck{}
+}
+
+// NewHTTPHealthCheck creates an empty HTTPHealthCheck
+func NewHTTPHealthCheck() *HTTPHealthCheck {
+	return &HTTPHealthCheck{}
+}
+
+// NewTCPHealthCheck creates an empty TCPHealthCheck
+func NewTCPHealthCheck() *TCPHealthCheck {
+	return &TCPHealthCheck{}
+}
+
+// NewCommandHealthCheck creates an empty CommandHealthCheck
+func NewCommandHealthCheck() *CommandHealthCheck {
+	return &CommandHealthCheck{}
+}
+
 // SetCommand sets the given command on the health check.
 func (h *HealthCheck) SetCommand(c Command) *HealthCheck {
 	h.Command = &c
@@ -126,4 +146,91 @@ type HealthCheckResult struct {
 // Command is the command health check type
 type Command struct {
 	Value string `json:"value"`
+}
+
+// SetHTTPHealthCheck configures the pod's health check for an HTTP endpoint.
+// Note this will erase any configured TCP/Exec health checks.
+func (p *PodHealthCheck) SetHTTPHealthCheck(h *HTTPHealthCheck) *PodHealthCheck {
+	p.HTTP = h
+	p.TCP = nil
+	p.Exec = nil
+	return p
+}
+
+// SetTCPHealthCheck configures the pod's health check for a TCP endpoint.
+// Note this will erase any configured HTTP/Exec health checks.
+func (p *PodHealthCheck) SetTCPHealthCheck(t *TCPHealthCheck) *PodHealthCheck {
+	p.TCP = t
+	p.HTTP = nil
+	p.Exec = nil
+	return p
+}
+
+// SetExecHealthCheck configures the pod's health check for a command.
+// Note this will erase any configured HTTP/TCP health checks.
+func (p *PodHealthCheck) SetExecHealthCheck(e *CommandHealthCheck) *PodHealthCheck {
+	p.Exec = e
+	p.HTTP = nil
+	p.TCP = nil
+	return p
+}
+
+// SetGracePeriod sets the health check initial grace period, in seconds
+func (p *PodHealthCheck) SetGracePeriod(gracePeriodSeconds int) *PodHealthCheck {
+	p.GracePeriodSeconds = &gracePeriodSeconds
+	return p
+}
+
+// SetInterval sets the health check polling interval, in seconds
+func (p *PodHealthCheck) SetInterval(intervalSeconds int) *PodHealthCheck {
+	p.IntervalSeconds = &intervalSeconds
+	return p
+}
+
+// SetMaxConsecutiveFailures sets the maximum consecutive failures on the health check
+func (p *PodHealthCheck) SetMaxConsecutiveFailures(maxFailures int) *PodHealthCheck {
+	p.MaxConsecutiveFailures = &maxFailures
+	return p
+}
+
+// SetTimeout sets the length of time the health check will await a result, in seconds
+func (p *PodHealthCheck) SetTimeout(timeoutSeconds int) *PodHealthCheck {
+	p.TimeoutSeconds = &timeoutSeconds
+	return p
+}
+
+// SetDelay sets the length of time a pod will delay running health checks on initial launch, in seconds
+func (p *PodHealthCheck) SetDelay(delaySeconds int) *PodHealthCheck {
+	p.DelaySeconds = &delaySeconds
+	return p
+}
+
+// SetEndpoint sets the name of the pod health check endpoint
+func (h *HTTPHealthCheck) SetEndpoint(endpoint string) *HTTPHealthCheck {
+	h.Endpoint = endpoint
+	return h
+}
+
+// SetPath sets the HTTP path of the pod health check endpoint
+func (h *HTTPHealthCheck) SetPath(path string) *HTTPHealthCheck {
+	h.Path = path
+	return h
+}
+
+// SetScheme sets the HTTP scheme of the pod health check endpoint
+func (h *HTTPHealthCheck) SetScheme(scheme string) *HTTPHealthCheck {
+	h.Scheme = scheme
+	return h
+}
+
+// SetEndpoint sets the name of the pod health check endpoint
+func (t *TCPHealthCheck) SetEndpoint(endpoint string) *TCPHealthCheck {
+	t.Endpoint = endpoint
+	return t
+}
+
+// SetCommand sets a CommandHealthCheck's underlying PodCommand
+func (c *CommandHealthCheck) SetCommand(p PodCommand) *CommandHealthCheck {
+	c.Command = p
+	return c
 }
