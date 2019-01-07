@@ -58,7 +58,7 @@ func (e *InvalidEndpointError) Error() string {
 
 // newInvalidEndpointError creates a new error
 func newInvalidEndpointError(message string, args ...interface{}) error {
-	return &InvalidEndpointError{message: fmt.Sprintf(message, args)}
+	return &InvalidEndpointError{message: fmt.Sprintf(message, args...)}
 }
 
 // APIError represents a generic API error.
