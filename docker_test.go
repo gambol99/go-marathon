@@ -141,6 +141,19 @@ func TestVolume(t *testing.T) {
 	assert.Equal(t, (*container.Volumes)[1].Mode, "R")
 }
 
+func TestSecretVolume(t *testing.T) {
+	container := NewDockerApplication().Container
+
+	container.Volume("", "oldPath", "")
+
+	sv1 := (*container.Volumes)[0]
+	assert.Equal(t, sv1.ContainerPath, "oldPath")
+
+	sv1.SetSecretVolume("newPath", "some-secret")
+	assert.Equal(t, sv1.ContainerPath, "newPath")
+	assert.Equal(t, sv1.Secret, "some-secret")
+}
+
 func TestExternalVolume(t *testing.T) {
 	container := NewDockerApplication().Container
 

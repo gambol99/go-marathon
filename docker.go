@@ -53,6 +53,7 @@ type Volume struct {
 	External      *ExternalVolume   `json:"external,omitempty"`
 	Mode          string            `json:"mode,omitempty"`
 	Persistent    *PersistentVolume `json:"persistent,omitempty"`
+	Secret        string            `json:"secret,omitempty"`
 }
 
 // PersistentVolumeType is the a persistent docker volume to be mounted
@@ -170,6 +171,13 @@ func (v *Volume) SetPersistentVolume() *PersistentVolume {
 	ev := &PersistentVolume{}
 	v.Persistent = ev
 	return ev
+}
+
+// SetSecretVolume defines secret and containerPath for volume
+func (v *Volume) SetSecretVolume(containerPath, secret string) *Volume {
+	v.ContainerPath = containerPath
+	v.Secret = secret
+	return v
 }
 
 // EmptyPersistentVolume empties the persistent volume definition
