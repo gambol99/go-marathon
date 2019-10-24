@@ -141,6 +141,19 @@ func TestVolume(t *testing.T) {
 	assert.Equal(t, (*container.Volumes)[1].Mode, "R")
 }
 
+func TestSecretVolume(t *testing.T) {
+	container := NewDockerApplication().Container
+
+	container.Volume("", "oldPath", "")
+
+	sv1 := (*container.Volumes)[0]
+	assert.Equal(t, sv1.ContainerPath, "oldPath")
+
+	sv1.SetSecretVolume("newPath", "some-secret")
+	assert.Equal(t, sv1.ContainerPath, "newPath")
+	assert.Equal(t, sv1.Secret, "some-secret")
+}
+
 func TestExternalVolume(t *testing.T) {
 	container := NewDockerApplication().Container
 
@@ -191,5 +204,16 @@ func TestDockerPersistentVolume(t *testing.T) {
 	pVol.EmptyConstraints()
 	if assert.NotNil(t, pVol.Constraints) {
 		assert.Empty(t, len(*pVol.Constraints))
+	}
+}
+
+func TestDockerPullConfig(t *testing.T) {
+	secretName := "mysecret1"
+	app := NewDockerApplication()
+	pullConfig := NewPullConfig(secretName)
+	app.Container.Docker.SetPullConfig(pullConfig)
+
+	if assert.NotNil(t, app.Container.Docker.PullConfig) {
+		assert.Equal(t, secretName, app.Container.Docker.PullConfig.Secret)
 	}
 }
