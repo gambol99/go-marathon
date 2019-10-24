@@ -206,3 +206,14 @@ func TestDockerPersistentVolume(t *testing.T) {
 		assert.Empty(t, len(*pVol.Constraints))
 	}
 }
+
+func TestDockerPullConfig(t *testing.T) {
+	secretName := "mysecret1"
+	app := NewDockerApplication()
+	pullConfig := NewPullConfig(secretName)
+	app.Container.Docker.SetPullConfig(pullConfig)
+
+	if assert.NotNil(t, app.Container.Docker.PullConfig) {
+		assert.Equal(t, secretName, app.Container.Docker.PullConfig.Secret)
+	}
+}

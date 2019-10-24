@@ -127,6 +127,18 @@ type ExternalVolume struct {
 	Options  *map[string]string `json:"options,omitempty"`
 }
 
+// PullConfig specifies a secret for authentication with a private Docker registry
+type PullConfig struct {
+	Secret string `json:"secret,omitempty"`
+}
+
+// NewPullConfig creats a *PullConfig based on a given secret
+func NewPullConfig(secret string) *PullConfig {
+	return &PullConfig{
+		Secret: secret,
+	}
+}
+
 // Docker is the docker definition from a marathon application
 type Docker struct {
 	ForcePullImage *bool          `json:"forcePullImage,omitempty"`
@@ -135,6 +147,7 @@ type Docker struct {
 	Parameters     *[]Parameters  `json:"parameters,omitempty"`
 	PortMappings   *[]PortMapping `json:"portMappings,omitempty"`
 	Privileged     *bool          `json:"privileged,omitempty"`
+	PullConfig     *PullConfig    `json:"pullConfig,omitempty"`
 }
 
 // Volume attachs a volume to the container
@@ -444,6 +457,13 @@ func (docker *Docker) ServicePortIndex(port int) (int, error) {
 
 	// step: we didn't find the port in the mappings
 	return 0, fmt.Errorf("The docker port %d was not found in the container port mappings", port)
+}
+
+// SetPullConfig adds *PullConfig to Docker
+func (docker *Docker) SetPullConfig(pullConfig *PullConfig) *Docker {
+	docker.PullConfig = pullConfig
+
+	return docker
 }
 
 // AddNetwork adds a network name to a PortMapping
