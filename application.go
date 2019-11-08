@@ -104,6 +104,7 @@ type Application struct {
 	IPAddressPerTask      *IPAddressPerTask       `json:"ipAddress,omitempty"`
 	Residency             *Residency              `json:"residency,omitempty"`
 	Secrets               *map[string]Secret      `json:"-"`
+	Role                  *string                 `json:"role,omitempty"`
 }
 
 // ApplicationVersions is a collection of application versions for a specific app in marathon

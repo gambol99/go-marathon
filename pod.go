@@ -36,6 +36,7 @@ type Pod struct {
 	Scaling           *PodScalingPolicy    `json:"scaling,omitempty"`
 	Scheduling        *PodSchedulingPolicy `json:"scheduling,omitempty"`
 	ExecutorResources *ExecutorResources   `json:"executorResources,omitempty"`
+	Role              *string              `json:"role,omitempty"`
 }
 
 // PodScalingPolicy is the scaling policy of the pod
