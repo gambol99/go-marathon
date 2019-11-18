@@ -808,7 +808,7 @@ func (r *marathonClient) ApplicationDeployments(name string) ([]*DeploymentID, e
 // 		application:		the structure holding the application configuration
 func (r *marathonClient) CreateApplication(application *Application) (*Application, error) {
 	result := new(Application)
-	if err := r.apiPost(marathonAPIApps, application, result); err != nil {
+	if err := r.ApiPost(marathonAPIApps, application, result); err != nil {
 		return nil, err
 	}
 
@@ -853,7 +853,7 @@ func (r *marathonClient) RestartApplication(name string, force bool) (*Deploymen
 	deployment := new(DeploymentID)
 	var options struct{}
 	path := buildPathWithForceParam(fmt.Sprintf("%s/restart", name), force)
-	if err := r.apiPost(path, &options, deployment); err != nil {
+	if err := r.ApiPost(path, &options, deployment); err != nil {
 		return nil, err
 	}
 

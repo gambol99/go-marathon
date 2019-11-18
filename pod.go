@@ -216,7 +216,7 @@ func (r *marathonClient) Pods() ([]Pod, error) {
 // CreatePod creates a new pod in Marathon
 func (r *marathonClient) CreatePod(pod *Pod) (*Pod, error) {
 	result := new(Pod)
-	if err := r.apiPost(marathonAPIPods, &pod, result); err != nil {
+	if err := r.ApiPost(marathonAPIPods, &pod, result); err != nil {
 		return nil, err
 	}
 

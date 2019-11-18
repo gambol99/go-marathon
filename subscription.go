@@ -250,7 +250,7 @@ func (r *marathonClient) listenToSSE(stream *eventsource.Stream) error {
 //	callback	: the URL you wish to subscribe
 func (r *marathonClient) Subscribe(callback string) error {
 	path := fmt.Sprintf("%s?callbackUrl=%s", marathonAPISubscription, callback)
-	return r.apiPost(path, "", nil)
+	return r.ApiPost(path, "", nil)
 
 }
 

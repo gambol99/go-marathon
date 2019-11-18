@@ -162,7 +162,7 @@ func (r *marathonClient) KillTasks(tasks []string, opts *KillTaskOpts) error {
 	}
 	post.IDs = tasks
 
-	return r.apiPost(path, &post, nil)
+	return r.ApiPost(path, &post, nil)
 }
 
 // TaskEndpoints gets the endpoints i.e. HOST_IP:DYNAMIC_PORT for a specific application service

@@ -149,7 +149,7 @@ func (r *marathonClient) HasGroup(name string) (bool, error) {
 // CreateGroup creates a new group in marathon
 //		group:			a pointer the Group structure defining the group
 func (r *marathonClient) CreateGroup(group *Group) error {
-	return r.apiPost(marathonAPIGroups, group, nil)
+	return r.ApiPost(marathonAPIGroups, group, nil)
 }
 
 // WaitOnGroup waits for all the applications in a group to be deployed
