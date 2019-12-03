@@ -18,9 +18,9 @@ package marathon
 
 // PodBackoff describes the backoff for re-run attempts of a pod
 type PodBackoff struct {
-	Backoff        *int     `json:"backoff,omitempty"`
+	Backoff        *float64 `json:"backoff,omitempty"`
 	BackoffFactor  *float64 `json:"backoffFactor,omitempty"`
-	MaxLaunchDelay *int     `json:"maxLaunchDelay,omitempty"`
+	MaxLaunchDelay *float64 `json:"maxLaunchDelay,omitempty"`
 }
 
 // PodUpgrade describes the policy for upgrading a pod in-place
@@ -87,7 +87,7 @@ func NewPodUpgrade() *PodUpgrade {
 }
 
 // SetBackoff sets the base backoff interval for failed pod launches, in seconds
-func (p *PodBackoff) SetBackoff(backoffSeconds int) *PodBackoff {
+func (p *PodBackoff) SetBackoff(backoffSeconds float64) *PodBackoff {
 	p.Backoff = &backoffSeconds
 	return p
 }
@@ -99,7 +99,7 @@ func (p *PodBackoff) SetBackoffFactor(backoffFactor float64) *PodBackoff {
 }
 
 // SetMaxLaunchDelay sets the maximum backoff interval for failed pod launches, in seconds
-func (p *PodBackoff) SetMaxLaunchDelay(maxLaunchDelaySeconds int) *PodBackoff {
+func (p *PodBackoff) SetMaxLaunchDelay(maxLaunchDelaySeconds float64) *PodBackoff {
 	p.MaxLaunchDelay = &maxLaunchDelaySeconds
 	return p
 }
