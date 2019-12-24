@@ -20,6 +20,7 @@ package marathon
 type PodVolume struct {
 	Name       string            `json:"name,omitempty"`
 	Host       string            `json:"host,omitempty"`
+	Secret     string            `json:"secret,omitempty"`
 	Persistent *PersistentVolume `json:"persistent,omitempty"`
 }
 
@@ -35,6 +36,14 @@ func NewPodVolume(name, path string) *PodVolume {
 	return &PodVolume{
 		Name: name,
 		Host: path,
+	}
+}
+
+// NewPodVolume creates a new PodVolume for file based secrets
+func NewPodVolumeSecret(name, secretPath string) *PodVolume {
+	return &PodVolume{
+		Name:   name,
+		Secret: secretPath,
 	}
 }
 
