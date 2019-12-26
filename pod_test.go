@@ -169,3 +169,15 @@ func TestGetPodByVersion(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, pod.ID, fakePodName)
 }
+
+func TestAddPodImagePullConfig(t *testing.T) {
+	container := new(PodContainer)
+	container.Image = new(PodContainerImage)
+	pullConfig := NewPullConfig("pullConfig-secret")
+
+	container.Image.SetPullConfig(pullConfig)
+
+	if assert.NotNil(t, container.Image.PullConfig) {
+		assert.Equal(t, "pullConfig-secret", container.Image.PullConfig.Secret)
+	}
+}
