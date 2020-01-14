@@ -56,7 +56,7 @@ func createRawPod() *marathon.Pod {
 			Image: &marathon.PodContainerImage{
 				Kind:      "DOCKER",
 				ID:        "nginx",
-				ForcePull: true,
+				ForcePull: marathon.Bool(true),
 			},
 			VolumeMounts: []*marathon.PodVolumeMount{
 				&marathon.PodVolumeMount{
