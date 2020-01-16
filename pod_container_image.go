@@ -29,9 +29,10 @@ const (
 
 // PodContainerImage describes how to retrieve the container image
 type PodContainerImage struct {
-	Kind      ImageType `json:"kind,omitempty"`
-	ID        string    `json:"id,omitempty"`
-	ForcePull bool      `json:"forcePull,omitempty"`
+	Kind       ImageType   `json:"kind,omitempty"`
+	ID         string      `json:"id,omitempty"`
+	ForcePull  *bool       `json:"forcePull,omitempty"`
+	PullConfig *PullConfig `json:"pullConfig,omitempty"`
 }
 
 // NewPodContainerImage creates an empty PodContainerImage
@@ -48,6 +49,13 @@ func (i *PodContainerImage) SetKind(typ ImageType) *PodContainerImage {
 // SetID sets the ID of the image
 func (i *PodContainerImage) SetID(id string) *PodContainerImage {
 	i.ID = id
+	return i
+}
+
+// SetPullConfig adds *PullConfig to PodContainerImage
+func (i *PodContainerImage) SetPullConfig(pullConfig *PullConfig) *PodContainerImage {
+	i.PullConfig = pullConfig
+
 	return i
 }
 

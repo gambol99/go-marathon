@@ -133,3 +133,8 @@ func addOptions(s string, opt interface{}) (string, error) {
 	u.RawQuery = qs.Encode()
 	return u.String(), nil
 }
+
+// Bool returns a pointer to the passed in bool value
+func Bool(b bool) *bool {
+	return &b
+}

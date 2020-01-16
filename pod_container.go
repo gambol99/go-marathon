@@ -51,9 +51,9 @@ type PodExec struct {
 // PodArtifact describes how to obtain a generic artifact for a pod
 type PodArtifact struct {
 	URI        string `json:"uri,omitempty"`
-	Extract    bool   `json:"extract,omitempty"`
-	Executable bool   `json:"executable,omitempty"`
-	Cache      bool   `json:"cache,omitempty"`
+	Extract    *bool  `json:"extract,omitempty"`
+	Executable *bool  `json:"executable,omitempty"`
+	Cache      *bool  `json:"cache,omitempty"`
 	DestPath   string `json:"destPath,omitempty"`
 }
 
