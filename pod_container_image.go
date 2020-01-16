@@ -31,7 +31,7 @@ const (
 type PodContainerImage struct {
 	Kind       ImageType   `json:"kind,omitempty"`
 	ID         string      `json:"id,omitempty"`
-	ForcePull  bool        `json:"forcePull,omitempty"`
+	ForcePull  *bool       `json:"forcePull,omitempty"`
 	PullConfig *PullConfig `json:"pullConfig,omitempty"`
 }
 

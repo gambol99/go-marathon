@@ -27,7 +27,7 @@ type PodVolume struct {
 type PodVolumeMount struct {
 	Name      string `json:"name,omitempty"`
 	MountPath string `json:"mountPath,omitempty"`
-	ReadOnly  bool   `json:"readOnly,omitempty"`
+	ReadOnly  *bool  `json:"readOnly,omitempty"`
 }
 
 // NewPodVolume creates a new PodVolume
